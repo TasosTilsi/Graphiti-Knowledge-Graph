@@ -12,7 +12,7 @@ Transform a basic MCP knowledge graph server into a production-ready, CLI-first 
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Storage Foundation** - Kuzu database with dual-scope graphs
+- [x] **Phase 1: Storage Foundation** - Kuzu database with dual-scope graphs
 - [ ] **Phase 2: Security Filtering** - File and entity-level sanitization
 - [ ] **Phase 3: LLM Integration** - Cloud Ollama with local fallback
 - [ ] **Phase 4: CLI Interface** - Core operations and configuration
@@ -37,9 +37,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans in 3 waves
 
 Plans:
-- [ ] 01-01-PLAN.md — Project foundation with dependencies, GraphScope enum, path configuration
-- [ ] 01-02-PLAN.md — GraphSelector for scope routing, GraphManager for dual-scope database management
-- [ ] 01-03-PLAN.md — Persistence and isolation tests, verification checkpoint
+- [x] 01-01-PLAN.md — Project foundation with dependencies, GraphScope enum, path configuration
+- [x] 01-02-PLAN.md — GraphSelector for scope routing, GraphManager for dual-scope database management
+- [x] 01-03-PLAN.md — Persistence and isolation tests, verification checkpoint
 
 ### Phase 2: Security Filtering
 **Goal**: Implement defense-in-depth security filtering to prevent secrets and PII from entering knowledge graphs
@@ -51,10 +51,14 @@ Plans:
   3. Common secret formats (AWS keys, GitHub tokens, JWTs) are identified and blocked
   4. Capture operations fail loudly if secrets are detected with clear error messages
   5. Audit log records all sanitization events for review
-**Plans**: TBD
+**Plans**: 5 plans in 4 waves
 
 Plans:
-- [ ] 02-01: TBD during planning
+- [ ] 02-01-PLAN.md — Security models and configuration foundation
+- [ ] 02-02-PLAN.md — File exclusions and audit logging
+- [ ] 02-03-PLAN.md — Secret detection and allowlist management
+- [ ] 02-04-PLAN.md — Content sanitizer with typed placeholders
+- [ ] 02-05-PLAN.md — Integration tests and verification checkpoint
 
 ### Phase 3: LLM Integration
 **Goal**: Establish hybrid cloud/local Ollama integration with graceful fallback and quota management
@@ -164,12 +168,12 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Storage Foundation | 0/3 | Planned | - |
-| 2. Security Filtering | 0/TBD | Not started | - |
+| 1. Storage Foundation | 3/3 | Complete | 2026-02-03 |
+| 2. Security Filtering | 0/5 | Planned | - |
 | 3. LLM Integration | 0/TBD | Not started | - |
 | 4. CLI Interface | 0/TBD | Not started | - |
 | 5. Background Queue | 0/TBD | Not started | - |
