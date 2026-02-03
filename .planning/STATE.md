@@ -5,33 +5,34 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Context continuity without repetition - Claude remembers your preferences, decisions, and project architecture across all sessions without you stating them again, while project teams can share knowledge safely through git.
-**Current focus:** Phase 1 - Storage Foundation
+**Current focus:** Phase 2 - Security Filtering
 
 ## Current Position
 
-Phase: 1 of 9 (Storage Foundation)
-Plan: 2 of 5 complete
+Phase: 2 of 9 (Security Filtering)
+Plan: 1 of 5 complete
 Status: In progress
-Last activity: 2026-02-03 — Completed 01-02-PLAN.md
+Last activity: 2026-02-03 — Completed 02-01-PLAN.md (security foundation)
 
-Progress: [██░░░░░░░░] 20%
+Progress: [████░░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 29 min
-- Total execution time: 1.0 hours
+- Total plans completed: 4
+- Average duration: 19 min
+- Total execution time: 1.4 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-storage-foundation | 2 | 57 min | 29 min |
+| 01-storage-foundation | 3 | 75 min | 25 min |
+| 02-security-filtering | 1 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last plan: 01-02 (21 min)
-- Trend: Improving (36 min → 21 min)
+- Last 3 plans: 01-02 (21 min), 01-03 (18 min), 02-01 (2 min)
+- Trend: Dramatically improved (21 → 18 → 2 min)
 
 *Updated after each plan completion*
 
@@ -52,6 +53,11 @@ Recent decisions affecting current work:
 - .git directory detection for project roots: Standard git convention, reliable across platforms
 - Singleton pattern per scope: Prevents multiple Database objects to same Kuzu path
 - asyncio.run() for async cleanup: Wraps KuzuDriver.close() for synchronous API
+- Kuzu Connection API: Use kuzu.Connection(db) constructor, not db.connect() method
+- Test isolation with monkeypatch: Prevents test pollution of user's real databases
+- Aggressive entropy thresholds: BASE64=3.5, HEX=2.5 for maximum secret detection sensitivity
+- Frozen dataclasses for security: Immutable security findings prevent accidental modification
+- Computed properties pattern: was_modified computed from findings list rather than stored state
 
 ### Pending Todos
 
@@ -63,6 +69,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-03 (plan execution)
-Stopped at: Completed 01-02-PLAN.md (Storage Layer)
+Last session: 2026-02-03 (phase execution)
+Stopped at: Completed 02-01-PLAN.md (security foundation)
 Resume file: None
