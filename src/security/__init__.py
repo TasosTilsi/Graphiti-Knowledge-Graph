@@ -6,8 +6,16 @@ This package provides:
 """
 
 from src.security.exclusions import FileExcluder, is_excluded_file
+from src.security.audit import (
+    SecurityAuditLogger,
+    get_audit_logger,
+    log_sanitization_event,
+)
 
 __all__ = [
     "FileExcluder",
     "is_excluded_file",
+    "SecurityAuditLogger",
+    "get_audit_logger",
+    "log_sanitization_event",
 ]
