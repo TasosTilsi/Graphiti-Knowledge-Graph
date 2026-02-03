@@ -20,6 +20,7 @@ from src.models.security import (
 from src.security.detector import SecretDetector
 from src.security.allowlist import Allowlist
 from src.security.audit import get_audit_logger, log_sanitization_event
+from src.security.exclusions import is_excluded_file
 
 
 # Map DetectionType to placeholder suffix
@@ -133,6 +134,40 @@ class ContentSanitizer:
             findings=findings_to_mask,
             allowlisted_count=allowlisted_count,
         )
+
+    def should_process_file(self, file_path: Path) -> bool:
+        """Check if file should be processed through sanitizer.
+
+        Excluded files should not even reach content sanitization -
+        they are blocked at the file level.
+
+        Args:
+            file_path: Path to check
+
+        Returns:
+            True if file should be processed, False if excluded
+        """
+        if is_excluded_file(file_path):
+            self._audit.log_file_excluded(file_path, "<default_exclusions>")
+            return False
+        return True
+
+    def sanitize_file(self, file_path: Path) -> Optional[SanitizationResult]:
+        """Sanitize content from a file.
+
+        Checks file exclusions first, then sanitizes content.
+
+        Args:
+            file_path: Path to file to sanitize
+
+        Returns:
+            SanitizationResult if processed, None if file excluded
+        """
+        if not self.should_process_file(file_path):
+            return None
+
+        content = file_path.read_text()
+        return self.sanitize(content, str(file_path))
 
 
 def sanitize_content(
