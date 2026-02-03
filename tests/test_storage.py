@@ -10,6 +10,7 @@ import tempfile
 import shutil
 from pathlib import Path
 import pytest
+import kuzu
 from src.storage import GraphSelector, GraphManager
 from src.models import GraphScope
 from src.config import GLOBAL_DB_PATH
@@ -154,7 +155,7 @@ class TestPersistence:
 
         # Use raw Kuzu connection to create a test node
         # (Graphiti's KuzuDriver provides .db attribute for raw access)
-        conn = driver1.db.connect()
+        conn = kuzu.Connection(driver1.db)
         try:
             # Create a simple test table and insert data
             conn.execute("CREATE NODE TABLE IF NOT EXISTS TestNode(id STRING PRIMARY KEY, value STRING)")
@@ -168,10 +169,10 @@ class TestPersistence:
         manager2 = GraphManager()
         driver2 = manager2.get_driver(GraphScope.GLOBAL)
 
-        conn = driver2.db.connect()
+        conn = kuzu.Connection(driver2.db)
         try:
             result = conn.execute("MATCH (n:TestNode {id: 'test1'}) RETURN n.value AS value")
-            rows = list(result)
+            rows = list(result.rows_as_dict())
             assert len(rows) == 1
             assert rows[0]['value'] == 'persisted'
         finally:
@@ -186,7 +187,7 @@ class TestPersistence:
         manager1 = GraphManager()
         driver1 = manager1.get_driver(GraphScope.PROJECT, tmp_path)
 
-        conn = driver1.db.connect()
+        conn = kuzu.Connection(driver1.db)
         try:
             conn.execute("CREATE NODE TABLE IF NOT EXISTS TestNode(id STRING PRIMARY KEY, value STRING)")
             conn.execute("CREATE (:TestNode {id: 'proj1', value: 'project_data'})")
@@ -199,10 +200,10 @@ class TestPersistence:
         manager2 = GraphManager()
         driver2 = manager2.get_driver(GraphScope.PROJECT, tmp_path)
 
-        conn = driver2.db.connect()
+        conn = kuzu.Connection(driver2.db)
         try:
             result = conn.execute("MATCH (n:TestNode {id: 'proj1'}) RETURN n.value AS value")
-            rows = list(result)
+            rows = list(result.rows_as_dict())
             assert len(rows) == 1
             assert rows[0]['value'] == 'project_data'
         finally:
@@ -233,8 +234,8 @@ class TestIsolation:
             project_driver = manager.get_driver(GraphScope.PROJECT, project_root)
 
             # Write different data to each
-            global_conn = global_driver.db.connect()
-            project_conn = project_driver.db.connect()
+            global_conn = kuzu.Connection(global_driver.db)
+            project_conn = kuzu.Connection(project_driver.db)
 
             try:
                 # Global: create table and insert
@@ -247,13 +248,13 @@ class TestIsolation:
 
                 # Verify global only sees global data
                 global_result = global_conn.execute("MATCH (n:IsolationTest) RETURN n.scope AS scope")
-                global_rows = list(global_result)
+                global_rows = list(global_result.rows_as_dict())
                 assert len(global_rows) == 1
                 assert global_rows[0]['scope'] == 'global'
 
                 # Verify project only sees project data
                 project_result = project_conn.execute("MATCH (n:IsolationTest) RETURN n.scope AS scope")
-                project_rows = list(project_result)
+                project_rows = list(project_result.rows_as_dict())
                 assert len(project_rows) == 1
                 assert project_rows[0]['scope'] == 'project'
 
@@ -280,16 +281,16 @@ class TestIsolation:
             assert project_driver is not None
 
             # Both should be usable
-            global_conn = global_driver.db.connect()
-            project_conn = project_driver.db.connect()
+            global_conn = kuzu.Connection(global_driver.db)
+            project_conn = kuzu.Connection(project_driver.db)
 
             try:
                 # Both can execute queries
                 global_result = global_conn.execute("RETURN 'global' AS source")
                 project_result = project_conn.execute("RETURN 'project' AS source")
 
-                assert list(global_result)[0]['source'] == 'global'
-                assert list(project_result)[0]['source'] == 'project'
+                assert list(global_result.rows_as_dict())[0]['source'] == 'global'
+                assert list(project_result.rows_as_dict())[0]['source'] == 'project'
             finally:
                 global_conn.close()
                 project_conn.close()
