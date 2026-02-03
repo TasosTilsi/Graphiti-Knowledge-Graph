@@ -10,29 +10,29 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 2 of 9 (Security Filtering)
-Plan: 1 of 5 complete
+Plan: 2 of 5 complete
 Status: In progress
-Last activity: 2026-02-03 — Completed 02-01-PLAN.md (security foundation)
+Last activity: 2026-02-03 — Completed 02-02-PLAN.md (file exclusion and audit logging)
 
 Progress: [████░░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 19 min
-- Total execution time: 1.4 hours
+- Total plans completed: 5
+- Average duration: 16 min
+- Total execution time: 1.5 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-storage-foundation | 3 | 75 min | 25 min |
-| 02-security-filtering | 1 | 2 min | 2 min |
+| 02-security-filtering | 2 | 4 min | 2 min |
 
 **Recent Trend:**
-- Last 3 plans: 01-02 (21 min), 01-03 (18 min), 02-01 (2 min)
-- Trend: Dramatically improved (21 → 18 → 2 min)
+- Last 3 plans: 01-03 (18 min), 02-01 (2 min), 02-02 (2 min)
+- Trend: Consistently fast (18 → 2 → 2 min)
 
 *Updated after each plan completion*
 
@@ -58,6 +58,10 @@ Recent decisions affecting current work:
 - Aggressive entropy thresholds: BASE64=3.5, HEX=2.5 for maximum secret detection sensitivity
 - Frozen dataclasses for security: Immutable security findings prevent accidental modification
 - Computed properties pattern: was_modified computed from findings list rather than stored state
+- Symlink resolution for security: Always Path.resolve() before pattern matching to prevent bypass attacks
+- Fail-closed security posture: Unresolvable paths are excluded rather than allowed through
+- Singleton audit logger: One SecurityAuditLogger per process to prevent multiple file handles
+- Project-local audit logs: .graphiti/audit.log for per-project security tracking
 
 ### Pending Todos
 
@@ -70,5 +74,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-03 (phase execution)
-Stopped at: Completed 02-01-PLAN.md (security foundation)
+Stopped at: Completed 02-02-PLAN.md (file exclusion and audit logging)
 Resume file: None
