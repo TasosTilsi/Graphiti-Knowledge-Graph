@@ -61,16 +61,17 @@ AUDIT_LOG_MAX_BYTES = 10_000_000  # 10 MB
 AUDIT_LOG_BACKUP_COUNT = 5
 
 # detect-secrets plugin configuration
-DETECT_SECRETS_PLUGINS = {
-    "Base64HighEntropyString": {"base64_limit": BASE64_ENTROPY_LIMIT},
-    "HexHighEntropyString": {"hex_limit": HEX_ENTROPY_LIMIT},
-    "KeywordDetector": {},
-    "AWSKeyDetector": {},
-    "GitHubTokenDetector": {},
-    "JwtTokenDetector": {},
-    "PrivateKeyDetector": {},
-    "BasicAuthDetector": {},
-}
+# Format: List of dicts with 'name' key and optional plugin-specific params
+DETECT_SECRETS_PLUGINS = [
+    {"name": "Base64HighEntropyString", "limit": BASE64_ENTROPY_LIMIT},
+    {"name": "HexHighEntropyString", "limit": HEX_ENTROPY_LIMIT},
+    {"name": "KeywordDetector"},
+    {"name": "AWSKeyDetector"},
+    {"name": "GitHubTokenDetector"},
+    {"name": "JwtTokenDetector"},
+    {"name": "PrivateKeyDetector"},
+    {"name": "BasicAuthDetector"},
+]
 
 __all__ = [
     "BASE64_ENTROPY_LIMIT",
