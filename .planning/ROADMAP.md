@@ -70,10 +70,14 @@ Plans:
   3. Automatic fallback to local Ollama occurs when cloud quota exhausted or network fails
   4. System clearly indicates which LLM provider (cloud vs local) is currently active
   5. All functionality remains operational in local-only fallback mode
-**Plans**: TBD
+**Plans**: 5 plans in 4 waves
 
 Plans:
-- [ ] 03-01: TBD during planning
+- [ ] 03-01-PLAN.md — Configuration foundation with TOML, env overrides, dependencies
+- [ ] 03-02-PLAN.md — OllamaClient with cloud-first failover and tenacity retry
+- [ ] 03-03-PLAN.md — QuotaTracker and LLMRequestQueue for state management
+- [ ] 03-04-PLAN.md — Full integration with public API convenience functions
+- [ ] 03-05-PLAN.md — Comprehensive test suite and verification checkpoint
 
 ### Phase 4: CLI Interface
 **Goal**: Build comprehensive CLI as single source of truth for all knowledge graph operations
@@ -174,7 +178,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 |-------|----------------|--------|-----------|
 | 1. Storage Foundation | 3/3 | Complete | 2026-02-03 |
 | 2. Security Filtering | 5/5 | Complete | 2026-02-04 |
-| 3. LLM Integration | 0/TBD | Not started | - |
+| 3. LLM Integration | 0/5 | Not started | - |
 | 4. CLI Interface | 0/TBD | Not started | - |
 | 5. Background Queue | 0/TBD | Not started | - |
 | 6. Automatic Capture | 0/TBD | Not started | - |
