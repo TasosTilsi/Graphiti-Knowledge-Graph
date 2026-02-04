@@ -66,12 +66,15 @@ class ContentSanitizer:
         """Initialize sanitizer.
 
         Args:
-            project_root: Project root for allowlist location
+            project_root: Project root for allowlist and audit log location
             enable_allowlist: Whether to check allowlist (default True)
         """
+        self._project_root = project_root
         self._detector = SecretDetector()
         self._allowlist = Allowlist(project_root) if enable_allowlist else None
-        self._audit = get_audit_logger()
+        # Pass project_root to audit logger for proper log location
+        log_dir = project_root / ".graphiti" if project_root else None
+        self._audit = get_audit_logger(log_dir)
 
     def sanitize(
         self,

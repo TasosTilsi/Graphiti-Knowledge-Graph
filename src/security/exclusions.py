@@ -63,15 +63,18 @@ class FileExcluder:
 
             # Handle ** glob patterns
             elif '**' in pattern:
-                # Convert **/ to work with fnmatch
-                glob_pattern = pattern.replace('**/', '*')
-                if fnmatch.fnmatch(path_str, f"*{glob_pattern}") or \
-                   fnmatch.fnmatch(path_name, glob_pattern.lstrip('*/')):
-                    return FileExclusionResult(
-                        file_path=file_path,
-                        is_excluded=True,
-                        matched_pattern=pattern
-                    )
+                # Use pathlib.match() for proper ** globbing
+                # This correctly handles **/test_*.py (any test_ file in any subdir)
+                try:
+                    if resolved_path.match(pattern):
+                        return FileExclusionResult(
+                            file_path=file_path,
+                            is_excluded=True,
+                            matched_pattern=pattern
+                        )
+                except (ValueError, OSError):
+                    # Invalid pattern, skip
+                    pass
 
             # Handle simple glob patterns
             else:
