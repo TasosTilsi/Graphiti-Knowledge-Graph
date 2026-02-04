@@ -13,7 +13,7 @@ Transform a basic MCP knowledge graph server into a production-ready, CLI-first 
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Storage Foundation** - Kuzu database with dual-scope graphs
-- [ ] **Phase 2: Security Filtering** - File and entity-level sanitization
+- [x] **Phase 2: Security Filtering** - File and entity-level sanitization
 - [ ] **Phase 3: LLM Integration** - Cloud Ollama with local fallback
 - [ ] **Phase 4: CLI Interface** - Core operations and configuration
 - [ ] **Phase 5: Background Queue** - Async processing for non-blocking operations
@@ -54,11 +54,11 @@ Plans:
 **Plans**: 5 plans in 4 waves
 
 Plans:
-- [ ] 02-01-PLAN.md — Security models and configuration foundation
-- [ ] 02-02-PLAN.md — File exclusions and audit logging
-- [ ] 02-03-PLAN.md — Secret detection and allowlist management
-- [ ] 02-04-PLAN.md — Content sanitizer with typed placeholders
-- [ ] 02-05-PLAN.md — Integration tests and verification checkpoint
+- [x] 02-01-PLAN.md — Security models and configuration foundation
+- [x] 02-02-PLAN.md — File exclusions and audit logging
+- [x] 02-03-PLAN.md — Secret detection and allowlist management
+- [x] 02-04-PLAN.md — Content sanitizer with typed placeholders
+- [x] 02-05-PLAN.md — Integration tests and verification checkpoint
 
 ### Phase 3: LLM Integration
 **Goal**: Establish hybrid cloud/local Ollama integration with graceful fallback and quota management
@@ -173,7 +173,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Storage Foundation | 3/3 | Complete | 2026-02-03 |
-| 2. Security Filtering | 0/5 | Planned | - |
+| 2. Security Filtering | 5/5 | Complete | 2026-02-04 |
 | 3. LLM Integration | 0/TBD | Not started | - |
 | 4. CLI Interface | 0/TBD | Not started | - |
 | 5. Background Queue | 0/TBD | Not started | - |

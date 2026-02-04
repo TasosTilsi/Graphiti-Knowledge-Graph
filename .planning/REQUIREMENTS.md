@@ -419,27 +419,43 @@ These are explicitly NOT included in v1:
 
 ---
 
-## Requirement-to-Phase Mapping
+## Traceability
 
-Phases will address requirements in this order:
+Mapping of requirements to phases in ROADMAP.md:
 
-| Phase | Requirements | Rationale |
-|-------|-------------|-----------|
-| 1. Storage Foundation | R1 (Kuzu + dual-scope) | Foundational dependency |
-| 2. Security Filtering | R3 (file + entity sanitization) | Must precede git integration |
-| 3. Core Engine | R5 (LLM integration + fallback) | Required for capture |
-| 4. CLI Interface | R2 (all CLI operations) | Single source of truth |
-| 5. Background Queue | R4.3 (async processing) | Required for hooks |
-| 6. Automatic Capture | R4.1, R4.2 (conversation + git hooks) | Depends on queue |
-| 7. Git Integration | R8 (git-safe graphs) | Depends on security |
-| 8. MCP Server | R6 (tools + context injection) | Wrapper around CLI |
-| 9. Smart Retention | R7 (expiration + reinforcement) | Refinement |
-| 10. Performance | R10 (latency + compression) | Optimization |
-| 11. Context Refresh | R11 (long conversations) | Edge case handling |
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| R1.1: Kuzu Database Integration | Phase 1: Storage Foundation | Pending |
+| R1.2: Dual-Scope Storage | Phase 1: Storage Foundation | Pending |
+| R3.1: File-Level Exclusions | Phase 2: Security Filtering | Complete |
+| R3.2: Entity-Level Sanitization | Phase 2: Security Filtering | Complete |
+| R3.3: Pre-Commit Validation | Phase 2: Security Filtering | Complete |
+| R5.1: Cloud Ollama Primary | Phase 3: LLM Integration | Pending |
+| R5.2: Local Ollama Fallback | Phase 3: LLM Integration | Pending |
+| R5.3: Fallback Hierarchy | Phase 3: LLM Integration | Pending |
+| R2.1: Core Operations | Phase 4: CLI Interface | Pending |
+| R2.2: Configuration Management | Phase 4: CLI Interface | Pending |
+| R2.3: Health & Diagnostics | Phase 4: CLI Interface | Pending |
+| R4.3: Background Processing | Phase 5: Background Queue | Pending |
+| R4.1: Conversation-Based Capture | Phase 6: Automatic Capture | Pending |
+| R4.2: Git Post-Commit Hook | Phase 6: Automatic Capture | Pending |
+| R8.1: Git-Safe Knowledge Graphs | Phase 7: Git Integration | Pending |
+| R8.2: Merge Conflict Prevention | Phase 7: Git Integration | Pending |
+| R6.1: MCP Server Tools | Phase 8: MCP Server | Pending |
+| R6.2: Context Injection Hooks | Phase 8: MCP Server | Pending |
+| R6.3: Conversation Capture Hook | Phase 8: MCP Server | Pending |
+| R7.1: Time-Based Expiration | Phase 9: Advanced Features | Pending |
+| R7.2: Reinforcement-Based Retention | Phase 9: Advanced Features | Pending |
+| R9.1: Decisions-Only Mode | Phase 9: Advanced Features | Pending |
+| R9.2: Decisions-and-Patterns Mode | Phase 9: Advanced Features | Pending |
+| R10.1: Latency Budgets | Phase 9: Advanced Features | Pending |
+| R10.2: Context Compression | Phase 9: Advanced Features | Pending |
+| R11.1: Periodic Context Refresh | Phase 9: Advanced Features | Pending |
+| R11.2: Conversation Forking | Phase 9: Advanced Features | Pending |
 
-**Critical path:** R1 → R3 → R5 → R2 → R4.3 → R4.1/R4.2 → R8
+**Coverage:** 27/27 requirements mapped (100%)
 
 ---
 
 *Requirements defined: 2026-02-02*
-*Status: Ready for roadmap creation*
+*Status: Mapped to roadmap phases*
