@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 3 of 9 (LLM Integration)
-Plan: 3 of 5 complete
+Plan: 4 of 5 complete
 Status: In progress
-Last activity: 2026-02-05 — Completed 03-03-PLAN.md (Quota tracking and request queue)
+Last activity: 2026-02-05 — Completed 03-04-PLAN.md (Unified client integration and public API)
 
-Progress: [█████████░] 11 of 13 plans complete (85%)
+Progress: [█████████░] 12 of 13 plans complete (92%)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
-- Average duration: 12 min
-- Total execution time: 2h 10min
+- Total plans completed: 12
+- Average duration: 13 min
+- Total execution time: 2h 41min
 
 **By Phase:**
 
@@ -29,11 +29,11 @@ Progress: [█████████░] 11 of 13 plans complete (85%)
 |-------|-------|-------|----------|
 | 01-storage-foundation | 3 | 75 min | 25 min |
 | 02-security-filtering | 5 | 37 min | 7.4 min |
-| 03-llm-integration | 3 | 7 min | 2.3 min |
+| 03-llm-integration | 4 | 38 min | 9.5 min |
 
 **Recent Trend:**
-- Last 3 plans: 03-01 (3 min), 03-02 (2 min), 03-03 (2 min)
-- Trend: Consistently fast (3 → 2 → 2 min)
+- Last 3 plans: 03-02 (2 min), 03-03 (2 min), 03-04 (31 min)
+- Trend: Increased complexity (2 → 2 → 31 min)
 
 *Updated after each plan completion*
 
@@ -85,6 +85,10 @@ Recent decisions affecting current work:
 - SQLite-backed request queue: Persistent queue via persistqueue.SQLiteAckQueue with ack/nack pattern
 - Bounded queue with pruning: Remove oldest items when max_size reached to prevent disk fill
 - TTL-based expiry: Skip stale items older than configured TTL during processing
+- Integrated quota tracking: OllamaClient tracks quota from headers or local count after cloud calls
+- Queue-and-raise pattern: Failed requests queued with ID, exception includes tracking info
+- Singleton LLM client: get_client() provides shared instance for quota/cooldown/queue state
+- Convenience API: chat(), generate(), embed() functions at module level for clean imports
 
 ### Pending Todos
 
@@ -97,7 +101,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-05 (phase execution)
-Stopped at: Completed 03-02-PLAN.md (Cloud client with failover)
+Stopped at: Completed 03-04-PLAN.md (Unified client integration and public API)
 Resume file: None
 
-**Phase 3 Plan 02 Complete:** OllamaClient implemented with cloud-first failover, tenacity retry, 429-only cooldown, state persistence, and local fallback with largest model selection. Ready for 03-04 (Unified Client integration).
+**Phase 3 Plan 04 Complete:** OllamaClient now fully integrated with quota tracking (headers or local count), request queueing (with tracking IDs), and clean public API (get_client() singleton, chat()/generate()/embed() convenience functions, get_status() monitoring). Complete LLM system ready for production use.
