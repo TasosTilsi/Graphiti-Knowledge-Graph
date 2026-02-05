@@ -321,22 +321,27 @@ class TestProcessAll:
 class TestClearStale:
     """Test stale item cleanup."""
 
-    def test_clear_stale_removes_old_items(self, queue):
+    def test_clear_stale_removes_old_items(self, test_config, tmp_path, monkeypatch):
         """clear_stale removes items older than TTL."""
-        # Add items
-        queue.enqueue("chat", {"num": 1}, "error1")
-        queue.enqueue("chat", {"num": 2}, "error2")
+        queue_path = tmp_path / "stale_queue"
 
-        # Manually age one item
-        item = queue._queue.get(block=False)
-        item['timestamp'] = time.time() - (2 * 3600)  # 2 hours old (TTL is 1 hour)
-        queue._queue.nack(item)
+        # Enqueue item at "old" time (2 hours ago)
+        old_time = time.time() - (2 * 3600)
+        monkeypatch.setattr(time, "time", lambda: old_time)
+        old_queue = LLMRequestQueue(test_config, queue_path=queue_path)
+        old_queue.enqueue("chat", {"num": 1}, "error1")
+
+        # Enqueue item at "current" time
+        current_time = time.time()  # real time (monkeypatch still active)
+        monkeypatch.undo()  # restore real time
+        fresh_queue = LLMRequestQueue(test_config, queue_path=queue_path)
+        fresh_queue.enqueue("chat", {"num": 2}, "error2")
 
         # Clear stale
-        removed = queue.clear_stale()
+        removed = fresh_queue.clear_stale()
 
         assert removed == 1
-        assert queue.get_pending_count() == 1  # One fresh item remains
+        assert fresh_queue.get_pending_count() == 1  # One fresh item remains
 
     def test_clear_stale_keeps_fresh_items(self, queue):
         """clear_stale keeps items within TTL."""

@@ -187,8 +187,8 @@ class LLMRequestQueue:
     def process_all(self, processor_fn: Callable[[str, dict], Any]) -> tuple[int, int]:
         """Process all pending items in queue.
 
-        Continues until queue empty or all items fail.
-        Useful for CLI retry command or background processing.
+        Each item is attempted exactly once. Failed items remain in the queue
+        for future retry but are not re-attempted in this batch.
 
         Args:
             processor_fn: Function to process items. Same signature as process_one.
@@ -199,18 +199,46 @@ class LLMRequestQueue:
         success_count = 0
         failure_count = 0
 
-        while True:
+        # Dequeue all items upfront to avoid nack-cycling
+        items = []
+        items_to_process = self.get_pending_count()
+        for _ in range(items_to_process):
             try:
-                processed = self.process_one(processor_fn)
-                if not processed:
-                    # Queue empty
-                    break
-                success_count += 1
-
+                item = self._queue.get(block=False)
+                items.append(item)
             except Exception:
-                # Item failed, was nacked, will retry later
+                break
+
+        for item in items:
+            # Check if item is stale
+            item_age = time.time() - item['timestamp']
+            if item_age > self._item_ttl_seconds:
+                self._queue.ack(item)
+                self._logger.debug(
+                    "stale_item_skipped",
+                    request_id=item['id'],
+                    age_hours=item_age / 3600,
+                )
+                continue
+
+            try:
+                processor_fn(item['operation'], item['params'])
+                self._queue.ack(item)
+                success_count += 1
+                self._logger.info(
+                    "queue_item_processed",
+                    request_id=item['id'],
+                    operation=item['operation'],
+                )
+            except Exception as e:
+                self._queue.nack(item)
                 failure_count += 1
-                # Continue to next item
+                self._logger.warning(
+                    "queue_item_failed",
+                    request_id=item['id'],
+                    operation=item['operation'],
+                    error=str(e),
+                )
 
         self._logger.info(
             "queue_batch_processed",
