@@ -21,6 +21,8 @@ from tenacity import (
 )
 
 from src.llm.config import LLMConfig, get_state_path
+from src.llm.quota import QuotaTracker
+from src.llm.queue import LLMRequestQueue
 
 logger = structlog.get_logger()
 
@@ -101,6 +103,10 @@ class OllamaClient:
         # Initialize cooldown state
         self.cloud_cooldown_until = 0  # Unix timestamp
         self._load_cooldown_state()
+
+        # Initialize quota tracker and request queue
+        self._quota_tracker = QuotaTracker(config.quota_warning_threshold)
+        self._request_queue = LLMRequestQueue(config)
 
         # Handle local_auto_start config
         # TODO: local_auto_start implementation deferred. Config field exists for future use.
@@ -250,6 +256,16 @@ class OllamaClient:
 
         result = _do_retry()
         self._current_provider = "cloud"
+
+        # Track quota usage after successful cloud call
+        # Note: ollama library may not expose raw httpx response headers
+        # Check if response has headers attribute, otherwise fall back to local counting
+        if hasattr(result, 'headers') and result.headers:
+            self._quota_tracker.update_from_headers(result.headers)
+        else:
+            # Fallback: increment local count
+            self._quota_tracker.increment_local_count()
+
         return result
 
     def _check_local_models(self) -> list[str]:
@@ -354,19 +370,31 @@ class OllamaClient:
             Chat completion response
 
         Raises:
-            LLMUnavailableError: If both cloud and local fail
+            LLMUnavailableError: If both cloud and local fail (request queued with ID)
         """
-        # Try cloud if available
-        if self._is_cloud_available():
-            try:
-                cloud_model = model or self.config.local_models[0]  # Default to first configured
-                return self._retry_cloud("chat", model=cloud_model, messages=messages, **kwargs)
-            except ResponseError as e:
-                self._handle_cloud_error(e)
-                # Fall through to local
+        try:
+            # Try cloud if available
+            if self._is_cloud_available():
+                try:
+                    cloud_model = model or self.config.local_models[0]  # Default to first configured
+                    return self._retry_cloud("chat", model=cloud_model, messages=messages, **kwargs)
+                except ResponseError as e:
+                    self._handle_cloud_error(e)
+                    # Fall through to local
 
-        # Fallback to local
-        return self._try_local("chat", model, messages=messages, **kwargs)
+            # Fallback to local
+            return self._try_local("chat", model, messages=messages, **kwargs)
+
+        except LLMUnavailableError as e:
+            # Both cloud and local failed - queue the request
+            params = {"model": model, "messages": messages, **kwargs}
+            request_id = self._request_queue.enqueue("chat", params, str(e))
+
+            # Raise with queue ID
+            raise LLMUnavailableError(
+                f"LLM unavailable. Request queued for retry. ID: {request_id}",
+                request_id=request_id
+            ) from e
 
     def generate(self, model: str | None = None, prompt: str | None = None, **kwargs):
         """Send generate request with automatic failover.
@@ -380,19 +408,31 @@ class OllamaClient:
             Generate response
 
         Raises:
-            LLMUnavailableError: If both cloud and local fail
+            LLMUnavailableError: If both cloud and local fail (request queued with ID)
         """
-        # Try cloud if available
-        if self._is_cloud_available():
-            try:
-                cloud_model = model or self.config.local_models[0]  # Default to first configured
-                return self._retry_cloud("generate", model=cloud_model, prompt=prompt, **kwargs)
-            except ResponseError as e:
-                self._handle_cloud_error(e)
-                # Fall through to local
+        try:
+            # Try cloud if available
+            if self._is_cloud_available():
+                try:
+                    cloud_model = model or self.config.local_models[0]  # Default to first configured
+                    return self._retry_cloud("generate", model=cloud_model, prompt=prompt, **kwargs)
+                except ResponseError as e:
+                    self._handle_cloud_error(e)
+                    # Fall through to local
 
-        # Fallback to local
-        return self._try_local("generate", model, prompt=prompt, **kwargs)
+            # Fallback to local
+            return self._try_local("generate", model, prompt=prompt, **kwargs)
+
+        except LLMUnavailableError as e:
+            # Both cloud and local failed - queue the request
+            params = {"model": model, "prompt": prompt, **kwargs}
+            request_id = self._request_queue.enqueue("generate", params, str(e))
+
+            # Raise with queue ID
+            raise LLMUnavailableError(
+                f"LLM unavailable. Request queued for retry. ID: {request_id}",
+                request_id=request_id
+            ) from e
 
     def embed(self, model: str | None = None, input: str | list[str] | None = None, **kwargs):
         """Send embeddings request with automatic failover.
@@ -406,21 +446,33 @@ class OllamaClient:
             Embeddings response
 
         Raises:
-            LLMUnavailableError: If both cloud and local fail
+            LLMUnavailableError: If both cloud and local fail (request queued with ID)
         """
-        # Default to embeddings model
-        embed_model = model or self.config.embeddings_model
+        try:
+            # Default to embeddings model
+            embed_model = model or self.config.embeddings_model
 
-        # Try cloud if available
-        if self._is_cloud_available():
-            try:
-                return self._retry_cloud("embed", model=embed_model, input=input, **kwargs)
-            except ResponseError as e:
-                self._handle_cloud_error(e)
-                # Fall through to local
+            # Try cloud if available
+            if self._is_cloud_available():
+                try:
+                    return self._retry_cloud("embed", model=embed_model, input=input, **kwargs)
+                except ResponseError as e:
+                    self._handle_cloud_error(e)
+                    # Fall through to local
 
-        # Fallback to local
-        return self._try_local("embed", embed_model, input=input, **kwargs)
+            # Fallback to local
+            return self._try_local("embed", embed_model, input=input, **kwargs)
+
+        except LLMUnavailableError as e:
+            # Both cloud and local failed - queue the request
+            params = {"model": embed_model, "input": input, **kwargs}
+            request_id = self._request_queue.enqueue("embed", params, str(e))
+
+            # Raise with queue ID
+            raise LLMUnavailableError(
+                f"LLM unavailable. Request queued for retry. ID: {request_id}",
+                request_id=request_id
+            ) from e
 
     @property
     def current_provider(self) -> str:
@@ -430,6 +482,53 @@ class OllamaClient:
             "cloud", "local", or "none"
         """
         return self._current_provider
+
+    def get_quota_status(self):
+        """Get current quota status from tracker.
+
+        Returns:
+            QuotaInfo with limit, remaining, usage details
+        """
+        return self._quota_tracker.get_status()
+
+    def get_queue_stats(self) -> dict:
+        """Get request queue statistics.
+
+        Returns:
+            Dict with pending count, max size, TTL hours
+        """
+        return self._request_queue.get_queue_stats()
+
+    def process_queue(self) -> tuple[int, int]:
+        """Process all queued requests.
+
+        Attempts to retry all failed requests in the queue.
+        Items are removed on success, kept on failure for later retry.
+
+        Returns:
+            Tuple of (success_count, failure_count)
+        """
+        def processor(operation: str, params: dict):
+            """Process a queued request by calling the appropriate method."""
+            if operation == "chat":
+                return self.chat(**params)
+            elif operation == "generate":
+                return self.generate(**params)
+            elif operation == "embed":
+                return self.embed(**params)
+            else:
+                raise ValueError(f"Unknown operation: {operation}")
+
+        success, failure = self._request_queue.process_all(processor)
+
+        logger.info(
+            "queue_processing_complete",
+            success=success,
+            failure=failure,
+            remaining=self._request_queue.get_pending_count()
+        )
+
+        return (success, failure)
 
 
 def get_largest_available_model(models: list[str], available: list[str]) -> str | None:
