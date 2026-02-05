@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 3 of 9 (LLM Integration)
-Plan: 1 of 5 complete
+Plan: 3 of 5 complete
 Status: In progress
-Last activity: 2026-02-05 — Completed 03-01-PLAN.md (LLM configuration foundation)
+Last activity: 2026-02-05 — Completed 03-03-PLAN.md (Quota tracking and request queue)
 
-Progress: [█████████░] 9 of 13 plans complete (69%)
+Progress: [█████████░] 11 of 13 plans complete (85%)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
-- Average duration: 14 min
-- Total execution time: 2h 6min
+- Total plans completed: 11
+- Average duration: 12 min
+- Total execution time: 2h 10min
 
 **By Phase:**
 
@@ -29,11 +29,11 @@ Progress: [█████████░] 9 of 13 plans complete (69%)
 |-------|-------|-------|----------|
 | 01-storage-foundation | 3 | 75 min | 25 min |
 | 02-security-filtering | 5 | 37 min | 7.4 min |
-| 03-llm-integration | 1 | 3 min | 3 min |
+| 03-llm-integration | 3 | 7 min | 2.3 min |
 
 **Recent Trend:**
-- Last 3 plans: 02-04 (3 min), 02-05 (15 min), 03-01 (3 min)
-- Trend: Fast execution (3 → 15 → 3 min)
+- Last 3 plans: 03-01 (3 min), 03-02 (2 min), 03-03 (2 min)
+- Trend: Consistently fast (3 → 2 → 2 min)
 
 *Updated after each plan completion*
 
@@ -76,6 +76,10 @@ Recent decisions affecting current work:
 - TOML configuration format: Python 3.11+ stdlib support, human-readable, type-safe parsing
 - Environment variables override TOML: Security best practice for API keys, 12-factor app pattern
 - Extensive configuration docs: WHY/WHEN/GOTCHA documentation for every configurable option
+- Header-based quota tracking: Parse x-ratelimit-* headers with local counting fallback
+- SQLite-backed request queue: Persistent queue via persistqueue.SQLiteAckQueue with ack/nack pattern
+- Bounded queue with pruning: Remove oldest items when max_size reached to prevent disk fill
+- TTL-based expiry: Skip stale items older than configured TTL during processing
 
 ### Pending Todos
 
@@ -88,7 +92,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-05 (phase execution)
-Stopped at: Completed 03-01-PLAN.md (LLM configuration foundation)
+Stopped at: Completed 03-03-PLAN.md (Quota tracking and request queue)
 Resume file: None
 
-**Phase 3 Plan 01 Complete:** LLM configuration foundation established with TOML-based config, frozen dataclass, and extensive documentation. Ready for 03-02 (Cloud Client).
+**Phase 3 Plan 03 Complete:** QuotaTracker and LLMRequestQueue implemented with header parsing, local fallback, SQLite persistence, bounded size, and TTL support. Ready for 03-04 (Unified Client integration).
