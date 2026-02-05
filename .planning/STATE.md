@@ -76,6 +76,11 @@ Recent decisions affecting current work:
 - TOML configuration format: Python 3.11+ stdlib support, human-readable, type-safe parsing
 - Environment variables override TOML: Security best practice for API keys, 12-factor app pattern
 - Extensive configuration docs: WHY/WHEN/GOTCHA documentation for every configurable option
+- Cloud-first failover pattern: Try cloud Ollama first, fall back to local on errors
+- 429-only cooldown: Only rate-limit errors trigger cooldown; other errors retry cloud on next request
+- Fixed delay retry: 10s fixed delay between retries (not exponential) for predictability
+- Cooldown state persistence: Persist to JSON to survive restarts and prevent re-hitting rate limits
+- Largest model selection: Select largest available model from fallback chain based on parameter count
 - Header-based quota tracking: Parse x-ratelimit-* headers with local counting fallback
 - SQLite-backed request queue: Persistent queue via persistqueue.SQLiteAckQueue with ack/nack pattern
 - Bounded queue with pruning: Remove oldest items when max_size reached to prevent disk fill
@@ -92,7 +97,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-05 (phase execution)
-Stopped at: Completed 03-03-PLAN.md (Quota tracking and request queue)
+Stopped at: Completed 03-02-PLAN.md (Cloud client with failover)
 Resume file: None
 
-**Phase 3 Plan 03 Complete:** QuotaTracker and LLMRequestQueue implemented with header parsing, local fallback, SQLite persistence, bounded size, and TTL support. Ready for 03-04 (Unified Client integration).
+**Phase 3 Plan 02 Complete:** OllamaClient implemented with cloud-first failover, tenacity retry, 429-only cooldown, state persistence, and local fallback with largest model selection. Ready for 03-04 (Unified Client integration).
