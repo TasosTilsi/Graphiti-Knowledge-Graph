@@ -14,6 +14,7 @@ import httpx
 import structlog
 from ollama import Client, ResponseError
 from tenacity import (
+    RetryError,
     retry,
     retry_if_exception_type,
     stop_after_attempt,
@@ -378,8 +379,14 @@ class OllamaClient:
                 try:
                     cloud_model = model or self.config.local_models[0]  # Default to first configured
                     return self._retry_cloud("chat", model=cloud_model, messages=messages, **kwargs)
-                except ResponseError as e:
-                    self._handle_cloud_error(e)
+                except (ResponseError, RetryError) as e:
+                    # Extract ResponseError from RetryError if needed
+                    if isinstance(e, RetryError):
+                        # Get the last exception from the retry
+                        if hasattr(e.last_attempt, 'exception') and e.last_attempt.exception():
+                            e = e.last_attempt.exception()
+                    if isinstance(e, ResponseError):
+                        self._handle_cloud_error(e)
                     # Fall through to local
 
             # Fallback to local
@@ -416,8 +423,13 @@ class OllamaClient:
                 try:
                     cloud_model = model or self.config.local_models[0]  # Default to first configured
                     return self._retry_cloud("generate", model=cloud_model, prompt=prompt, **kwargs)
-                except ResponseError as e:
-                    self._handle_cloud_error(e)
+                except (ResponseError, RetryError) as e:
+                    # Extract ResponseError from RetryError if needed
+                    if isinstance(e, RetryError):
+                        if hasattr(e.last_attempt, 'exception') and e.last_attempt.exception():
+                            e = e.last_attempt.exception()
+                    if isinstance(e, ResponseError):
+                        self._handle_cloud_error(e)
                     # Fall through to local
 
             # Fallback to local
@@ -456,8 +468,13 @@ class OllamaClient:
             if self._is_cloud_available():
                 try:
                     return self._retry_cloud("embed", model=embed_model, input=input, **kwargs)
-                except ResponseError as e:
-                    self._handle_cloud_error(e)
+                except (ResponseError, RetryError) as e:
+                    # Extract ResponseError from RetryError if needed
+                    if isinstance(e, RetryError):
+                        if hasattr(e.last_attempt, 'exception') and e.last_attempt.exception():
+                            e = e.last_attempt.exception()
+                    if isinstance(e, ResponseError):
+                        self._handle_cloud_error(e)
                     # Fall through to local
 
             # Fallback to local
