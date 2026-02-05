@@ -1,0 +1,152 @@
+# LLM Configuration Template
+#
+# This file provides default configuration for LLM operations in graphiti-knowledge-graph.
+# Copy to ~/.graphiti/llm.toml and customize as needed.
+#
+# CONFIGURATION PRIORITY:
+# 1. Environment variables (highest priority)
+# 2. This TOML file
+# 3. Hardcoded defaults in src/llm/config.py
+#
+# ENVIRONMENT VARIABLE OVERRIDES:
+# - OLLAMA_API_KEY: Overrides [cloud].api_key
+# - OLLAMA_CLOUD_ENDPOINT: Overrides [cloud].endpoint
+# - OLLAMA_LOCAL_ENDPOINT: Overrides [local].endpoint
+
+# ============================================================================
+# CLOUD ENDPOINT CONFIGURATION
+# ============================================================================
+# Cloud Ollama provides free tier access to models like gemma2:9b.
+# This is the PRIMARY endpoint - local is only used when cloud fails.
+
+[cloud]
+# WHAT: Cloud Ollama API endpoint URL
+# WHY: Default points to official Ollama cloud service
+# WHEN TO CHANGE: Only if using a self-hosted cloud proxy
+# GOTCHA: Must include protocol (https://)
+endpoint = "https://ollama.com"
+
+# WHAT: API key for cloud authentication
+# WHY: Defaults to None because env var (OLLAMA_API_KEY) is preferred for security
+# WHEN TO CHANGE: Only set here if you can't use environment variables
+# GOTCHA: Storing keys in TOML exposes them to git - use env vars instead!
+api_key = ""  # Leave empty, use OLLAMA_API_KEY environment variable
+
+# ============================================================================
+# LOCAL ENDPOINT CONFIGURATION
+# ============================================================================
+# Local Ollama server is FALLBACK ONLY - used when cloud quota exhausted.
+# Running local models requires significant RAM (9B model = ~6GB RAM).
+
+[local]
+# WHAT: Local Ollama server endpoint URL
+# WHY: Standard localhost:11434 is Ollama's default port
+# WHEN TO CHANGE: If running Ollama on different port or remote machine
+# GOTCHA: Must be accessible from this machine
+endpoint = "http://localhost:11434"
+
+# WHAT: Automatically start local Ollama server if not running
+# WHY: Defaults to false - we don't want to auto-start heavy services
+# WHEN TO CHANGE: Set true only if you want automatic local server management
+# GOTCHA: Requires Ollama CLI installed and in PATH
+auto_start = false
+
+# WHAT: Models to try when falling back to local (in order)
+# WHY: gemma2:9b is good quality, llama3.2:3b is faster/lighter fallback
+# WHEN TO CHANGE: Add your preferred models or reorder by priority
+# GOTCHA: Models must be pre-pulled with `ollama pull <model>`
+models = ["gemma2:9b", "llama3.2:3b"]
+
+# ============================================================================
+# EMBEDDINGS CONFIGURATION
+# ============================================================================
+# Embeddings convert text to vectors for semantic search.
+# Used for entity/relationship matching in knowledge graph.
+
+[embeddings]
+# WHAT: Model used for generating embeddings
+# WHY: nomic-embed-text is optimized for semantic similarity (what we need)
+# WHEN TO CHANGE: If you need multilingual support or different embedding dimensions
+# GOTCHA: Changing this invalidates existing embeddings - requires full reindex
+model = "nomic-embed-text"
+
+# ============================================================================
+# RETRY CONFIGURATION
+# ============================================================================
+# Transient failures (network hiccups, temporary API issues) should be retried.
+# This uses FIXED DELAY (not exponential) per CONTEXT.md simplicity requirement.
+
+[retry]
+# WHAT: Maximum number of retry attempts (includes initial attempt)
+# WHY: 3 attempts = 1 initial + 2 retries balances reliability vs latency
+# WHEN TO CHANGE: Increase for flaky networks, decrease for faster failure feedback
+# GOTCHA: Total time = max_attempts × (request_timeout + delay)
+max_attempts = 3
+
+# WHAT: Fixed delay between retry attempts (seconds)
+# WHY: 10 seconds gives temporary issues time to resolve without long waits
+# WHEN TO CHANGE: Increase for known slow recovery times, decrease for faster APIs
+# GOTCHA: This is FIXED delay, not exponential backoff (simpler, more predictable)
+delay_seconds = 10
+
+# ============================================================================
+# TIMEOUT CONFIGURATION
+# ============================================================================
+# Timeouts prevent hanging on stalled requests.
+# LLM requests can be slow (especially for long contexts), so generous timeout.
+
+[timeout]
+# WHAT: Maximum time to wait for a single LLM request (seconds)
+# WHY: 90 seconds handles most requests, even large context windows
+# WHEN TO CHANGE: Increase for very large contexts, decrease for faster failure
+# GOTCHA: This is PER REQUEST - total time with retries is longer
+request_seconds = 90
+
+# ============================================================================
+# QUOTA MANAGEMENT
+# ============================================================================
+# Cloud APIs have rate limits and quotas. We track these to avoid hitting hard limits.
+
+[quota]
+# WHAT: Threshold (0.0-1.0) at which to warn about quota usage
+# WHY: 0.8 (80%) gives early warning before hitting 100% limit
+# WHEN TO CHANGE: Increase to 0.9 for less noisy warnings, decrease to 0.7 for more headroom
+# GOTCHA: Only affects logging - doesn't prevent quota exhaustion
+warning_threshold = 0.8
+
+# WHAT: Cooldown period after hitting rate limit (seconds)
+# WHY: 600 (10 minutes) is typical API rate limit window
+# WHEN TO CHANGE: Match your API's rate limit reset period if documented
+# GOTCHA: This ONLY applies to 429 (rate limit) errors - other failures retry immediately
+rate_limit_cooldown_seconds = 600
+
+# ============================================================================
+# LOGGING CONFIGURATION
+# ============================================================================
+# Controls what gets logged during LLM operations.
+
+[logging]
+# WHAT: Log every time we fail over from cloud to local
+# WHY: True by default - failover is important to track for debugging
+# WHEN TO CHANGE: Set false only if your logs are too noisy
+# GOTCHA: Even if false, errors are still logged - this just controls INFO-level failover events
+failover = true
+
+# ============================================================================
+# QUEUE CONFIGURATION
+# ============================================================================
+# Background processing uses persistent queue for reliability.
+# These settings prevent unbounded growth and stale requests.
+
+[queue]
+# WHAT: Maximum number of items allowed in queue
+# WHY: 1000 prevents unbounded memory/disk growth
+# WHEN TO CHANGE: Increase for high-volume projects, decrease for resource-constrained systems
+# GOTCHA: When full, oldest items are dropped (not newest) - see RESEARCH.md pitfall 8
+max_size = 1000
+
+# WHAT: Maximum age of queued items before being skipped (hours)
+# WHY: 24 hours - stale context requests aren't useful for knowledge graph
+# WHEN TO CHANGE: Increase if your background worker runs infrequently
+# GOTCHA: Stale items are SKIPPED, not deleted - they remain in queue for audit
+item_ttl_hours = 24
