@@ -57,9 +57,26 @@ def cli_entry():
         sys.exit(1)  # EXIT_ERROR
 
 
+# Command imports
+from src.cli.commands.summarize import summarize_command
+from src.cli.commands.compact import compact_command
+
+
+# Register commands
+app.command(
+    name="summarize",
+    help="Generate a summary of the knowledge graph"
+)(summarize_command)
+
+app.command(
+    name="compact",
+    help="Compact the knowledge graph by merging duplicates"
+)(compact_command)
+
+
 # Command registration will happen in subsequent plans
 # Commands to be added:
 # - add (plan 02)
 # - search (plan 03)
-# - delete, list, summarize (plan 04)
-# - compact, config, health, show (plan 05)
+# - delete, list (plan 04)
+# - config, health, show (plan 05)
