@@ -58,11 +58,19 @@ def cli_entry():
 
 
 # Command imports
+from src.cli.commands.add import add_command
+from src.cli.commands.search import search_command
 from src.cli.commands.summarize import summarize_command
 from src.cli.commands.compact import compact_command
+from src.cli.commands.list_cmd import list_command
+from src.cli.commands.show import show_command
+from src.cli.commands.delete import delete_command
 
 
 # Register commands
+app.command(name="add", help="Add content to the knowledge graph")(add_command)
+app.command(name="search", help="Search the knowledge graph")(search_command)
+
 app.command(
     name="summarize",
     help="Generate a summary of the knowledge graph"
@@ -73,10 +81,22 @@ app.command(
     help="Compact the knowledge graph by merging duplicates"
 )(compact_command)
 
+app.command(
+    name="list",
+    help="List entities in the knowledge graph"
+)(list_command)
+
+app.command(
+    name="show",
+    help="Show detailed entity information"
+)(show_command)
+
+app.command(
+    name="delete",
+    help="Delete entities from the knowledge graph"
+)(delete_command)
+
 
 # Command registration will happen in subsequent plans
 # Commands to be added:
-# - add (plan 02)
-# - search (plan 03)
-# - delete, list (plan 04)
-# - config, health, show (plan 05)
+# - config, health (plan 05 or later)
