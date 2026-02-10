@@ -65,6 +65,8 @@ from src.cli.commands.compact import compact_command
 from src.cli.commands.list_cmd import list_command
 from src.cli.commands.show import show_command
 from src.cli.commands.delete import delete_command
+from src.cli.commands.config import config_command
+from src.cli.commands.health import health_command
 
 
 # Register commands
@@ -96,7 +98,15 @@ app.command(
     help="Delete entities from the knowledge graph"
 )(delete_command)
 
+app.command(
+    name="config",
+    help="View and modify configuration"
+)(config_command)
 
-# Command registration will happen in subsequent plans
-# Commands to be added:
-# - config, health (plan 05 or later)
+app.command(
+    name="health",
+    help="Check system health and diagnostics"
+)(health_command)
+
+
+# All 9 commands registered: add, search, list, show, delete, summarize, compact, config, health
