@@ -43,6 +43,7 @@ Progress: [████████████░░░░░░░░░░░
 |------|--------------|-------|-------|
 | Phase 04 P01 | 161 | 2 tasks | 6 files |
 | Phase 04 P04 | 141 | 2 tasks | 3 files |
+| Phase 04 P03 | 180 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,9 @@ Recent decisions affecting current work:
 - Mock data stubs for graph operations: Enables CLI testing before graph implementation with clear TODO markers for integration
 - Rich Panel with Markdown for summaries: Professional formatted output respecting terminal capabilities
 - confirm_action() for destructive ops: Single confirmation with --force bypass balances safety and UX
+- list_cmd.py filename: Avoid shadowing Python's built-in list keyword
+- Ambiguous name resolution pattern: Interactive numbered list prompts for user selection in show/delete commands
+- Delete --force no short flag: Avoid conflict with --format (-f), makes destructive ops more explicit
 
 ### Pending Todos
 
@@ -112,7 +116,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-11 (phase execution)
-Stopped at: Completed 04-04-PLAN.md (summarize and compact commands)
+Stopped at: Completed 04-03-PLAN.md (list, show, delete commands)
 Resume file: None
 
-**Phase 4 Progress:** Plans 01-04 complete. CLI foundation established and core commands implemented including add, search, list, show, delete, summarize, compact, config, and health. Two plans remaining (04-05, 04-06) to complete phase.
+**Phase 4 Progress:** Plans 01, 03, 04, 05 complete. CLI foundation established and core commands implemented including list, show, delete, summarize, compact, config, and health. Two plans remaining (04-02 add command, 04-06 integration) to complete phase.
