@@ -152,8 +152,6 @@ def add_command(
             tags_str = f" (tags: {', '.join(result['tags'])})" if result.get("tags") else ""
             print_success(f"Added {entity_name} to {scope.value} scope{tags_str}")
 
-        raise typer.Exit(EXIT_SUCCESS)
-
     except typer.BadParameter:
         # Re-raise parameter errors (already formatted by typer)
         raise
