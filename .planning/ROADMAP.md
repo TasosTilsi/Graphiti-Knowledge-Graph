@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Storage Foundation** - Kuzu database with dual-scope graphs
 - [x] **Phase 2: Security Filtering** - File and entity-level sanitization
-- [ ] **Phase 3: LLM Integration** - Cloud Ollama with local fallback
+- [x] **Phase 3: LLM Integration** - Cloud Ollama with local fallback
 - [ ] **Phase 4: CLI Interface** - Core operations and configuration
 - [ ] **Phase 5: Background Queue** - Async processing for non-blocking operations
 - [ ] **Phase 6: Automatic Capture** - Git hooks and conversation capture
@@ -73,11 +73,11 @@ Plans:
 **Plans**: 5 plans in 4 waves
 
 Plans:
-- [ ] 03-01-PLAN.md — Configuration foundation with TOML, env overrides, dependencies
-- [ ] 03-02-PLAN.md — OllamaClient with cloud-first failover and tenacity retry
-- [ ] 03-03-PLAN.md — QuotaTracker and LLMRequestQueue for state management
-- [ ] 03-04-PLAN.md — Full integration with public API convenience functions
-- [ ] 03-05-PLAN.md — Comprehensive test suite and verification checkpoint
+- [x] 03-01-PLAN.md — Configuration foundation with TOML, env overrides, dependencies
+- [x] 03-02-PLAN.md — OllamaClient with cloud-first failover and tenacity retry
+- [x] 03-03-PLAN.md — QuotaTracker and LLMRequestQueue for state management
+- [x] 03-04-PLAN.md — Full integration with public API convenience functions
+- [x] 03-05-PLAN.md — Comprehensive test suite and verification checkpoint
 
 ### Phase 4: CLI Interface
 **Goal**: Build comprehensive CLI as single source of truth for all knowledge graph operations
@@ -89,10 +89,15 @@ Plans:
   3. Health check identifies connectivity and quota issues with clear diagnostics
   4. JSON output mode enables programmatic use of all commands
   5. Help text and error messages guide users effectively
-**Plans**: TBD
+**Plans**: 6 plans in 3 waves
 
 Plans:
-- [ ] 04-01: TBD during planning
+- [ ] 04-01-PLAN.md — CLI foundation: Typer app, Rich output, input handling, utilities, entry points
+- [ ] 04-02-PLAN.md — Add and search commands
+- [ ] 04-03-PLAN.md — List, show, and delete commands
+- [ ] 04-04-PLAN.md — Summarize and compact commands
+- [ ] 04-05-PLAN.md — Config and health commands
+- [ ] 04-06-PLAN.md — CLI test suite and verification checkpoint
 
 ### Phase 5: Background Queue
 **Goal**: Implement async processing queue to enable non-blocking git hooks and conversation capture
@@ -178,8 +183,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 |-------|----------------|--------|-----------|
 | 1. Storage Foundation | 3/3 | Complete | 2026-02-03 |
 | 2. Security Filtering | 5/5 | Complete | 2026-02-04 |
-| 3. LLM Integration | 0/5 | Not started | - |
-| 4. CLI Interface | 0/TBD | Not started | - |
+| 3. LLM Integration | 5/5 | Complete | 2026-02-08 |
+| 4. CLI Interface | 0/6 | Not started | - |
 | 5. Background Queue | 0/TBD | Not started | - |
 | 6. Automatic Capture | 0/TBD | Not started | - |
 | 7. Git Integration | 0/TBD | Not started | - |
