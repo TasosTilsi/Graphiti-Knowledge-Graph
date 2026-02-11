@@ -89,15 +89,18 @@ Plans:
   3. Health check identifies connectivity and quota issues with clear diagnostics
   4. JSON output mode enables programmatic use of all commands
   5. Help text and error messages guide users effectively
-**Plans**: 6 plans in 3 waves
+**Plans**: 9 plans (6 original + 3 gap closure) in 3 waves
 
 Plans:
-- [ ] 04-01-PLAN.md — CLI foundation: Typer app, Rich output, input handling, utilities, entry points
-- [ ] 04-02-PLAN.md — Add and search commands
-- [ ] 04-03-PLAN.md — List, show, and delete commands
-- [ ] 04-04-PLAN.md — Summarize and compact commands
-- [ ] 04-05-PLAN.md — Config and health commands
-- [ ] 04-06-PLAN.md — CLI test suite and verification checkpoint
+- [x] 04-01-PLAN.md — CLI foundation: Typer app, Rich output, input handling, utilities, entry points
+- [x] 04-02-PLAN.md — Add and search commands
+- [x] 04-03-PLAN.md — List, show, and delete commands
+- [x] 04-04-PLAN.md — Summarize and compact commands
+- [x] 04-05-PLAN.md — Config and health commands
+- [x] 04-06-PLAN.md — CLI test suite and verification checkpoint
+- [ ] 04-07-PLAN.md — [GAP CLOSURE] Adapter layer and GraphService for graphiti_core integration
+- [ ] 04-08-PLAN.md — [GAP CLOSURE] Wire add, search, list commands to real graph operations
+- [ ] 04-09-PLAN.md — [GAP CLOSURE] Wire show, delete, summarize, compact commands to real graph operations
 
 ### Phase 5: Background Queue
 **Goal**: Implement async processing queue to enable non-blocking git hooks and conversation capture
@@ -184,7 +187,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 1. Storage Foundation | 3/3 | Complete | 2026-02-03 |
 | 2. Security Filtering | 5/5 | Complete | 2026-02-04 |
 | 3. LLM Integration | 5/5 | Complete | 2026-02-08 |
-| 4. CLI Interface | 0/6 | Not started | - |
+| 4. CLI Interface | 6/9 | Gap closure | - |
 | 5. Background Queue | 0/TBD | Not started | - |
 | 6. Automatic Capture | 0/TBD | Not started | - |
 | 7. Git Integration | 0/TBD | Not started | - |
