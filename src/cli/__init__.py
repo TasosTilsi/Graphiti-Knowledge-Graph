@@ -67,6 +67,7 @@ from src.cli.commands.show import show_command
 from src.cli.commands.delete import delete_command
 from src.cli.commands.config import config_command
 from src.cli.commands.health import health_command
+from src.cli.commands.queue_cmd import queue_app
 
 
 # Register commands
@@ -108,5 +109,8 @@ app.command(
     help="Check system health and diagnostics"
 )(health_command)
 
+# Register queue command group
+app.add_typer(queue_app, name="queue", help="Manage the background processing queue")
 
-# All 9 commands registered: add, search, list, show, delete, summarize, compact, config, health
+
+# All 10 commands registered: add, search, list, show, delete, summarize, compact, config, health, queue (group)
