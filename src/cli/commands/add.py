@@ -13,6 +13,8 @@ from src.cli.output import console, print_success, print_json, print_error
 from src.cli.utils import resolve_scope, EXIT_SUCCESS, EXIT_ERROR
 from src.models import GraphScope
 from src.config.paths import get_project_db_path
+from src.graph import get_service, run_graph_operation
+from src.llm import LLMUnavailableError
 
 
 def _detect_source() -> str:
@@ -57,11 +59,11 @@ def _add_entity(
     tags: Optional[list[str]],
     source: str,
 ) -> dict:
-    """Stub function to prepare entity data for storage layer.
+    """Add entity to the knowledge graph via GraphService.
 
-    This is a temporary stub that prepares the data structure and returns
-    a mock result. Will be replaced with actual graph operations when
-    storage layer is fully wired.
+    Calls GraphService.add() which invokes Graphiti.add_episode() to write
+    real content to the Kuzu graph database. Content is sanitized for secrets
+    before storage, and entities/relationships are extracted via LLM.
 
     Args:
         content: Content to add to knowledge graph
@@ -71,33 +73,32 @@ def _add_entity(
         source: Source provenance
 
     Returns:
-        Dictionary with entity metadata (name, type, scope, created_at)
+        Dictionary with entity metadata (name, type, scope, created_at, tags,
+        source, content_length, nodes_created, edges_created)
+
+    Raises:
+        LLMUnavailableError: If LLM is unavailable for entity extraction
     """
-    # Log what would be done
-    scope_str = f"{scope.value} ({project_root})" if project_root else scope.value
-    console.log(f"[dim]Would add entity to {scope_str} scope[/dim]")
-    console.log(f"[dim]Content: {content[:100]}...[/dim]" if len(content) > 100 else f"[dim]Content: {content}[/dim]")
-    console.log(f"[dim]Source: {source}[/dim]")
-    if tags:
-        console.log(f"[dim]Tags: {', '.join(tags)}[/dim]")
-
-    # Return mock result with realistic data
-    # In real implementation, this would:
-    # 1. Get database connection for scope
-    # 2. Sanitize content (security layer)
-    # 3. Extract entities/relationships (LLM layer)
-    # 4. Write to graph (storage layer)
-    # 5. Return actual entity metadata
-
-    return {
-        "name": f"entity_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-        "type": "entity",
-        "scope": scope.value,
-        "created_at": datetime.now().isoformat(),
-        "tags": tags or [],
-        "source": source,
-        "content_length": len(content),
-    }
+    try:
+        # Get service and call add operation
+        service = get_service()
+        result = run_graph_operation(
+            service.add(
+                content=content,
+                scope=scope,
+                project_root=project_root,
+                tags=tags,
+                source=source,
+            )
+        )
+        return result
+    except LLMUnavailableError as e:
+        # Re-raise with user-friendly message
+        print_error(
+            f"Cannot add content: LLM service unavailable. {str(e)}\n"
+            "Please check your Ollama configuration with 'graphiti health'."
+        )
+        raise
 
 
 def add_command(
