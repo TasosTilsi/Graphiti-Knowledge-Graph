@@ -540,9 +540,43 @@ class GraphService:
         """
         logger.info("Deleting entities", names=names, scope=scope.value)
 
-        # TODO: Implement with actual entity deletion logic
-        logger.warning("delete_entities not yet implemented, returning 0")
-        return 0
+        try:
+            # Get graphiti instance and group_id
+            graphiti = self._get_graphiti(scope, project_root)
+            driver = graphiti.driver
+            group_id = self._get_group_id(scope, project_root)
+
+            # Find UUIDs of entities to delete by matching names
+            uuids_to_delete = []
+            for name in names:
+                records, _, _ = await driver.execute_query(
+                    """
+                    MATCH (n:Entity)
+                    WHERE n.group_id = $group_id AND lower(n.name) = lower($name)
+                    RETURN n.uuid AS uuid
+                    """,
+                    group_id=group_id,
+                    name=name,
+                )
+                uuids_to_delete.extend([r["uuid"] for r in records])
+
+            if not uuids_to_delete:
+                logger.info("No entities found to delete")
+                return 0
+
+            # Delete using graphiti_core's API (handles Kuzu-specific deletion)
+            await Node.delete_by_uuids(driver, uuids_to_delete)
+
+            logger.info("Deleted entities", count=len(uuids_to_delete))
+            return len(uuids_to_delete)
+
+        except Exception as e:
+            logger.error(
+                "Failed to delete entities",
+                error=str(e),
+                error_type=type(e).__name__,
+            )
+            raise
 
     async def summarize(
         self,
@@ -606,15 +640,100 @@ class GraphService:
             project_root: Project root path (required for PROJECT scope)
 
         Returns:
-            Dict with: entity_count, relationship_count, duplicate_count, size_bytes
+            Dict with: entity_count, relationship_count, episode_count, duplicate_count, size_bytes
         """
         logger.info("Getting graph stats", scope=scope.value)
 
-        # TODO: Implement with actual Kuzu queries
-        logger.warning("get_stats not yet implemented, returning placeholder")
-        return {
-            "entity_count": 0,
-            "relationship_count": 0,
-            "duplicate_count": 0,
-            "size_bytes": 0,
-        }
+        try:
+            # Get graphiti instance and group_id
+            graphiti = self._get_graphiti(scope, project_root)
+            driver = graphiti.driver
+            group_id = self._get_group_id(scope, project_root)
+
+            # Count entities
+            entity_records, _, _ = await driver.execute_query(
+                """
+                MATCH (n:Entity)
+                WHERE n.group_id = $group_id
+                RETURN count(n) AS cnt
+                """,
+                group_id=group_id,
+            )
+            entity_count = entity_records[0]["cnt"] if entity_records else 0
+
+            # Count relationships (RelatesToNode_ nodes represent edges in Kuzu)
+            rel_records, _, _ = await driver.execute_query(
+                """
+                MATCH (n:Entity)-[:RELATES_TO]->(e:RelatesToNode_)-[:RELATES_TO]->(m:Entity)
+                WHERE e.group_id = $group_id
+                RETURN count(e) AS cnt
+                """,
+                group_id=group_id,
+            )
+            relationship_count = rel_records[0]["cnt"] if rel_records else 0
+
+            # Count episodes
+            ep_records, _, _ = await driver.execute_query(
+                """
+                MATCH (e:Episodic)
+                WHERE e.group_id = $group_id
+                RETURN count(e) AS cnt
+                """,
+                group_id=group_id,
+            )
+            episode_count = ep_records[0]["cnt"] if ep_records else 0
+
+            # Calculate database size from filesystem
+            db_path = None
+            try:
+                # Try to get database path from driver
+                if hasattr(graphiti.driver, "db") and hasattr(
+                    graphiti.driver.db, "database_path"
+                ):
+                    db_path = str(graphiti.driver.db.database_path)
+            except AttributeError:
+                pass
+
+            # Fallback to path configuration if needed
+            if db_path is None:
+                if scope == GraphScope.GLOBAL:
+                    db_path = str(GLOBAL_DB_PATH)
+                elif project_root:
+                    db_path = str(get_project_db_path(project_root))
+
+            # Calculate size
+            size_bytes = 0
+            if db_path:
+                try:
+                    for dirpath, dirnames, filenames in os.walk(db_path):
+                        for f in filenames:
+                            fp = os.path.join(dirpath, f)
+                            size_bytes += os.path.getsize(fp)
+                except OSError as ose:
+                    logger.warning(
+                        "Could not calculate database size", path=db_path, error=str(ose)
+                    )
+                    size_bytes = 0
+
+            return {
+                "entity_count": entity_count,
+                "relationship_count": relationship_count,
+                "episode_count": episode_count,
+                "duplicate_count": 0,  # Duplicate detection is handled by compact()
+                "size_bytes": size_bytes,
+            }
+
+        except Exception as e:
+            logger.error(
+                "Failed to get graph stats",
+                error=str(e),
+                error_type=type(e).__name__,
+            )
+            # Return zeros dict on failure (stats should be best-effort)
+            return {
+                "entity_count": 0,
+                "relationship_count": 0,
+                "episode_count": 0,
+                "duplicate_count": 0,
+                "size_bytes": 0,
+            }
