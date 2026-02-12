@@ -4,85 +4,48 @@ Provides bulk entity deletion with confirmation prompts, ambiguous name
 resolution, and JSON/quiet output modes.
 """
 from typing import Annotated, Optional
+from pathlib import Path
 import typer
 from rich.table import Table
 from src.cli.output import console, print_json, print_error, print_success
 from src.cli.utils import resolve_scope, confirm_action, EXIT_ERROR, EXIT_SUCCESS
+from src.graph import get_service, run_graph_operation
+from src.models import GraphScope
 
 
-def _resolve_entity(name: str) -> dict | list[dict] | None:
-    """Stub function that resolves entity name to entity object.
-
-    This will be replaced with actual GraphManager integration in future plans.
+def _resolve_entity(name: str, scope: GraphScope, project_root: Optional[Path] = None) -> dict | list[dict] | None:
+    """Resolve entity name to entity object from the knowledge graph.
 
     Args:
         name: Entity name or ID to resolve
+        scope: Graph scope (GLOBAL or PROJECT)
+        project_root: Project root path (required for PROJECT scope)
 
     Returns:
         Entity dict if unique match, list of matches if ambiguous, None if not found
     """
-    # Mock entity database
-    entities = {
-        "Python FastAPI": {
-            "id": "ent_001",
-            "name": "Python FastAPI",
-            "type": "technology",
-            "scope": "project"
-        },
-        "Database Design Pattern": {
-            "id": "ent_002",
-            "name": "Database Design Pattern",
-            "type": "concept",
-            "scope": "project"
-        },
-        "Claude Preferences": {
-            "id": "ent_003",
-            "name": "Claude Preferences",
-            "type": "preference",
-            "scope": "global"
-        },
-        "test_entity": {
-            "id": "ent_999",
-            "name": "test_entity",
-            "type": "test",
-            "scope": "project"
-        }
-    }
-
-    # Simulate ambiguous match scenario
-    if name.lower() == "test":
-        return [
-            {"id": "test_001", "name": "Test Entity 1", "type": "entity", "scope": "project"},
-            {"id": "test_002", "name": "Test Entity 2", "type": "entity", "scope": "project"},
-            {"id": "test_003", "name": "Testing Framework", "type": "technology", "scope": "project"}
-        ]
-
-    # Find exact or partial match
-    if name in entities:
-        return entities[name]
-
-    # Try partial match (case-insensitive)
-    for entity_name, entity_data in entities.items():
-        if name.lower() in entity_name.lower():
-            return entity_data
-
-    # Not found
-    return None
+    result = run_graph_operation(get_service().get_entity(name=name, scope=scope, project_root=project_root))
+    return result
 
 
-def _delete_entities(entities: list[dict]) -> int:
-    """Stub function that deletes entities from the graph.
-
-    This will be replaced with actual GraphManager integration in future plans.
+def _delete_entities(entities: list[dict], scope: GraphScope, project_root: Optional[Path] = None) -> int:
+    """Delete entities from the graph.
 
     Args:
         entities: List of entity dicts to delete
+        scope: Graph scope (GLOBAL or PROJECT)
+        project_root: Project root path (required for PROJECT scope)
 
     Returns:
         Count of entities successfully deleted
     """
-    # Mock deletion - always succeeds
-    return len(entities)
+    # Extract entity names from the entities list
+    names = [e["name"] for e in entities]
+
+    # Call GraphService to delete the entities
+    deleted_count = run_graph_operation(get_service().delete_entities(names=names, scope=scope, project_root=project_root))
+
+    return deleted_count
 
 
 def delete_command(
@@ -104,7 +67,7 @@ def delete_command(
     # Resolve all entity names to actual entities
     resolved_entities = []
     for entity_name in entities:
-        result = _resolve_entity(entity_name)
+        result = _resolve_entity(entity_name, scope, project_root)
 
         # Handle not found
         if result is None:
@@ -159,7 +122,7 @@ def delete_command(
 
     # Delete entities with spinner
     with console.status(f"[cyan]Deleting {len(resolved_entities)} entities...", spinner="dots"):
-        deleted_count = _delete_entities(resolved_entities)
+        deleted_count = _delete_entities(resolved_entities, scope, project_root)
 
     # Output results
     entity_names = [e["name"] for e in resolved_entities]

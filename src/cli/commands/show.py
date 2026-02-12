@@ -4,76 +4,34 @@ Provides rich formatted view of entity details including relationships,
 with JSON output option and ambiguous name resolution.
 """
 from typing import Annotated, Optional
+from pathlib import Path
 import typer
 from rich.panel import Panel
 from rich.text import Text
 from src.cli.output import console, print_json, print_error
 from src.cli.utils import resolve_scope, EXIT_ERROR
+from src.graph import get_service, run_graph_operation
+from src.models import GraphScope
 
 
-def _find_entity(name: str) -> dict | list[dict]:
-    """Stub function that finds entity by name.
-
-    This will be replaced with actual GraphManager integration in future plans.
+def _find_entity(name: str, scope: GraphScope, project_root: Optional[Path] = None) -> dict | list[dict]:
+    """Find entity by name from the knowledge graph.
 
     Args:
         name: Entity name or ID to find
+        scope: Graph scope (GLOBAL or PROJECT)
+        project_root: Project root path (required for PROJECT scope)
 
     Returns:
         Entity dict if unique match found, list of matches if ambiguous, or empty dict if not found
     """
-    # Mock entity database
-    entities = {
-        "Python FastAPI": {
-            "id": "ent_001",
-            "name": "Python FastAPI",
-            "type": "technology",
-            "scope": "project",
-            "created_at": "2026-01-15T10:30:00Z",
-            "updated_at": "2026-01-20T14:22:00Z",
-            "tags": ["web", "framework", "async"],
-            "content": "FastAPI is a modern, fast (high-performance) web framework for building APIs with Python 3.8+ based on standard Python type hints. Key features include automatic OpenAPI documentation, dependency injection, and async support.",
-            "relationships": [
-                {"type": "uses", "target": "Pydantic"},
-                {"type": "depends_on", "target": "Starlette"},
-                {"type": "integrates_with", "target": "SQLAlchemy"}
-            ]
-        },
-        "Database Design": {
-            "id": "ent_002",
-            "name": "Database Design Pattern",
-            "type": "concept",
-            "scope": "project",
-            "created_at": "2026-01-20T14:22:00Z",
-            "updated_at": "2026-01-20T14:22:00Z",
-            "tags": ["architecture", "persistence"],
-            "content": "Design patterns for structuring database access layers, including repository pattern, unit of work, and data mapper approaches.",
-            "relationships": [
-                {"type": "related_to", "target": "SQLAlchemy"},
-                {"type": "implements", "target": "Repository Pattern"}
-            ]
-        }
-    }
+    result = run_graph_operation(get_service().get_entity(name=name, scope=scope, project_root=project_root))
 
-    # Simulate ambiguous match scenario
-    if name.lower() == "test":
-        return [
-            {"name": "Test Entity 1", "id": "test_001", "type": "entity"},
-            {"name": "Test Entity 2", "id": "test_002", "type": "entity"},
-            {"name": "Testing Framework", "id": "test_003", "type": "technology"}
-        ]
+    # Handle None (not found) -> return empty dict for backward compatibility
+    if result is None:
+        return {}
 
-    # Find exact or partial match
-    if name in entities:
-        return entities[name]
-
-    # Try partial match (case-insensitive)
-    for entity_name, entity_data in entities.items():
-        if name.lower() in entity_name.lower():
-            return entity_data
-
-    # Not found
-    return {}
+    return result
 
 
 def show_command(
@@ -91,7 +49,7 @@ def show_command(
     scope, project_root = resolve_scope(global_scope, project_scope)
 
     # Find entity
-    result = _find_entity(entity)
+    result = _find_entity(entity, scope, project_root)
 
     # Handle not found
     if not result or (isinstance(result, dict) and not result):
@@ -119,7 +77,7 @@ def show_command(
 
         # Get the selected entity by ID (would need another lookup in real implementation)
         selected_name = result[choice - 1]["name"]
-        result = _find_entity(selected_name)
+        result = _find_entity(selected_name, scope, project_root)
 
     # Now result is a single entity dict
     entity_data = result
