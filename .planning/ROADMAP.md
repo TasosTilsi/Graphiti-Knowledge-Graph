@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Storage Foundation** - Kuzu database with dual-scope graphs
 - [x] **Phase 2: Security Filtering** - File and entity-level sanitization
 - [x] **Phase 3: LLM Integration** - Cloud Ollama with local fallback
-- [ ] **Phase 4: CLI Interface** - Core operations and configuration
+- [x] **Phase 4: CLI Interface** - Core operations and configuration
 - [ ] **Phase 5: Background Queue** - Async processing for non-blocking operations
 - [ ] **Phase 6: Automatic Capture** - Git hooks and conversation capture
 - [ ] **Phase 7: Git Integration** - Git-safe knowledge graphs
@@ -189,7 +189,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 1. Storage Foundation | 3/3 | Complete | 2026-02-03 |
 | 2. Security Filtering | 5/5 | Complete | 2026-02-04 |
 | 3. LLM Integration | 5/5 | Complete | 2026-02-08 |
-| 4. CLI Interface | 9/11 | Gap closure | - |
+| 4. CLI Interface | 11/11 | Complete | 2026-02-12 |
 | 5. Background Queue | 0/TBD | Not started | - |
 | 6. Automatic Capture | 0/TBD | Not started | - |
 | 7. Git Integration | 0/TBD | Not started | - |
