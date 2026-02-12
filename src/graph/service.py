@@ -599,9 +599,70 @@ class GraphService:
         """
         logger.info("Generating summary", scope=scope.value, topic=topic)
 
-        # TODO: Implement with actual graph querying and LLM summarization
-        logger.warning("summarize not yet implemented, returning placeholder")
-        return ("Summary generation not yet implemented", 0)
+        # Get graphiti instance and group_id
+        graphiti = self._get_graphiti(scope, project_root)
+        group_id = self._get_group_id(scope, project_root)
+
+        # Load entities using EntityNode.get_by_group_ids
+        entities = await EntityNode.get_by_group_ids(
+            graphiti.driver, group_ids=[group_id], limit=200
+        )
+
+        if not entities:
+            return ("No entities found in the knowledge graph.", 0)
+
+        # Filter by topic if provided
+        if topic:
+            filtered = [
+                e
+                for e in entities
+                if topic.lower() in e.name.lower()
+                or (e.summary and topic.lower() in e.summary.lower())
+            ]
+            if filtered:
+                entities = filtered
+            # If no matches for topic filter, use all entities but note it in the prompt
+
+        # Build LLM prompt from entity data
+        entity_descriptions = []
+        for e in entities[:100]:  # Cap at 100 entities for LLM context
+            desc = f"- {e.name}"
+            if e.summary:
+                desc += f": {e.summary}"
+            if e.labels:
+                desc += f" (labels: {', '.join(e.labels)})"
+            entity_descriptions.append(desc)
+
+        entity_text = "\n".join(entity_descriptions)
+
+        topic_clause = f" focusing on '{topic}'" if topic else ""
+        prompt = (
+            f"Summarize the following knowledge graph entities{topic_clause}. "
+            f"Provide a concise, readable overview of what knowledge is stored. "
+            f"Focus on key themes, relationships between concepts, and notable patterns.\n\n"
+            f"Entities ({len(entities)} total):\n{entity_text}"
+        )
+
+        # Call ollama_chat via run_in_executor (since ollama_chat is sync and we're in async context)
+        try:
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: ollama_chat(messages=[{"role": "user", "content": prompt}]),
+            )
+            summary_text = response["message"]["content"]
+            return (summary_text, len(entities))
+
+        except LLMUnavailableError:
+            # Fall back to a non-LLM summary
+            entity_names = [e.name for e in entities[:20]]
+            fallback = f"Knowledge graph contains {len(entities)} entities"
+            if topic:
+                fallback += f" (filtered by '{topic}')"
+            fallback += f". Key entities: {', '.join(entity_names)}"
+            if len(entities) > 20:
+                fallback += f"... and {len(entities) - 20} more"
+            return (fallback, len(entities))
 
     async def compact(
         self,
