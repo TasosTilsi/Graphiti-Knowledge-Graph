@@ -13,6 +13,7 @@ import asyncio
 import json
 import logging
 import os
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -174,6 +175,48 @@ class GraphService:
             return "global"
         else:
             return project_root.name if project_root else "unknown_project"
+
+    def _get_db_size(self, scope: GraphScope, project_root: Optional[Path], driver) -> int:
+        """Calculate database size in bytes.
+
+        Args:
+            scope: Graph scope
+            project_root: Project root path
+            driver: Graph driver instance
+
+        Returns:
+            Database size in bytes (0 if calculation fails)
+        """
+        db_path = None
+        try:
+            # Try to get database path from driver
+            if hasattr(driver, "db") and hasattr(driver.db, "database_path"):
+                db_path = str(driver.db.database_path)
+        except AttributeError:
+            pass
+
+        # Fallback to path configuration if needed
+        if db_path is None:
+            if scope == GraphScope.GLOBAL:
+                db_path = str(GLOBAL_DB_PATH)
+            elif project_root:
+                db_path = str(get_project_db_path(project_root))
+
+        # Calculate size
+        size_bytes = 0
+        if db_path:
+            try:
+                for dirpath, dirnames, filenames in os.walk(db_path):
+                    for f in filenames:
+                        fp = os.path.join(dirpath, f)
+                        size_bytes += os.path.getsize(fp)
+            except OSError as ose:
+                logger.warning(
+                    "Could not calculate database size", path=db_path, error=str(ose)
+                )
+                size_bytes = 0
+
+        return size_bytes
 
     async def add(
         self,
@@ -680,14 +723,79 @@ class GraphService:
         """
         logger.info("Compacting graph", scope=scope.value)
 
-        # TODO: Implement deduplication logic
-        logger.warning("compact not yet implemented, returning placeholder")
-        return {
-            "merged_count": 0,
-            "removed_count": 0,
-            "new_entity_count": 0,
-            "new_size_bytes": 0,
-        }
+        try:
+            # Get graphiti instance, driver, and group_id
+            graphiti = self._get_graphiti(scope, project_root)
+            driver = graphiti.driver
+            group_id = self._get_group_id(scope, project_root)
+
+            # Load all entities
+            entities = await EntityNode.get_by_group_ids(
+                driver, group_ids=[group_id], limit=1000
+            )
+            original_count = len(entities)
+
+            # Early return if no entities or only one entity
+            if len(entities) <= 1:
+                return {
+                    "merged_count": 0,
+                    "removed_count": 0,
+                    "new_entity_count": original_count,
+                    "new_size_bytes": 0,
+                }
+
+            # Find duplicates by grouping entities with identical lowercased names
+            name_groups: dict[str, list] = defaultdict(list)
+            for entity in entities:
+                name_groups[entity.name.lower().strip()].append(entity)
+
+            # Groups with more than 1 entity are duplicates
+            duplicate_groups = {k: v for k, v in name_groups.items() if len(v) > 1}
+
+            # For each duplicate group, keep the entity with the most information
+            removed_count = 0
+            merged_count = 0
+            for name_key, group in duplicate_groups.items():
+                # Sort by summary length descending - keep the most complete entity
+                group.sort(key=lambda e: len(e.summary or ""), reverse=True)
+                keep = group[0]  # Entity with most information
+                to_remove = group[1:]  # Duplicates to delete
+
+                if to_remove:
+                    # Delete duplicate entity nodes
+                    uuids_to_remove = [e.uuid for e in to_remove]
+                    await Node.delete_by_uuids(driver, uuids_to_remove)
+                    removed_count += len(to_remove)
+                    merged_count += 1
+
+            # Get new entity count after compaction
+            remaining = await EntityNode.get_by_group_ids(driver, group_ids=[group_id])
+            new_entity_count = len(remaining)
+
+            # Get database size
+            size_bytes = self._get_db_size(scope, project_root, driver)
+
+            logger.info(
+                "Compaction complete",
+                merged_count=merged_count,
+                removed_count=removed_count,
+                new_count=new_entity_count,
+            )
+
+            return {
+                "merged_count": merged_count,
+                "removed_count": removed_count,
+                "new_entity_count": new_entity_count,
+                "new_size_bytes": size_bytes,
+            }
+
+        except Exception as e:
+            logger.error(
+                "Failed to compact graph",
+                error=str(e),
+                error_type=type(e).__name__,
+            )
+            raise
 
     async def get_stats(
         self,
@@ -744,37 +852,8 @@ class GraphService:
             )
             episode_count = ep_records[0]["cnt"] if ep_records else 0
 
-            # Calculate database size from filesystem
-            db_path = None
-            try:
-                # Try to get database path from driver
-                if hasattr(graphiti.driver, "db") and hasattr(
-                    graphiti.driver.db, "database_path"
-                ):
-                    db_path = str(graphiti.driver.db.database_path)
-            except AttributeError:
-                pass
-
-            # Fallback to path configuration if needed
-            if db_path is None:
-                if scope == GraphScope.GLOBAL:
-                    db_path = str(GLOBAL_DB_PATH)
-                elif project_root:
-                    db_path = str(get_project_db_path(project_root))
-
-            # Calculate size
-            size_bytes = 0
-            if db_path:
-                try:
-                    for dirpath, dirnames, filenames in os.walk(db_path):
-                        for f in filenames:
-                            fp = os.path.join(dirpath, f)
-                            size_bytes += os.path.getsize(fp)
-                except OSError as ose:
-                    logger.warning(
-                        "Could not calculate database size", path=db_path, error=str(ose)
-                    )
-                    size_bytes = 0
+            # Calculate database size
+            size_bytes = self._get_db_size(scope, project_root, driver)
 
             return {
                 "entity_count": entity_count,
