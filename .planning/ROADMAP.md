@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Security Filtering** - File and entity-level sanitization
 - [x] **Phase 3: LLM Integration** - Cloud Ollama with local fallback
 - [x] **Phase 4: CLI Interface** - Core operations and configuration
-- [ ] **Phase 5: Background Queue** - Async processing for non-blocking operations
+- [x] **Phase 5: Background Queue** - Async processing for non-blocking operations
 - [ ] **Phase 6: Automatic Capture** - Git hooks and conversation capture
 - [ ] **Phase 7: Git Integration** - Git-safe knowledge graphs
 - [ ] **Phase 8: MCP Server** - Context injection and Claude Code integration
@@ -117,9 +117,9 @@ Plans:
 **Plans**: 3 plans in 3 waves
 
 Plans:
-- [ ] 05-01-PLAN.md — Queue data models, SQLite storage with dead letter, and hook context detection
-- [ ] 05-02-PLAN.md — Background worker with parallel batching, retry, and public API
-- [ ] 05-03-PLAN.md — CLI queue commands (status, process, retry) and app registration
+- [x] 05-01-PLAN.md — Queue data models, SQLite storage with dead letter, and hook context detection
+- [x] 05-02-PLAN.md — Background worker with parallel batching, retry, and public API
+- [x] 05-03-PLAN.md — CLI queue commands (status, process, retry) and app registration
 
 ### Phase 6: Automatic Capture
 **Goal**: Enable automatic knowledge capture from git commits and conversations without manual effort
@@ -192,7 +192,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 2. Security Filtering | 5/5 | Complete | 2026-02-04 |
 | 3. LLM Integration | 5/5 | Complete | 2026-02-08 |
 | 4. CLI Interface | 11/11 | Complete | 2026-02-12 |
-| 5. Background Queue | 0/TBD | Not started | - |
+| 5. Background Queue | 3/3 | Complete | 2026-02-13 |
 | 6. Automatic Capture | 0/TBD | Not started | - |
 | 7. Git Integration | 0/TBD | Not started | - |
 | 8. MCP Server | 0/TBD | Not started | - |
