@@ -114,10 +114,12 @@ Plans:
   3. Failed captures retry automatically with exponential backoff
   4. System remains responsive during high capture rates (1000+ captures/minute)
   5. Worker thread processes queued jobs successfully in background
-**Plans**: TBD
+**Plans**: 3 plans in 3 waves
 
 Plans:
-- [ ] 05-01: TBD during planning
+- [ ] 05-01-PLAN.md — Queue data models, SQLite storage with dead letter, and hook context detection
+- [ ] 05-02-PLAN.md — Background worker with parallel batching, retry, and public API
+- [ ] 05-03-PLAN.md — CLI queue commands (status, process, retry) and app registration
 
 ### Phase 6: Automatic Capture
 **Goal**: Enable automatic knowledge capture from git commits and conversations without manual effort
