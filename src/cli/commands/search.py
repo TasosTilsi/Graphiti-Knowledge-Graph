@@ -6,15 +6,18 @@ supporting filters, result formatting, and pagination.
 import typer
 from typing import Annotated, Optional
 from datetime import datetime
+from pathlib import Path
 
 from src.cli.output import console, print_table, print_compact, print_json, print_warning
 from src.cli.utils import resolve_scope, DEFAULT_LIMIT, EXIT_SUCCESS, EXIT_ERROR
 from src.models import GraphScope
+from src.graph import get_service, run_graph_operation
 
 
 def _search_entities(
     query: str,
     scope: GraphScope,
+    project_root: Optional[Path],
     exact: bool,
     since: Optional[str],
     before: Optional[str],
@@ -22,84 +25,42 @@ def _search_entities(
     tags: Optional[list[str]],
     limit: Optional[int],
 ) -> list[dict]:
-    """Stub function to search entities in the knowledge graph.
+    """Search entities in the knowledge graph via GraphService.
 
-    This is a temporary stub that returns mock results for testing the
-    CLI flow. Will be replaced with actual graph search operations when
-    storage and LLM layers are fully integrated.
+    Calls GraphService.search() which performs semantic or exact search
+    against the real Kuzu graph database.
 
     Args:
         query: Search query string
         scope: Graph scope to search in
+        project_root: Project root path (required for PROJECT scope)
         exact: Whether to use exact matching (True) or semantic (False)
-        since: Filter results after this date/duration
-        before: Filter results before this date
-        type_filter: Filter by type (entity, relationship)
-        tags: Filter by tags
+        since: Filter results after this date/duration (future enhancement)
+        before: Filter results before this date (future enhancement)
+        type_filter: Filter by type (future enhancement)
+        tags: Filter by tags (future enhancement)
         limit: Maximum number of results (None for unlimited)
 
     Returns:
         List of result dictionaries with name, type, snippet, score, created_at, scope, tags
     """
-    # Log search parameters
-    mode = "exact" if exact else "semantic"
-    console.log(f"[dim]Searching in {scope.value} scope using {mode} mode[/dim]")
-    console.log(f"[dim]Query: {query}[/dim]")
-    if since:
-        console.log(f"[dim]Since: {since}[/dim]")
-    if before:
-        console.log(f"[dim]Before: {before}[/dim]")
-    if type_filter:
-        console.log(f"[dim]Type filter: {type_filter}[/dim]")
-    if tags:
-        console.log(f"[dim]Tags: {', '.join(tags)}[/dim]")
-    if limit:
-        console.log(f"[dim]Limit: {limit}[/dim]")
+    # Get service and call search operation
+    service = get_service()
+    results = run_graph_operation(
+        service.search(
+            query=query,
+            scope=scope,
+            project_root=project_root,
+            exact=exact,
+            limit=limit or 15,
+        )
+    )
 
-    # Return mock results for testing
-    # In real implementation, this would:
-    # 1. Get database connection for scope
-    # 2. If semantic: use LLM to generate query embedding
-    # 3. If exact: use literal string matching
-    # 4. Apply filters (since, before, type, tags)
-    # 5. Execute graph query with filters
-    # 6. Return actual results with relevance scores
+    # Note: Date/type/tag filters not yet implemented in GraphService
+    # These will be added in future integration phases
+    # For now, we return all matching results from semantic/exact search
 
-    mock_results = [
-        {
-            "name": "meeting_notes_20260211",
-            "type": "entity",
-            "snippet": f"Meeting notes discussing {query} and related topics...",
-            "score": 0.95,
-            "created_at": "2026-02-11T00:00:00",
-            "scope": scope.value,
-            "tags": ["meeting", "notes"],
-        },
-        {
-            "name": "project_roadmap",
-            "type": "entity",
-            "snippet": f"Roadmap entry mentioning {query} as a key milestone",
-            "score": 0.87,
-            "created_at": "2026-02-10T14:30:00",
-            "scope": scope.value,
-            "tags": ["roadmap", "planning"],
-        },
-        {
-            "name": "research_findings",
-            "type": "entity",
-            "snippet": f"Research document about {query} with detailed analysis",
-            "score": 0.82,
-            "created_at": "2026-02-09T09:15:00",
-            "scope": scope.value,
-            "tags": ["research"],
-        },
-    ]
-
-    # Apply limit if specified
-    if limit is not None:
-        mock_results = mock_results[:limit]
-
-    return mock_results
+    return results
 
 
 def search_command(
@@ -130,7 +91,7 @@ def search_command(
     """
     try:
         # 1. Resolve scope
-        scope, _ = resolve_scope(global_scope, project_scope)
+        scope, project_root = resolve_scope(global_scope, project_scope)
 
         # 2. Determine effective limit
         effective_limit = None if all_results else limit
@@ -140,6 +101,7 @@ def search_command(
             results = _search_entities(
                 query=query,
                 scope=scope,
+                project_root=project_root,
                 exact=exact,
                 since=since,
                 before=before,

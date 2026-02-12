@@ -4,85 +4,48 @@ Provides table, compact, and JSON output formats with filtering by scope,
 type, and tags.
 """
 from typing import Annotated, Optional
+from pathlib import Path
 import typer
 from src.cli.output import console, print_json, print_table, print_compact, print_warning
 from src.cli.utils import resolve_scope, DEFAULT_LIMIT
+from src.models import GraphScope
+from src.graph import get_service, run_graph_operation
 
 
-def _list_entities() -> list[dict]:
-    """Stub function that returns mock entity data.
+def _list_entities(
+    scope: GraphScope,
+    project_root: Optional[Path],
+    limit: Optional[int],
+) -> list[dict]:
+    """List entities from the knowledge graph via GraphService.
 
-    This will be replaced with actual GraphManager integration in future plans.
+    Calls GraphService.list_entities() which queries the real Kuzu graph
+    database for entities in the specified scope.
+
+    Args:
+        scope: Graph scope to list from
+        project_root: Project root path (required for PROJECT scope)
+        limit: Maximum number of entities to return
 
     Returns:
         List of entity dictionaries with name, type, created_at, tags, scope, relationship_count
     """
-    return [
-        {
-            "name": "Python FastAPI",
-            "type": "technology",
-            "created_at": "2026-01-15T10:30:00Z",
-            "tags": "web, framework, async",
-            "scope": "project",
-            "relationship_count": 12
-        },
-        {
-            "name": "Database Design Pattern",
-            "type": "concept",
-            "created_at": "2026-01-20T14:22:00Z",
-            "tags": "architecture, persistence",
-            "scope": "project",
-            "relationship_count": 8
-        },
-        {
-            "name": "Claude Preferences",
-            "type": "preference",
-            "created_at": "2026-01-10T08:15:00Z",
-            "tags": "ai, settings",
-            "scope": "global",
-            "relationship_count": 3
-        },
-        {
-            "name": "Git Workflow",
-            "type": "process",
-            "created_at": "2026-01-18T11:45:00Z",
-            "tags": "version-control, workflow",
-            "scope": "global",
-            "relationship_count": 15
-        },
-        {
-            "name": "Project Dependencies",
-            "type": "technical-detail",
-            "created_at": "2026-01-22T09:10:00Z",
-            "tags": "dependencies, pyproject",
-            "scope": "project",
-            "relationship_count": 24
-        },
-        {
-            "name": "Security Best Practices",
-            "type": "guideline",
-            "created_at": "2026-01-12T16:30:00Z",
-            "tags": "security, standards",
-            "scope": "global",
-            "relationship_count": 7
-        },
-        {
-            "name": "API Authentication",
-            "type": "implementation",
-            "created_at": "2026-01-25T13:20:00Z",
-            "tags": "auth, security, api",
-            "scope": "project",
-            "relationship_count": 9
-        },
-        {
-            "name": "Testing Strategy",
-            "type": "process",
-            "created_at": "2026-01-14T10:00:00Z",
-            "tags": "testing, qa, pytest",
-            "scope": "project",
-            "relationship_count": 11
-        }
-    ]
+    # Get service and call list operation
+    service = get_service()
+    entities = run_graph_operation(
+        service.list_entities(
+            scope=scope,
+            project_root=project_root,
+            limit=limit,
+        )
+    )
+
+    # Convert tags from list to string if needed (for table display)
+    for entity in entities:
+        if "tags" in entity and isinstance(entity["tags"], list):
+            entity["tags"] = ", ".join(entity["tags"])
+
+    return entities
 
 
 def list_command(
@@ -108,7 +71,7 @@ def list_command(
 
     # Load entities with spinner
     with console.status("[cyan]Loading entities...", spinner="dots"):
-        entities = _list_entities()
+        entities = _list_entities(scope, project_root, effective_limit)
 
     # Check if empty
     if not entities:
