@@ -10,12 +10,12 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 4 of 9 (CLI Interface)
-Plan: 9 of 9 complete
-Status: Complete
-Last activity: 2026-02-12 — Completed 04-09-PLAN.md (Wire show/delete/summarize/compact to GraphService)
-Next: Phase 5 - Graph Integration
+Plan: 8 of 9 complete
+Status: In Progress
+Last activity: 2026-02-12 — Completed 04-08-PLAN.md (Wire add/search/list to GraphService)
+Next: 04-09-PLAN.md (Wire remaining commands)
 
-Progress: [███████████████████████████████] 22 of 22 plans complete (100%)
+Progress: [███████████████████████░░░░░░░] 21 of 22 plans complete (95%)
 
 ## Performance Metrics
 
@@ -48,6 +48,7 @@ Progress: [███████████████████████
 | Phase 04 P05 | 227 | 2 tasks | 3 files |
 | Phase 04 P06 | 420 | 2 tasks | 2 files |
 | Phase 04 P07 | 219 | 2 tasks | 3 files |
+| Phase 04 P08 | 4390 | 2 tasks | 3 files |
 | Phase 04 P09 | 4353 | 2 tasks | 4 files |
 
 ## Accumulated Context
@@ -121,6 +122,9 @@ Recent decisions affecting current work:
 - [Phase 04-06]: Mock all stub functions for fast, isolated CLI tests (<1s) that validate UX without requiring graph integration
 - [Phase 04-06]: Human verification checkpoint ensures terminal UX meets professional standards beyond what automated tests can verify
 - [Phase 04-06]: JSON extraction via bracket matching handles Rich pretty-printing while testing actual user-facing output
+- [Phase 04-08]: LLMUnavailableError handling in CLI provides user-friendly messages directing to 'graphiti health' for diagnostics
+- [Phase 04-08]: project_root parameter threading ensures correct scope resolution from CLI commands through to GraphService
+- [Phase 04-08]: Date/type/tag filters in search documented as future enhancements while maintaining CLI UX
 - [Phase 04-09]: Direct delegation pattern for CLI stub replacement preserves existing CLI interface while connecting to real graph operations
 
 ### Pending Todos
@@ -134,7 +138,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-12 (phase execution)
-Stopped at: Completed 04-09-PLAN.md (Wire show/delete/summarize/compact to GraphService)
+Stopped at: Completed 04-08-PLAN.md (Wire add/search/list to GraphService)
 Resume file: None
 
 **Phase 4 Complete:** All 9 plans finished. CLI interface fully implemented with 7 commands, comprehensive test suite (56 tests), verified professional terminal UX, and all commands wired to GraphService. Gap closure complete - all stub functions replaced with real graph operations via GraphService adapters.
