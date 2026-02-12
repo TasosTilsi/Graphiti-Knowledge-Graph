@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 5 of 9 (Background Queue)
-Plan: 1 of 3 complete
+Plan: 2 of 3 complete
 Status: In Progress
-Last activity: 2026-02-13 — Completed 05-01-PLAN.md (Queue Foundation - Data Models and Storage)
-Next: 05-02-PLAN.md (Background Worker Thread)
+Last activity: 2026-02-13 — Completed 05-02-PLAN.md (Background Worker Thread)
+Next: 05-03-PLAN.md (CLI Commands)
 
-Progress: [██████████████████████████████] 25 of 27 plans complete (92.6%)
+Progress: [██████████████████████████████] 26 of 27 plans complete (96.3%)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 25
-- Average duration: 12.9 min
-- Total execution time: 5h 25.6min
+- Total plans completed: 26
+- Average duration: 12.6 min
+- Total execution time: 5h 28.4min
 
 **By Phase:**
 
@@ -32,11 +32,11 @@ Progress: [███████████████████████
 | 02-security-filtering | 5 | 37 min | 7.4 min |
 | 03-llm-integration | 5 | 83 min | 16.6 min |
 | 04-cli-interface | 11 | 107 min | 9.7 min |
-| 05-background-queue | 1 | 3.6 min | 3.6 min |
+| 05-background-queue | 2 | 6.4 min | 3.2 min |
 
 **Recent Trend:**
-- Last 3 plans: 04-10 (1.8 min), 04-11 (1.9 min), 05-01 (3.6 min)
-- Trend: Phase 05 started - Queue foundation with SQLite persistence and dead letter support
+- Last 3 plans: 04-11 (1.9 min), 05-01 (3.6 min), 05-02 (2.8 min)
+- Trend: Phase 05 progressing - Background worker with parallel batching and public API complete
 
 *Updated after each plan completion*
 
@@ -54,6 +54,8 @@ Progress: [███████████████████████
 | Phase 04 P10 | 106 | 2 tasks | 1 files |
 | Phase 04 P11 | 112 | 2 tasks | 1 files |
 | Phase 05 P01 | 214 | 2 tasks | 4 files |
+| Phase 05 P02 | 167 | 2 tasks | 2 files |
+| Phase 05 P02 | 167 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -146,6 +148,12 @@ Recent decisions affecting current work:
 - [Phase 05-01]: is_hook_context() checks CLAUDE_* env vars, TTY status, and CI/CD markers for silent mode
 - [Phase 05-01]: FIFO batching: get_batch() collects consecutive parallel jobs, stops at sequential barrier
 - [Phase 05-01]: Connection-per-call pattern for dead letter operations ensures thread safety
+- [Phase 05-02]: ThreadPoolExecutor with 4 max_workers optimal for I/O-bound CLI replay
+- [Phase 05-02]: Non-daemon threads prevent job loss on process exit during graceful shutdown
+- [Phase 05-02]: Event.wait(timeout) for responsive shutdown without busy-waiting during backoff delays
+- [Phase 05-02]: Conditional worker startup with threshold=1 (start on any pending job)
+- [Phase 05-02]: Health levels at 80%/100% thresholds match established health check pattern
+- [Phase 05-02]: CLI-first architecture: worker replays CLI commands via subprocess for consistency
 
 ### Pending Todos
 
@@ -158,7 +166,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-13 (phase execution)
-Stopped at: Completed 05-01-PLAN.md (Queue Foundation - Data Models and Storage)
+Stopped at: Completed 05-02-PLAN.md (Background Worker Thread)
 Resume file: None
 
-**Phase 5 IN PROGRESS:** Plan 1 of 3 complete in Phase 05-background-queue. Queue foundation established with SQLite-backed JobQueue, FIFO parallel batching logic, dead letter table, and hook context detection. Ready for Plan 02 (Background Worker Thread) and Plan 03 (CLI Commands).
+**Phase 5 IN PROGRESS:** Plan 2 of 3 complete in Phase 05-background-queue. Background worker with parallel batching complete - Event-based lifecycle, ThreadPoolExecutor for concurrency, exponential backoff retry, public API with singletons. Ready for Plan 03 (CLI Commands) to expose queue operations to users.
