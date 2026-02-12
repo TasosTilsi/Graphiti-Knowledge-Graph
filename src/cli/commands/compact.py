@@ -5,63 +5,40 @@ This is a destructive operation that requires confirmation.
 """
 import typer
 from typing import Annotated, Optional
+from pathlib import Path
 
 from src.models import GraphScope
 from src.cli.output import console, print_error, print_json, print_success
 from src.cli.utils import resolve_scope, confirm_action, EXIT_ERROR
+from src.graph import get_service, run_graph_operation
 
 
-def _get_graph_stats(scope: GraphScope) -> dict:
+def _get_graph_stats(scope: GraphScope, project_root: Optional[Path] = None) -> dict:
     """Get current graph statistics.
 
     Args:
         scope: Graph scope to query
+        project_root: Project root path (required for PROJECT scope)
 
     Returns:
         Dictionary with entity_count, relationship_count, duplicate_count, size_bytes
-
-    TODO: Wire to actual graph statistics when available.
-    For now, returns mock data to enable CLI flow testing.
     """
-    # Mock data for CLI testing
-    if scope == GraphScope.GLOBAL:
-        return {
-            "entity_count": 127,
-            "relationship_count": 342,
-            "duplicate_count": 18,
-            "size_bytes": 4_567_890,
-        }
-    else:
-        return {
-            "entity_count": 43,
-            "relationship_count": 89,
-            "duplicate_count": 5,
-            "size_bytes": 1_234_567,
-        }
+    stats = run_graph_operation(get_service().get_stats(scope=scope, project_root=project_root))
+    return stats
 
 
-def _compact_graph(scope: GraphScope) -> dict:
+def _compact_graph(scope: GraphScope, project_root: Optional[Path] = None) -> dict:
     """Perform graph compaction operation.
 
     Args:
         scope: Graph scope to compact
+        project_root: Project root path (required for PROJECT scope)
 
     Returns:
         Dictionary with merged_count, removed_count, new_entity_count, new_size_bytes
-
-    TODO: Wire to actual graph compaction logic when available.
-    For now, returns mock results to enable CLI flow testing.
     """
-    # Mock compaction results for CLI testing
-    stats = _get_graph_stats(scope)
-    duplicates = stats["duplicate_count"]
-
-    return {
-        "merged_count": duplicates,
-        "removed_count": duplicates * 2,  # Some duplicates involve multiple entities
-        "new_entity_count": stats["entity_count"] - duplicates,
-        "new_size_bytes": int(stats["size_bytes"] * 0.85),  # 15% size reduction
-    }
+    result = run_graph_operation(get_service().compact(scope=scope, project_root=project_root))
+    return result
 
 
 def compact_command(
@@ -103,10 +80,10 @@ def compact_command(
     """
     try:
         # Resolve scope
-        scope, _ = resolve_scope(global_scope, project_scope)
+        scope, project_root = resolve_scope(global_scope, project_scope)
 
         # Load current graph statistics
-        stats = _get_graph_stats(scope)
+        stats = _get_graph_stats(scope, project_root)
 
         # Display current state
         if not quiet and format != "json":
@@ -145,7 +122,7 @@ def compact_command(
             # Placeholder for finalization
 
             # Execute compaction
-            result = _compact_graph(scope)
+            result = _compact_graph(scope, project_root)
 
         # Output results
         if format == "json":
