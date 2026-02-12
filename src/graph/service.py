@@ -10,13 +10,15 @@ It handles:
 """
 
 import asyncio
+import json
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 from graphiti_core import Graphiti
-from graphiti_core.nodes import EpisodeType
+from graphiti_core.nodes import EntityNode, EpisodeType, Node
 
 from src.config.paths import GLOBAL_DB_PATH, get_project_db_path
 from src.graph.adapters import OllamaEmbedder, OllamaLLMClient
@@ -350,16 +352,42 @@ class GraphService:
         """
         logger.info("Listing entities", scope=scope.value, limit=limit)
 
-        # Get driver for direct Kuzu queries
-        driver = self._graph_manager.get_driver(scope, project_root)
-        group_id = self._get_group_id(scope, project_root)
-
         try:
-            # Query entities from graph
-            # TODO: Implement with actual Kuzu queries once schema is confirmed
-            # For now, return empty list (will be wired in integration phase)
-            logger.warning("list_entities not yet implemented, returning empty list")
-            return []
+            # Get graphiti instance and group_id
+            graphiti = self._get_graphiti(scope, project_root)
+            group_id = self._get_group_id(scope, project_root)
+
+            # Query entities from graph using EntityNode.get_by_group_ids()
+            entities = await EntityNode.get_by_group_ids(
+                graphiti.driver, group_ids=[group_id], limit=limit
+            )
+
+            # Convert EntityNode objects to dicts
+            result_list = []
+            for entity in entities:
+                # Count relationships for this entity
+                rel_records, _, _ = await graphiti.driver.execute_query(
+                    """
+                    MATCH (n:Entity {uuid: $uuid})-[:RELATES_TO]->(e:RelatesToNode_)
+                    RETURN count(e) AS rel_count
+                    """,
+                    uuid=entity.uuid,
+                )
+                rel_count = rel_records[0]["rel_count"] if rel_records else 0
+
+                result_list.append(
+                    {
+                        "name": entity.name,
+                        "type": "entity",
+                        "created_at": entity.created_at.isoformat(),
+                        "tags": entity.labels or [],
+                        "scope": scope.value,
+                        "relationship_count": rel_count,
+                    }
+                )
+
+            logger.info("Listed entities", count=len(result_list))
+            return result_list
 
         except Exception as e:
             logger.error(
@@ -389,9 +417,110 @@ class GraphService:
         """
         logger.info("Getting entity", name=name, scope=scope.value)
 
-        # TODO: Implement with actual Kuzu queries
-        logger.warning("get_entity not yet implemented, returning None")
-        return None
+        try:
+            # Get graphiti instance and group_id
+            graphiti = self._get_graphiti(scope, project_root)
+            driver = graphiti.driver
+            group_id = self._get_group_id(scope, project_root)
+
+            # Query entities matching the name (case-insensitive partial match)
+            records, _, _ = await driver.execute_query(
+                """
+                MATCH (n:Entity)
+                WHERE n.group_id = $group_id AND lower(n.name) CONTAINS lower($name)
+                RETURN
+                    n.uuid AS uuid,
+                    n.name AS name,
+                    n.group_id AS group_id,
+                    n.labels AS labels,
+                    n.created_at AS created_at,
+                    n.summary AS summary,
+                    n.attributes AS attributes
+                """,
+                group_id=group_id,
+                name=name,
+            )
+
+            if not records:
+                return None
+
+            # Build entity dicts with relationships
+            entity_dicts = []
+            for record in records:
+                # Fetch outgoing relationships
+                edge_records, _, _ = await driver.execute_query(
+                    """
+                    MATCH (n:Entity {uuid: $uuid})-[:RELATES_TO]->(e:RelatesToNode_)-[:RELATES_TO]->(m:Entity)
+                    RETURN e.name AS name, e.fact AS fact, m.name AS target_name, e.created_at AS created_at
+                    """,
+                    uuid=record["uuid"],
+                )
+
+                # Fetch incoming relationships
+                incoming_records, _, _ = await driver.execute_query(
+                    """
+                    MATCH (m:Entity)-[:RELATES_TO]->(e:RelatesToNode_)-[:RELATES_TO]->(n:Entity {uuid: $uuid})
+                    RETURN e.name AS name, e.fact AS fact, m.name AS source_name, e.created_at AS created_at
+                    """,
+                    uuid=record["uuid"],
+                )
+
+                # Parse attributes
+                attributes = (
+                    json.loads(record["attributes"]) if record["attributes"] else {}
+                )
+
+                # Build relationships list
+                relationships = [
+                    {
+                        "name": er["name"],
+                        "fact": er["fact"],
+                        "target": er["target_name"],
+                        "created_at": str(er["created_at"]),
+                    }
+                    for er in edge_records
+                ] + [
+                    {
+                        "name": er["name"],
+                        "fact": er["fact"],
+                        "source": er["source_name"],
+                        "created_at": str(er["created_at"]),
+                    }
+                    for er in incoming_records
+                ]
+
+                # Build entity dict
+                entity_dict = {
+                    "name": record["name"],
+                    "type": "entity",
+                    "created_at": (
+                        record["created_at"].isoformat()
+                        if hasattr(record["created_at"], "isoformat")
+                        else str(record["created_at"])
+                    ),
+                    "tags": record["labels"] or [],
+                    "scope": scope.value,
+                    "summary": record["summary"] or "",
+                    "attributes": attributes,
+                    "relationships": relationships,
+                }
+                entity_dicts.append(entity_dict)
+
+            # Return single dict, list, or None based on match count
+            if len(entity_dicts) == 1:
+                return entity_dicts[0]
+            elif len(entity_dicts) > 1:
+                return entity_dicts
+            else:
+                return None
+
+        except Exception as e:
+            logger.error(
+                "Failed to get entity",
+                error=str(e),
+                error_type=type(e).__name__,
+            )
+            raise
 
     async def delete_entities(
         self,
