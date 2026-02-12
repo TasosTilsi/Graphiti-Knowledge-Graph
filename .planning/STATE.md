@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 4 of 9 (CLI Interface)
-Plan: 8 of 9 complete
+Plan: 10 of 11 complete
 Status: In Progress
-Last activity: 2026-02-12 — Completed 04-08-PLAN.md (Wire add/search/list to GraphService)
-Next: 04-09-PLAN.md (Wire remaining commands)
+Last activity: 2026-02-12 — Completed 04-10-PLAN.md (Implement query-based GraphService methods)
+Next: 04-11-PLAN.md (Final gap closure plan)
 
-Progress: [███████████████████████░░░░░░░] 21 of 22 plans complete (95%)
+Progress: [████████████████████████░░░░░] 23 of 24 plans complete (96%)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 22
-- Average duration: 14.5 min
-- Total execution time: 5h 18min
+- Total plans completed: 23
+- Average duration: 13.8 min
+- Total execution time: 5h 20min
 
 **By Phase:**
 
@@ -31,11 +31,11 @@ Progress: [███████████████████████
 | 01-storage-foundation | 3 | 75 min | 25 min |
 | 02-security-filtering | 5 | 37 min | 7.4 min |
 | 03-llm-integration | 5 | 83 min | 16.6 min |
-| 04-cli-interface | 9 | 103 min | 11.4 min |
+| 04-cli-interface | 10 | 105 min | 10.5 min |
 
 **Recent Trend:**
-- Last 3 plans: 04-07 (3.7 min), 04-08 (estimated), 04-09 (72.6 min)
-- Trend: Phase 4 complete - All CLI commands wired to GraphService
+- Last 3 plans: 04-08 (73.2 min), 04-09 (72.6 min), 04-10 (1.8 min)
+- Trend: Query methods implemented - list/show/delete/stats now functional
 
 *Updated after each plan completion*
 
@@ -50,6 +50,7 @@ Progress: [███████████████████████
 | Phase 04 P07 | 219 | 2 tasks | 3 files |
 | Phase 04 P08 | 4390 | 2 tasks | 3 files |
 | Phase 04 P09 | 4353 | 2 tasks | 4 files |
+| Phase 04 P10 | 106 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -126,6 +127,10 @@ Recent decisions affecting current work:
 - [Phase 04-08]: project_root parameter threading ensures correct scope resolution from CLI commands through to GraphService
 - [Phase 04-08]: Date/type/tag filters in search documented as future enhancements while maintaining CLI UX
 - [Phase 04-09]: Direct delegation pattern for CLI stub replacement preserves existing CLI interface while connecting to real graph operations
+- [Phase 04-10]: Use EntityNode.get_by_group_ids() instead of raw Cypher for list_entities() - leverages graphiti_core's built-in API
+- [Phase 04-10]: Case-insensitive CONTAINS matching for get_entity() enables flexible entity lookup ("python" matches "Python SDK")
+- [Phase 04-10]: Node.delete_by_uuids() handles Kuzu-specific deletion including RelatesToNode_ cleanup automatically
+- [Phase 04-10]: Best-effort stats pattern: get_stats() returns zeros on failure rather than raising exceptions for robustness
 
 ### Pending Todos
 
@@ -138,7 +143,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-12 (phase execution)
-Stopped at: Completed 04-08-PLAN.md (Wire add/search/list to GraphService)
+Stopped at: Completed 04-10-PLAN.md (Implement query-based GraphService methods)
 Resume file: None
 
-**Phase 4 Complete:** All 9 plans finished. CLI interface fully implemented with 7 commands, comprehensive test suite (56 tests), verified professional terminal UX, and all commands wired to GraphService. Gap closure complete - all stub functions replaced with real graph operations via GraphService adapters.
+**Phase 4 - Plan 10 Complete:** Implemented 4 query-based GraphService methods (list_entities, get_entity, delete_entities, get_stats) with real Kuzu operations. All core CLI commands now fully functional with end-to-end graph database integration. 1 plan remaining in phase 04 (04-11).
