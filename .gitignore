@@ -9,6 +9,7 @@ __pycache__/
 .Python
 env/
 venv/
+.venv/
 ENV/
 build/
 dist/
@@ -34,3 +35,7 @@ Thumbs.db
 .env.local
 *.db
 *.sqlite
+
+# Project-local knowledge graphs and GSD planning
+.graphiti/
+.planning/
