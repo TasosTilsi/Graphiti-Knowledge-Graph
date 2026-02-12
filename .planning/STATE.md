@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Context continuity without repetition - Claude remembers your preferences, decisions, and project architecture across all sessions without you stating them again, while project teams can share knowledge safely through git.
-**Current focus:** Phase 4 Complete — Ready for Phase 5
+**Current focus:** Phase 5 In Progress — Background Queue Foundation
 
 ## Current Position
 
-Phase: 4 of 9 (CLI Interface)
-Plan: 11 of 11 complete
-Status: Complete
-Last activity: 2026-02-12 — Completed 04-11-PLAN.md (Implement LLM-powered summarize and compact methods)
-Next: Phase 05 - Git Hooks
+Phase: 5 of 9 (Background Queue)
+Plan: 1 of 3 complete
+Status: In Progress
+Last activity: 2026-02-13 — Completed 05-01-PLAN.md (Queue Foundation - Data Models and Storage)
+Next: 05-02-PLAN.md (Background Worker Thread)
 
-Progress: [█████████████████████████████] 24 of 24 plans complete (100%)
+Progress: [██████████████████████████████] 25 of 27 plans complete (92.6%)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 24
-- Average duration: 13.4 min
-- Total execution time: 5h 22min
+- Total plans completed: 25
+- Average duration: 12.9 min
+- Total execution time: 5h 25.6min
 
 **By Phase:**
 
@@ -32,10 +32,11 @@ Progress: [███████████████████████
 | 02-security-filtering | 5 | 37 min | 7.4 min |
 | 03-llm-integration | 5 | 83 min | 16.6 min |
 | 04-cli-interface | 11 | 107 min | 9.7 min |
+| 05-background-queue | 1 | 3.6 min | 3.6 min |
 
 **Recent Trend:**
-- Last 3 plans: 04-09 (72.6 min), 04-10 (1.8 min), 04-11 (1.9 min)
-- Trend: Phase 04 complete - All GraphService methods implemented with LLM integration
+- Last 3 plans: 04-10 (1.8 min), 04-11 (1.9 min), 05-01 (3.6 min)
+- Trend: Phase 05 started - Queue foundation with SQLite persistence and dead letter support
 
 *Updated after each plan completion*
 
@@ -52,6 +53,7 @@ Progress: [███████████████████████
 | Phase 04 P09 | 4353 | 2 tasks | 4 files |
 | Phase 04 P10 | 106 | 2 tasks | 1 files |
 | Phase 04 P11 | 112 | 2 tasks | 1 files |
+| Phase 05 P01 | 214 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -137,6 +139,13 @@ Recent decisions affecting current work:
 - [Phase 04-11]: compact() uses exact case-insensitive name matching for deduplication (fuzzy/semantic dedup deferred to Phase 9)
 - [Phase 04-11]: Deduplication keeps entity with longest summary (assumes most informative), deletes rest via Node.delete_by_uuids()
 - [Phase 04-11]: Extracted _get_db_size() helper to avoid code duplication between compact() and get_stats()
+- [Phase 05-01]: JobStatus enum for type-safe status tracking (PENDING, PROCESSING, FAILED, DEAD)
+- [Phase 05-01]: QueuedJob dataclass non-frozen to allow status/attempts mutation during processing
+- [Phase 05-01]: Dead letter table uses separate SQLite connection with WAL mode for thread safety
+- [Phase 05-01]: Soft capacity limit always accepts jobs but logs warnings at 80% and 100%+ capacity
+- [Phase 05-01]: is_hook_context() checks CLAUDE_* env vars, TTY status, and CI/CD markers for silent mode
+- [Phase 05-01]: FIFO batching: get_batch() collects consecutive parallel jobs, stops at sequential barrier
+- [Phase 05-01]: Connection-per-call pattern for dead letter operations ensures thread safety
 
 ### Pending Todos
 
@@ -148,8 +157,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-12 (phase execution)
-Stopped at: Completed 04-11-PLAN.md (Implement LLM-powered summarize and compact methods)
+Last session: 2026-02-13 (phase execution)
+Stopped at: Completed 05-01-PLAN.md (Queue Foundation - Data Models and Storage)
 Resume file: None
 
-**Phase 4 COMPLETE:** All 11 plans in Phase 04-cli-interface completed. All 8 GraphService methods (add, search, list_entities, get_entity, delete_entities, summarize, compact, get_stats) fully implemented with no placeholders. CLI commands fully wired to real graph operations with LLM integration and proper fallback handling. Ready to proceed to Phase 05 (Git Hooks).
+**Phase 5 IN PROGRESS:** Plan 1 of 3 complete in Phase 05-background-queue. Queue foundation established with SQLite-backed JobQueue, FIFO parallel batching logic, dead letter table, and hook context detection. Ready for Plan 02 (Background Worker Thread) and Plan 03 (CLI Commands).
