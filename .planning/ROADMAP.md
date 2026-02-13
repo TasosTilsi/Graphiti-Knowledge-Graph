@@ -131,10 +131,13 @@ Plans:
   3. Only relevant information (decisions, architecture) is stored, not noise
   4. Excluded files are never processed during automatic capture
   5. Captured knowledge is queryable and appears in search results
-**Plans**: TBD
+**Plans**: 4 plans in 2 waves
 
 Plans:
-- [ ] 06-01: TBD during planning
+- [ ] 06-01-PLAN.md — Capture pipeline core: git capture, batching, relevance filtering, LLM summarization
+- [ ] 06-02-PLAN.md — Hook installation system: templates, installer, manager
+- [ ] 06-03-PLAN.md — Conversation capture and git worker processing pipeline
+- [ ] 06-04-PLAN.md — CLI commands (capture, hooks) and auto-install wiring
 
 ### Phase 7: Git Integration
 **Goal**: Make project knowledge graphs safe for git commits with validation and merge conflict prevention
@@ -193,7 +196,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 3. LLM Integration | 5/5 | Complete | 2026-02-08 |
 | 4. CLI Interface | 11/11 | Complete | 2026-02-12 |
 | 5. Background Queue | 3/3 | Complete | 2026-02-13 |
-| 6. Automatic Capture | 0/TBD | Not started | - |
+| 6. Automatic Capture | 0/4 | Not started | - |
 | 7. Git Integration | 0/TBD | Not started | - |
 | 8. MCP Server | 0/TBD | Not started | - |
 | 9. Advanced Features | 0/TBD | Not started | - |
