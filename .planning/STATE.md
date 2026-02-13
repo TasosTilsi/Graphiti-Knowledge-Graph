@@ -9,20 +9,20 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 ## Current Position
 
-Phase: 5 of 9 (Background Queue)
-Plan: 3 of 3 complete
-Status: Complete
-Last activity: 2026-02-13 — Completed 05-03-PLAN.md (CLI Commands)
-Next: Phase 06 (Git Hooks)
+Phase: 6 of 9 (Automatic Capture)
+Plan: 2 of 4 complete
+Status: In Progress
+Last activity: 2026-02-13 — Completed 06-02-PLAN.md (Hook Installation and Management)
+Next: 06-03-PLAN.md (CLI Hook Commands)
 
-Progress: [██████████████████████████████] 27 of 27 plans complete (100%)
+Progress: [██████████████████████████████▒▒] 29 of 31 plans complete (94%)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 27
-- Average duration: 12.1 min
-- Total execution time: 5h 30.7min
+- Total plans completed: 29
+- Average duration: 13.3 min
+- Total execution time: 6h 7.8min
 
 **By Phase:**
 
@@ -33,10 +33,11 @@ Progress: [███████████████████████
 | 03-llm-integration | 5 | 83 min | 16.6 min |
 | 04-cli-interface | 11 | 107 min | 9.7 min |
 | 05-background-queue | 3 | 8.7 min | 2.9 min |
+| 06-automatic-capture | 2 | 36.1 min | 18.1 min |
 
 **Recent Trend:**
-- Last 3 plans: 05-01 (3.6 min), 05-02 (2.8 min), 05-03 (2.4 min)
-- Trend: Phase 05 complete - Background queue foundation with SQLite persistence, worker thread, and CLI management ready for Phase 6 git hook integration
+- Last 3 plans: 05-03 (2.4 min), 06-01 (3.4 min), 06-02 (33 min)
+- Trend: Phase 06 in progress - Hook installation and management with non-destructive append strategy complete, ready for CLI integration
 
 *Updated after each plan completion*
 
@@ -56,6 +57,8 @@ Progress: [███████████████████████
 | Phase 05 P01 | 214 | 2 tasks | 4 files |
 | Phase 05 P02 | 167 | 2 tasks | 2 files |
 | Phase 05 P03 | 141 | 2 tasks | 2 files |
+| Phase 06 P01 | 202 | 2 tasks | 5 files |
+| Phase 06 P02 | 1966 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -158,6 +161,11 @@ Recent decisions affecting current work:
 - [Phase 05-03]: JSON format support enables programmatic queue monitoring and automation
 - [Phase 05-03]: Blocking process command provides synchronous CLI fallback when MCP not running
 - [Phase 05-03]: Retry 'all' enables bulk dead letter recovery for operational convenience
+- [Phase 06-02]: Append strategy for existing hooks (non-destructive, preserves other tools' hooks)
+- [Phase 06-02]: GRAPHITI_HOOK_START/END markers for idempotent detection and removal
+- [Phase 06-02]: Config check on every hook run (exit immediately if hooks.enabled=false)
+- [Phase 06-02]: Default enabled=True when config key missing (hooks installed intentionally)
+- [Phase 06-02]: Graceful failure handling (try both git and Claude hooks even if one fails)
 
 ### Pending Todos
 
@@ -170,7 +178,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-13 (phase execution)
-Stopped at: Completed 05-03-PLAN.md (CLI Commands)
+Stopped at: Completed 06-02-PLAN.md (Hook Installation and Management)
 Resume file: None
 
-**Phase 5 COMPLETE:** All 3 plans complete in Phase 05-background-queue. Background queue foundation ready for production use - SQLite persistence, FIFO batching, background worker with parallel execution, exponential backoff retry, CLI management (status/process/retry), health monitoring. Phase 6 (Git Hooks) ready to integrate queue for async capture during Claude Code hooks.
+**Phase 6 Progress (2 of 4):** Git post-commit hook template with config toggle, non-destructive installer using marker-based append strategy, and lifecycle manager for both git and Claude Code hooks complete. Ready for CLI integration in 06-03-PLAN.md.
