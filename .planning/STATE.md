@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 6 of 9 (Automatic Capture)
-Plan: 3 of 4 complete
-Status: In Progress
-Last activity: 2026-02-13 — Completed 06-03-PLAN.md (Capture Processing Modules)
-Next: 06-04-PLAN.md (Background Worker Integration)
+Plan: 4 of 4 complete
+Status: Complete
+Last activity: 2026-02-13 — Completed 06-04-PLAN.md (CLI Integration)
+Next: Phase 07 (Future Enhancement)
 
-Progress: [███████████████████████████████▒] 30 of 31 plans complete (97%)
+Progress: [████████████████████████████████] 31 of 31 plans complete (100%)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 30
-- Average duration: 12.8 min
-- Total execution time: 6h 10.7min
+- Total plans completed: 31
+- Average duration: 13.4 min
+- Total execution time: 6h 52.4min
 
 **By Phase:**
 
@@ -33,11 +33,11 @@ Progress: [███████████████████████
 | 03-llm-integration | 5 | 83 min | 16.6 min |
 | 04-cli-interface | 11 | 107 min | 9.7 min |
 | 05-background-queue | 3 | 8.7 min | 2.9 min |
-| 06-automatic-capture | 3 | 39.0 min | 13.0 min |
+| 06-automatic-capture | 4 | 60.7 min | 15.2 min |
 
 **Recent Trend:**
-- Last 3 plans: 06-01 (3.4 min), 06-02 (33 min), 06-03 (2.9 min)
-- Trend: Phase 06 nearing completion - Capture processing modules complete with conversation tracking and git worker pipeline, ready for background worker integration
+- Last 3 plans: 06-02 (33 min), 06-03 (2.9 min), 06-04 (21.7 min)
+- Trend: Phase 06 complete - Automatic capture fully implemented with CLI integration, auto-install on first use, and frictionless onboarding. All 31 plans complete.
 
 *Updated after each plan completion*
 
@@ -60,6 +60,7 @@ Progress: [███████████████████████
 | Phase 06 P01 | 202 | 2 tasks | 5 files |
 | Phase 06 P02 | 1966 | 2 tasks | 4 files |
 | Phase 06 P03 | 172 | 2 tasks | 3 files |
+| Phase 06 P04 | 1300 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -173,6 +174,10 @@ Recent decisions affecting current work:
 - [Phase 06-02]: Config check on every hook run (exit immediately if hooks.enabled=false)
 - [Phase 06-02]: Default enabled=True when config key missing (hooks installed intentionally)
 - [Phase 06-02]: Graceful failure handling (try both git and Claude hooks even if one fails)
+- [Phase 06-04]: Auto-install hooks on first 'graphiti add' in any git project (frictionless onboarding)
+- [Phase 06-04]: Best-effort auto-install pattern (never fails add operation, logs warning on failure)
+- [Phase 06-04]: CLI capture command supports both manual and auto modes for user/hook-triggered capture
+- [Phase 06-04]: Hooks command group provides install/uninstall/status lifecycle management
 
 ### Pending Todos
 
@@ -185,7 +190,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-13 (phase execution)
-Stopped at: Completed 06-03-PLAN.md (Capture Processing Modules)
+Stopped at: Completed 06-04-PLAN.md (CLI Integration)
 Resume file: None
 
-**Phase 6 Progress (3 of 4):** Capture processing modules complete with conversation tracking (JSONL transcripts, per-session metadata) and git worker pipeline (read → filter → batch → summarize → store). Ready for background worker integration in 06-04-PLAN.md.
+**Phase 6 Complete (4 of 4):** Automatic capture fully implemented with capture pipeline, hook installation, conversation processing, and CLI integration. Auto-install on first 'graphiti add' provides frictionless onboarding. Ready for Phase 7.
