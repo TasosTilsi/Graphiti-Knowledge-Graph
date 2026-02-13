@@ -68,6 +68,8 @@ from src.cli.commands.delete import delete_command
 from src.cli.commands.config import config_command
 from src.cli.commands.health import health_command
 from src.cli.commands.queue_cmd import queue_app
+from src.cli.commands.capture import capture_command
+from src.cli.commands.hooks import hooks_app
 
 
 # Register commands
@@ -112,5 +114,11 @@ app.command(
 # Register queue command group
 app.add_typer(queue_app, name="queue", help="Manage the background processing queue")
 
+# Register capture command
+app.command(name="capture", help="Capture knowledge from conversations")(capture_command)
 
-# All 10 commands registered: add, search, list, show, delete, summarize, compact, config, health, queue (group)
+# Register hooks command group
+app.add_typer(hooks_app, name="hooks", help="Manage automatic capture hooks")
+
+
+# All 12 commands registered: add, search, list, show, delete, summarize, compact, config, health, queue (group), capture, hooks (group)

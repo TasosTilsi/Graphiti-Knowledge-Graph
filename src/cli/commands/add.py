@@ -15,6 +15,8 @@ from src.models import GraphScope
 from src.config.paths import get_project_db_path
 from src.graph import get_service, run_graph_operation
 from src.llm import LLMUnavailableError
+from src.hooks import is_git_hook_installed, install_hooks
+import structlog
 
 
 def _detect_source() -> str:
@@ -50,6 +52,66 @@ def _ensure_project_directory(project_root: Path) -> None:
     graphiti_dir = project_root / ".graphiti"
     if not graphiti_dir.exists():
         graphiti_dir.mkdir(parents=True, exist_ok=True)
+
+
+def _auto_install_hooks(project_root: Path) -> None:
+    """Auto-install hooks on first graphiti add in a project.
+
+    Per locked decision: "Auto-install on first `graphiti add`: When user
+    first runs `graphiti add` in a project, automatically install the
+    post-commit hook. Frictionless, no extra step."
+
+    This function:
+    1. Checks if git hook already installed (no-op if yes)
+    2. Checks if .git directory exists (only install in git repos)
+    3. Installs both git and Claude Code hooks
+    4. Logs the auto-installation (transparent to user)
+    5. Best-effort: Never fails the add operation
+
+    Args:
+        project_root: Root directory of the project
+    """
+    logger = structlog.get_logger()
+
+    try:
+        # 1. Check if already installed (no-op if yes)
+        if is_git_hook_installed(project_root):
+            return
+
+        # 2. Check if .git directory exists (only install in git repos)
+        git_dir = project_root / ".git"
+        if not git_dir.exists():
+            return
+
+        # 3. Install both git and Claude Code hooks (locked decision)
+        logger.info(
+            "auto_install_hooks",
+            action="installing_hooks",
+            project_root=str(project_root)
+        )
+
+        result = install_hooks(
+            project_root,
+            install_git=True,
+            install_claude=True
+        )
+
+        if result.get("git_installed") or result.get("claude_installed"):
+            logger.info(
+                "auto_install_hooks",
+                action="hooks_installed",
+                git=result.get("git_installed", False),
+                claude=result.get("claude_installed", False)
+            )
+
+    except Exception as e:
+        # Best-effort: Log warning but do NOT fail the add operation
+        logger.warning(
+            "auto_install_hooks",
+            action="install_failed",
+            error=str(e),
+            message="Hook installation failed, continuing with add operation"
+        )
 
 
 def _add_entity(
@@ -134,6 +196,10 @@ def add_command(
         # 4. Auto-init .graphiti/ directory for project scope
         if scope == GraphScope.PROJECT and root:
             _ensure_project_directory(root)
+
+        # 4.5 Auto-install hooks on first add (best-effort)
+        if root:
+            _auto_install_hooks(root)
 
         # 5. Add entity with spinner
         with console.status("Adding to knowledge graph..."):
