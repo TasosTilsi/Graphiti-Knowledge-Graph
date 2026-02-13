@@ -38,8 +38,17 @@ from src.capture.git_capture import (
     append_pending_commit,
 )
 from src.capture.batching import BatchAccumulator
-
-# Will be extended in Task 2 with relevance and summarizer exports
+from src.capture.relevance import (
+    filter_relevant_commit,
+    get_active_categories,
+    RELEVANCE_CATEGORIES,
+    DEFAULT_CATEGORIES,
+)
+from src.capture.summarizer import (
+    summarize_batch,
+    summarize_and_store,
+    BATCH_SUMMARIZATION_PROMPT,
+)
 
 __all__ = [
     # Git capture
@@ -48,4 +57,13 @@ __all__ = [
     "append_pending_commit",
     # Batching
     "BatchAccumulator",
+    # Relevance filtering
+    "filter_relevant_commit",
+    "get_active_categories",
+    "RELEVANCE_CATEGORIES",
+    "DEFAULT_CATEGORIES",
+    # Summarization
+    "summarize_batch",
+    "summarize_and_store",
+    "BATCH_SUMMARIZATION_PROMPT",
 ]
