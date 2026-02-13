@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: LLM Integration** - Cloud Ollama with local fallback
 - [x] **Phase 4: CLI Interface** - Core operations and configuration
 - [x] **Phase 5: Background Queue** - Async processing for non-blocking operations
-- [ ] **Phase 6: Automatic Capture** - Git hooks and conversation capture
+- [x] **Phase 6: Automatic Capture** - Git hooks and conversation capture
 - [ ] **Phase 7: Git Integration** - Git-safe knowledge graphs
 - [ ] **Phase 8: MCP Server** - Context injection and Claude Code integration
 - [ ] **Phase 9: Advanced Features** - Smart retention, performance, and context refresh
@@ -134,10 +134,10 @@ Plans:
 **Plans**: 4 plans in 2 waves
 
 Plans:
-- [ ] 06-01-PLAN.md — Capture pipeline core: git capture, batching, relevance filtering, LLM summarization
-- [ ] 06-02-PLAN.md — Hook installation system: templates, installer, manager
-- [ ] 06-03-PLAN.md — Conversation capture and git worker processing pipeline
-- [ ] 06-04-PLAN.md — CLI commands (capture, hooks) and auto-install wiring
+- [x] 06-01-PLAN.md — Capture pipeline core: git capture, batching, relevance filtering, LLM summarization
+- [x] 06-02-PLAN.md — Hook installation system: templates, installer, manager
+- [x] 06-03-PLAN.md — Conversation capture and git worker processing pipeline
+- [x] 06-04-PLAN.md — CLI commands (capture, hooks) and auto-install wiring
 
 ### Phase 7: Git Integration
 **Goal**: Make project knowledge graphs safe for git commits with validation and merge conflict prevention
@@ -196,7 +196,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 3. LLM Integration | 5/5 | Complete | 2026-02-08 |
 | 4. CLI Interface | 11/11 | Complete | 2026-02-12 |
 | 5. Background Queue | 3/3 | Complete | 2026-02-13 |
-| 6. Automatic Capture | 0/4 | Not started | - |
+| 6. Automatic Capture | 4/4 | Complete | 2026-02-13 |
 | 7. Git Integration | 0/TBD | Not started | - |
 | 8. MCP Server | 0/TBD | Not started | - |
 | 9. Advanced Features | 0/TBD | Not started | - |
