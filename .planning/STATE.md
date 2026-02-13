@@ -161,6 +161,12 @@ Recent decisions affecting current work:
 - [Phase 05-03]: JSON format support enables programmatic queue monitoring and automation
 - [Phase 05-03]: Blocking process command provides synchronous CLI fallback when MCP not running
 - [Phase 05-03]: Retry 'all' enables bulk dead letter recovery for operational convenience
+- [Phase 06-01]: Atomic rename pattern for pending_commits file prevents race conditions during concurrent append
+- [Phase 06-01]: Per-file diff truncation at 500 lines via awk for context preservation with payload limits
+- [Phase 06-01]: Security filter runs BEFORE LLM (sanitize_content gate prevents secrets reaching LLM)
+- [Phase 06-01]: Graceful LLM fallback to concatenation on unavailable (better to store raw than lose capture)
+- [Phase 06-01]: All 4 relevance categories enabled by default (decisions/architecture/bugs/dependencies)
+- [Phase 06-01]: Batch size defaults to 10 items per user decision from Phase 6 research
 - [Phase 06-02]: Append strategy for existing hooks (non-destructive, preserves other tools' hooks)
 - [Phase 06-02]: GRAPHITI_HOOK_START/END markers for idempotent detection and removal
 - [Phase 06-02]: Config check on every hook run (exit immediately if hooks.enabled=false)
@@ -178,7 +184,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-13 (phase execution)
-Stopped at: Completed 06-02-PLAN.md (Hook Installation and Management)
+Stopped at: Completed 06-01-PLAN.md (Capture Pipeline Core)
 Resume file: None
 
-**Phase 6 Progress (2 of 4):** Git post-commit hook template with config toggle, non-destructive installer using marker-based append strategy, and lifecycle manager for both git and Claude Code hooks complete. Ready for CLI integration in 06-03-PLAN.md.
+**Phase 6 Progress (1 of 4):** Capture pipeline core complete with git extraction (atomic pending file I/O), batch accumulation (10 items), relevance filtering (4 categories), and LLM summarization (security-gated). Ready for hook installation in 06-02-PLAN.md.
