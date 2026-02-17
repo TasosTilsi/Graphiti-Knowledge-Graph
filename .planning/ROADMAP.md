@@ -149,10 +149,14 @@ Plans:
   3. Concurrent commits from multiple developers don't corrupt graphs
   4. Git diffs of graph changes are meaningful and reviewable
   5. Storage architecture prevents or minimizes merge conflicts
-**Plans**: TBD
+**Plans**: 5 plans in 3 waves
 
 Plans:
-- [ ] 07-01: TBD during planning
+- [ ] 07-01-PLAN.md -- Journal entry Pydantic model and timestamped file writer
+- [ ] 07-02-PLAN.md -- Git configuration files (.gitignore, .gitattributes) and LFS helpers
+- [ ] 07-03-PLAN.md -- Checkpoint tracking and incremental journal replay engine
+- [ ] 07-04-PLAN.md -- Pre-commit validation hooks (staging, schema, secrets, size)
+- [ ] 07-05-PLAN.md -- Auto-heal, compact, hook templates, and auto-setup
 
 ### Phase 8: MCP Server
 **Goal**: Provide MCP server interface for Claude Code integration with context injection and conversation capture
