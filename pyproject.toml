@@ -5,6 +5,7 @@ description = "Dual-scope knowledge graph system with global preferences and pro
 requires-python = ">=3.12"
 dependencies = [
     "detect-secrets>=1.5.0",
+    "GitPython>=3.1.0",
     "graphiti-core[kuzu]==0.26.3",
     "httpx>=0.28.0",
     "kuzu==0.11.3",
