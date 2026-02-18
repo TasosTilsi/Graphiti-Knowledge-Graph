@@ -16,8 +16,11 @@ HOOK_START_MARKER = "# GRAPHITI_HOOK_START"
 HOOK_END_MARKER = "# GRAPHITI_HOOK_END"
 
 
-def _get_hook_template() -> str:
-    """Read the post-commit.sh template from the templates directory.
+def _get_hook_template(hook_type: str = "post-commit") -> str:
+    """Read a hook template from the templates directory.
+
+    Args:
+        hook_type: Hook type (post-commit, pre-commit, post-merge)
 
     Returns:
         Template content as string
@@ -25,17 +28,20 @@ def _get_hook_template() -> str:
     Raises:
         FileNotFoundError: If template file doesn't exist
     """
-    template_path = Path(__file__).parent / "templates" / "post-commit.sh"
+    template_path = Path(__file__).parent / "templates" / f"{hook_type}.sh"
     return template_path.read_text()
 
 
-def _get_graphiti_section() -> str:
+def _get_graphiti_section(hook_type: str = "post-commit") -> str:
     """Extract the graphiti section (between markers) from the template.
+
+    Args:
+        hook_type: Hook type (post-commit, pre-commit, post-merge)
 
     Returns:
         Just the section between GRAPHITI_HOOK_START and GRAPHITI_HOOK_END markers (inclusive)
     """
-    template = _get_hook_template()
+    template = _get_hook_template(hook_type)
 
     # Find start and end marker positions
     start_idx = template.find(HOOK_START_MARKER)
@@ -314,3 +320,233 @@ def uninstall_claude_hook(project_path: Path) -> bool:
 
     logger.info("Graphiti Claude Code hook removed", project=str(project_path))
     return True
+
+
+# Generalized git hook functions for pre-commit and post-merge
+
+
+def _install_hook(hook_type: str, repo_path: Path, force: bool = False) -> bool:
+    """Install a git hook non-destructively (generalized helper).
+
+    Args:
+        hook_type: Hook type (pre-commit, post-merge, etc.)
+        repo_path: Path to git repository
+        force: If True, reinstall even if already installed
+
+    Returns:
+        True if hook was installed, False if already installed
+
+    Raises:
+        ValueError: If repo_path is not a git repository
+    """
+    # Verify this is a git repo
+    git_dir = repo_path / ".git"
+    if not git_dir.exists() or not git_dir.is_dir():
+        raise ValueError(f"Not a git repository: {repo_path}")
+
+    hook_path = git_dir / "hooks" / hook_type
+
+    # Check if already installed (idempotent)
+    if hook_path.exists():
+        content = hook_path.read_text()
+        if HOOK_START_MARKER in content:
+            logger.info(f"Graphiti {hook_type} hook already installed", repo=str(repo_path))
+            return False
+
+    # Ensure hooks directory exists
+    hook_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if hook_path.exists():
+        # Existing hook from another tool - append our section
+        logger.info(
+            f"Existing {hook_type} hook found, appending graphiti section",
+            path=str(hook_path)
+        )
+
+        existing_content = hook_path.read_text()
+
+        # Detect pre-commit framework
+        if "# pre-commit" in existing_content or "pre-commit hook" in existing_content:
+            logger.warning(
+                "pre-commit framework detected - appending graphiti hook",
+                suggestion="Consider pre-commit integration for better compatibility"
+            )
+
+        # Append our section with spacing
+        graphiti_section = _get_graphiti_section(hook_type)
+        new_content = existing_content.rstrip() + "\n\n" + graphiti_section
+        hook_path.write_text(new_content)
+
+    else:
+        # No existing hook - create new one with full template
+        logger.info(f"Creating new {hook_type} hook", path=str(hook_path))
+        template = _get_hook_template(hook_type)
+        hook_path.write_text(template)
+
+    # Set executable permission
+    hook_path.chmod(0o755)
+
+    logger.info(f"Graphiti {hook_type} hook installed successfully", repo=str(repo_path))
+    return True
+
+
+def _is_hook_installed(hook_type: str, repo_path: Path) -> bool:
+    """Check if graphiti hook is installed (generalized helper).
+
+    Args:
+        hook_type: Hook type (pre-commit, post-merge, etc.)
+        repo_path: Path to git repository
+
+    Returns:
+        True if hook exists and contains GRAPHITI_HOOK_START marker
+    """
+    hook_path = repo_path / ".git" / "hooks" / hook_type
+
+    if not hook_path.exists():
+        return False
+
+    try:
+        content = hook_path.read_text()
+        return HOOK_START_MARKER in content
+    except Exception as e:
+        logger.warning(f"Failed to read {hook_type} hook file", path=str(hook_path), error=str(e))
+        return False
+
+
+def _uninstall_hook(hook_type: str, repo_path: Path) -> bool:
+    """Remove graphiti section from a git hook (generalized helper).
+
+    Args:
+        hook_type: Hook type (pre-commit, post-merge, etc.)
+        repo_path: Path to git repository
+
+    Returns:
+        True if hook was uninstalled, False if not installed
+    """
+    # Check if installed
+    if not _is_hook_installed(hook_type, repo_path):
+        logger.info(f"Graphiti {hook_type} hook not installed, nothing to uninstall", repo=str(repo_path))
+        return False
+
+    hook_path = repo_path / ".git" / "hooks" / hook_type
+    content = hook_path.read_text()
+
+    # Find graphiti section boundaries
+    start_idx = content.find(HOOK_START_MARKER)
+    end_idx = content.find(HOOK_END_MARKER)
+
+    if start_idx == -1 or end_idx == -1:
+        logger.error("Hook markers not found despite is_hook_installed check",
+                    path=str(hook_path))
+        return False
+
+    # Find the end of the end marker line
+    end_line_end = content.find('\n', end_idx)
+    if end_line_end == -1:
+        end_line_end = len(content)
+    else:
+        end_line_end += 1  # Include the newline
+
+    # Extract content before and after graphiti section
+    before = content[:start_idx]
+    after = content[end_line_end:]
+
+    # Remove surrounding blank lines
+    before = before.rstrip()
+    after = after.lstrip()
+
+    remaining_content = before + ("\n\n" + after if after else "")
+    remaining_content = remaining_content.strip()
+
+    if not remaining_content or remaining_content == "#!/bin/sh" or remaining_content == "#!/bin/bash":
+        # Hook only contained graphiti content - remove entire file
+        hook_path.unlink()
+        logger.info(f"Removed entire {hook_type} hook (only graphiti content)",
+                   path=str(hook_path))
+    else:
+        # Other content exists - write back without graphiti section
+        hook_path.write_text(remaining_content + "\n")
+        logger.info(f"Removed graphiti section from {hook_type} hook",
+                   path=str(hook_path))
+
+    return True
+
+
+# Public API for pre-commit hook
+
+
+def install_precommit_hook(repo_path: Path, force: bool = False) -> bool:
+    """Install pre-commit hook for journal validation.
+
+    Args:
+        repo_path: Path to git repository
+        force: If True, reinstall even if already installed
+
+    Returns:
+        True if hook was installed, False if already installed
+    """
+    return _install_hook("pre-commit", repo_path, force)
+
+
+def is_precommit_hook_installed(repo_path: Path) -> bool:
+    """Check if graphiti pre-commit hook is installed.
+
+    Args:
+        repo_path: Path to git repository
+
+    Returns:
+        True if hook exists and contains GRAPHITI_HOOK_START marker
+    """
+    return _is_hook_installed("pre-commit", repo_path)
+
+
+def uninstall_precommit_hook(repo_path: Path) -> bool:
+    """Remove graphiti section from pre-commit hook.
+
+    Args:
+        repo_path: Path to git repository
+
+    Returns:
+        True if hook was uninstalled, False if not installed
+    """
+    return _uninstall_hook("pre-commit", repo_path)
+
+
+# Public API for post-merge hook
+
+
+def install_postmerge_hook(repo_path: Path, force: bool = False) -> bool:
+    """Install post-merge hook for auto-heal.
+
+    Args:
+        repo_path: Path to git repository
+        force: If True, reinstall even if already installed
+
+    Returns:
+        True if hook was installed, False if already installed
+    """
+    return _install_hook("post-merge", repo_path, force)
+
+
+def is_postmerge_hook_installed(repo_path: Path) -> bool:
+    """Check if graphiti post-merge hook is installed.
+
+    Args:
+        repo_path: Path to git repository
+
+    Returns:
+        True if hook exists and contains GRAPHITI_HOOK_START marker
+    """
+    return _is_hook_installed("post-merge", repo_path)
+
+
+def uninstall_postmerge_hook(repo_path: Path) -> bool:
+    """Remove graphiti section from post-merge hook.
+
+    Args:
+        repo_path: Path to git repository
+
+    Returns:
+        True if hook was uninstalled, False if not installed
+    """
+    return _uninstall_hook("post-merge", repo_path)
