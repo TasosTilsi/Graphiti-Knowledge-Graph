@@ -41,19 +41,31 @@ from src.gitops.replay import (
     replay_journal,
     rebuild_from_journal,
 )
+from src.gitops.autoheal import (
+    auto_heal,
+    auto_setup,
+)
+from src.gitops.compact import (
+    compact_journal,
+    get_journal_stats,
+)
 
 __all__ = [
     "JournalAuthor",
     "JournalEntry",
     "JournalOperation",
     "JournalReplayer",
+    "auto_heal",
+    "auto_setup",
     "check_graphiti_size",
+    "compact_journal",
     "create_journal_entry",
     "ensure_database_available",
     "ensure_git_config",
     "generate_gitattributes",
     "generate_gitignore",
     "get_checkpoint",
+    "get_journal_stats",
     "get_new_journal_entries",
     "is_lfs_available",
     "is_lfs_pointer",
