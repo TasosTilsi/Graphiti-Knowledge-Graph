@@ -101,10 +101,13 @@ def create_journal_entry(
     # Generate timestamp (UTC, timezone-aware for cross-timezone deterministic sorting)
     timestamp = datetime.now(timezone.utc)
 
-    # Generate filename: YYYYMMDD_HHMMSS_<uuid6hex>.json
+    # Generate filename: YYYYMMDD_HHMMSS_ffffff_<random>.json
+    # Microseconds ensure chronological ordering even for entries in same second
+    # UUID provides uniqueness in case of simultaneous entries (parallel processes)
     date_part = timestamp.strftime("%Y%m%d_%H%M%S")
+    micro_part = f"{timestamp.microsecond:06d}"
     uuid_part = uuid4().hex[:6]
-    filename = f"{date_part}_{uuid_part}.json"
+    filename = f"{date_part}_{micro_part}_{uuid_part}.json"
 
     # Determine journal directory
     if project_root is None:

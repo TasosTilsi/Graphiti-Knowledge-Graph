@@ -30,23 +30,41 @@ from src.gitops.hooks import (
     stage_journal_entries,
     validate_journal_schemas,
 )
+from src.gitops.checkpoint import (
+    get_checkpoint,
+    set_checkpoint,
+    get_new_journal_entries,
+    validate_checkpoint,
+)
+from src.gitops.replay import (
+    JournalReplayer,
+    replay_journal,
+    rebuild_from_journal,
+)
 
 __all__ = [
     "JournalAuthor",
     "JournalEntry",
     "JournalOperation",
+    "JournalReplayer",
     "check_graphiti_size",
     "create_journal_entry",
     "ensure_database_available",
     "ensure_git_config",
     "generate_gitattributes",
     "generate_gitignore",
+    "get_checkpoint",
+    "get_new_journal_entries",
     "is_lfs_available",
     "is_lfs_pointer",
     "list_journal_entries",
+    "rebuild_from_journal",
+    "replay_journal",
     "run_precommit_validation",
     "scan_journal_secrets",
+    "set_checkpoint",
     "setup_lfs_tracking",
     "stage_journal_entries",
+    "validate_checkpoint",
     "validate_journal_schemas",
 ]
