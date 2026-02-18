@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 7 of 9 (Git Integration)
-Plan: 1 of 5 complete
+Plan: 3 of 5 complete
 Status: In Progress
-Last activity: 2026-02-18 — Completed 07-01-PLAN.md (Journal Entry Foundation)
-Next: 07-02-PLAN.md (Git Configuration)
+Last activity: 2026-02-18 — Completed 07-04-PLAN.md (Pre-commit Validation Hooks)
+Next: 07-03-PLAN.md (Journal Replay and Checkpoints) or 07-05-PLAN.md (Git Hook Installation)
 
-Progress: [████████████████████████████████▌] 32 of 36 plans complete (89%)
+Progress: [████████████████████████████████▊] 34 of 36 plans complete (94%)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 32
-- Average duration: 13.2 min
-- Total execution time: 7h 7.4min
+- Total plans completed: 34
+- Average duration: 12.7 min
+- Total execution time: 7h 12.8min
 
 **By Phase:**
 
@@ -34,11 +34,11 @@ Progress: [███████████████████████
 | 04-cli-interface | 11 | 107 min | 9.7 min |
 | 05-background-queue | 3 | 8.7 min | 2.9 min |
 | 06-automatic-capture | 4 | 60.7 min | 15.2 min |
-| 07-git-integration | 1 | 5 min | 5 min |
+| 07-git-integration | 3 | 13.1 min | 4.4 min |
 
 **Recent Trend:**
-- Last 3 plans: 06-03 (2.9 min), 06-04 (21.7 min), 07-01 (5 min)
-- Trend: Phase 07 in progress - Journal entry foundation complete with migration-style timestamped logs and git author attribution. 1 of 5 plans complete.
+- Last 3 plans: 06-04 (21.7 min), 07-01 (5 min), 07-02 (2.7 min), 07-04 (5.4 min)
+- Trend: Phase 07 in progress - Pre-commit validation hooks complete with journal auto-staging, schema validation, secret scanning, and size monitoring. 3 of 5 plans complete.
 
 *Updated after each plan completion*
 
@@ -64,6 +64,7 @@ Progress: [███████████████████████
 | Phase 06 P04 | 1300 | 2 tasks | 4 files |
 | Phase 07 P02 | 160 | 2 tasks | 4 files |
 | Phase 07 P01 | 300 | 2 tasks | 3 files |
+| Phase 07 P04 | 325 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -190,6 +191,12 @@ Recent decisions affecting current work:
 - [Phase 07-02]: Idempotent gitattributes generation to prevent duplicate LFS tracking lines
 - [Phase 07-02]: LFS pointer detection via file size (<200 bytes) and version string check
 - [Phase 07-02]: Journal rebuild fallback when LFS unavailable ensures system works without LFS installed
+- [Phase 07-04]: Auto-stage journal entries on best-effort basis (never block commits on staging errors)
+- [Phase 07-04]: Schema validation uses JournalEntry.model_validate for strict Pydantic enforcement
+- [Phase 07-04]: Secret scanning leverages existing Phase 2 sanitize_content (belt-and-suspenders with LFS)
+- [Phase 07-04]: Size thresholds at 50MB/100MB excluding LFS-tracked database with warnings not blocking commits
+- [Phase 07-04]: GRAPHITI_SKIP=1 environment variable bypasses all pre-commit checks for WIP commits
+- [Phase 07-04]: Errors block commits (schema/secrets), warnings inform but allow (size)
 
 ### Pending Todos
 
@@ -202,7 +209,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-18 (phase execution)
-Stopped at: Completed 07-01-PLAN.md (Journal Entry Foundation)
+Stopped at: Completed 07-04-PLAN.md (Pre-commit Validation Hooks)
 Resume file: None
 
-**Phase 7 In Progress (1 of 5):** Journal entry foundation complete with migration-style timestamped logs, Pydantic validation, and git author attribution. Ready for 07-02 (Git Configuration).
+**Phase 7 In Progress (3 of 5):** Pre-commit validation hooks complete with journal auto-staging, schema validation, secret scanning, and size monitoring. Plans 07-01 (Journal Entry Foundation), 07-02 (Git Configuration), and 07-04 (Pre-commit Validation Hooks) complete. Remaining: 07-03 (Journal Replay and Checkpoints), 07-05 (Git Hook Installation).
