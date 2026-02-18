@@ -12,17 +12,17 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 Phase: 7 of 9 (Git Integration)
 Plan: 3 of 5 complete
 Status: In Progress
-Last activity: 2026-02-18 — Completed 07-04-PLAN.md (Pre-commit Validation Hooks)
-Next: 07-03-PLAN.md (Journal Replay and Checkpoints) or 07-05-PLAN.md (Git Hook Installation)
+Last activity: 2026-02-18 — Completed 07-03-PLAN.md (Checkpoint Tracking and Replay)
+Next: 07-04-PLAN.md (Pre-commit Validation Hooks) or 07-05-PLAN.md (Git Hook Installation)
 
-Progress: [████████████████████████████████▊] 34 of 36 plans complete (94%)
+Progress: [████████████████████████████████▊] 33 of 36 plans complete (92%)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 34
-- Average duration: 12.7 min
-- Total execution time: 7h 12.8min
+- Total plans completed: 33
+- Average duration: 12.9 min
+- Total execution time: 7h 7.9min
 
 **By Phase:**
 
@@ -34,11 +34,11 @@ Progress: [███████████████████████
 | 04-cli-interface | 11 | 107 min | 9.7 min |
 | 05-background-queue | 3 | 8.7 min | 2.9 min |
 | 06-automatic-capture | 4 | 60.7 min | 15.2 min |
-| 07-git-integration | 3 | 13.1 min | 4.4 min |
+| 07-git-integration | 3 | 15.2 min | 5.1 min |
 
 **Recent Trend:**
-- Last 3 plans: 06-04 (21.7 min), 07-01 (5 min), 07-02 (2.7 min), 07-04 (5.4 min)
-- Trend: Phase 07 in progress - Pre-commit validation hooks complete with journal auto-staging, schema validation, secret scanning, and size monitoring. 3 of 5 plans complete.
+- Last 3 plans: 07-01 (5 min), 07-02 (2.7 min), 07-03 (7.5 min)
+- Trend: Phase 07 in progress - Checkpoint tracking and replay engine complete with incremental sync and last-write-wins conflict resolution. 3 of 5 plans complete.
 
 *Updated after each plan completion*
 
@@ -64,7 +64,7 @@ Progress: [███████████████████████
 | Phase 06 P04 | 1300 | 2 tasks | 4 files |
 | Phase 07 P02 | 160 | 2 tasks | 4 files |
 | Phase 07 P01 | 300 | 2 tasks | 3 files |
-| Phase 07 P04 | 325 | 2 tasks | 2 files |
+| Phase 07 P03 | 447 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -197,6 +197,11 @@ Recent decisions affecting current work:
 - [Phase 07-04]: Size thresholds at 50MB/100MB excluding LFS-tracked database with warnings not blocking commits
 - [Phase 07-04]: GRAPHITI_SKIP=1 environment variable bypasses all pre-commit checks for WIP commits
 - [Phase 07-04]: Errors block commits (schema/secrets), warnings inform but allow (size)
+- [Phase 07-03]: Atomic checkpoint updates using temp file + Path.replace() prevents corruption during crash recovery
+- [Phase 07-03]: Per-entry checkpoint updates (not batch) prevent duplicate processing on crash recovery
+- [Phase 07-03]: Microsecond precision in journal filenames (YYYYMMDD_HHMMSS_ffffff_<uuid>) ensures chronological ordering for entries in same second
+- [Phase 07-03]: Callback pattern (apply_fn) allows replay engine testing independently from database application
+- [Phase 07-03]: Last-write-wins conflict resolution achieved by processing entries in chronological order
 
 ### Pending Todos
 
@@ -209,7 +214,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-18 (phase execution)
-Stopped at: Completed 07-04-PLAN.md (Pre-commit Validation Hooks)
+Stopped at: Completed 07-03-PLAN.md (Checkpoint Tracking and Replay)
 Resume file: None
 
-**Phase 7 In Progress (3 of 5):** Pre-commit validation hooks complete with journal auto-staging, schema validation, secret scanning, and size monitoring. Plans 07-01 (Journal Entry Foundation), 07-02 (Git Configuration), and 07-04 (Pre-commit Validation Hooks) complete. Remaining: 07-03 (Journal Replay and Checkpoints), 07-05 (Git Hook Installation).
+**Phase 7 In Progress (3 of 5):** Checkpoint tracking and journal replay complete with atomic checkpointing, incremental sync, and last-write-wins conflict resolution. Plans 07-01 (Journal Entry Foundation), 07-02 (Git Configuration), and 07-03 (Checkpoint Tracking and Replay) complete. Remaining: 07-04 (Pre-commit Validation Hooks), 07-05 (Git Hook Installation).
