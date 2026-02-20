@@ -10,10 +10,10 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 7.1 of 10 (Git Indexing Pivot — INSERTED)
-Plan: 2 of 4 complete (7.1-02 and 7.1-03 done; 7.1-01 and 7.1-04 pending)
+Plan: 3 of 4 complete (7.1-01, 7.1-02, 7.1-03 done; 7.1-04 pending)
 Status: In progress
-Last activity: 2026-02-20 — 7.1-02 complete: src/indexer/ package built with GitIndexer, IndexState, quality gate, two-pass LLM extraction
-Next: 7.1-01-PLAN.md (cleanup) or 7.1-04-PLAN.md (graphiti index CLI command)
+Last activity: 2026-02-20 — 7.1-01 complete: deleted 6 journal modules, trimmed gitops package to general git hygiene only
+Next: 7.1-04-PLAN.md (graphiti index CLI command)
 
 Progress: [████████████████████████████████░░░░░] 35 plans complete — 3 phases remaining (7.1, 8, 9, 10)
 
@@ -221,6 +221,8 @@ Recent decisions affecting current work:
 - [Phase 7.1]: Two-pass extraction per commit: structured Q&A + free-form entity facts, both tagged git-history-index: for traceability
 - [Phase 7.1]: Quality gate fails open: exception during commit stats check = process the commit rather than skip
 - [Phase 7.1]: save_state() after every processed commit for crash recovery at cost of I/O (crash-safe indexing)
+- [Phase 7.1]: scan_staged_secrets() scans ALL staged files (not just journal/) — broader scope than old scan_journal_secrets()
+- [Phase 7.1]: ensure_git_config() return dict simplified to {gitignore: bool} only — gitattributes key removed with LFS feature
 
 ### Pending Todos
 
@@ -238,8 +240,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-20 (execute-phase 7.1-03)
-Stopped at: Completed 7.1-03-PLAN.md — hook templates and installer extension
+Last session: 2026-02-20 (execute-phase 7.1-01)
+Stopped at: Completed 7.1-01-PLAN.md — journal module deletion and gitops package trim
 Resume file: .planning/phases/7.1-git-indexing-pivot-inserted/7.1-CONTEXT.md
 
 **Phase 7.1 Context Captured:** Git Indexing Pivot. Key decisions: remove journal/replay/LFS/checkpoint from Phase 7, keep secrets+size pre-commit hooks. Indexer = historical bootstrap (brownfield), Phase 6 = ongoing real-time capture. SHA deduplication prevents overlap. --full flag for clean rebuild. Quality gate skips version-bump/bot/merge/tiny commits. Two-pass extraction (structured Q&A + free-form entity). Stale triggers: post-merge, post-checkout, post-rewrite (NOT post-commit). Cooldown 5 min between auto-triggers.

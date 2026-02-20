@@ -174,7 +174,7 @@ Plans:
 **Plans**: 4 plans in 2 waves
 
 Plans:
-- [ ] 7.1-01-PLAN.md — Remove journal, LFS, checkpoint, replay, autoheal, compact modules; trim surviving gitops files and compact CLI command
+- [x] 7.1-01-PLAN.md — Remove journal, LFS, checkpoint, replay, autoheal, compact modules; trim surviving gitops files and compact CLI command
 - [x] 7.1-02-PLAN.md — Build src/indexer/ package: state management, quality gate, GitIndexer class, two-pass extraction pipeline
 - [x] 7.1-03-PLAN.md — Update and create hook templates (post-merge, post-checkout, post-rewrite, pre-commit); extend installer with new hook types and upgrade path
 - [ ] 7.1-04-PLAN.md — Create graphiti index CLI command; register in app; wire new hook installers into graphiti hooks install
@@ -237,8 +237,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 7.1 -> 8 -> 
 | 4. CLI Interface | 11/11 | Complete | 2026-02-12 |
 | 5. Background Queue | 3/3 | Complete | 2026-02-13 |
 | 6. Automatic Capture | 4/4 | Complete | 2026-02-13 |
-| 7. Git Integration | 5/5 | Complete (superseded by 7.1) | 2026-02-18 |
-| 7.1. Git Indexing Pivot | 2/4 | In progress | - |
+| 7. Git Integration | 5/5 | Complete   | 2026-02-20 |
+| 7.1. Git Indexing Pivot | 3/4 | In progress | - |
 | 8. MCP Server | 0/TBD | Not started | - |
 | 9. Advanced Features | 0/TBD | Not started | - |
 | 10. Frontend UI | 0/TBD | Not started | - |
