@@ -550,3 +550,244 @@ def uninstall_postmerge_hook(repo_path: Path) -> bool:
         True if hook was uninstalled, False if not installed
     """
     return _uninstall_hook("post-merge", repo_path)
+
+
+# Public API for post-checkout hook
+
+
+def install_postcheckout_hook(git_dir: Path) -> bool:
+    """Install post-checkout hook for background indexing on branch switches.
+
+    The hook exits early on file checkouts ($3=0) and only triggers indexing
+    on branch switches ($3=1) to avoid excessive indexing.
+
+    Args:
+        git_dir: Path to the .git directory of the repository
+
+    Returns:
+        True if hook was installed, False if already installed or on error
+    """
+    repo_path = git_dir.parent if git_dir.name == ".git" else git_dir
+    try:
+        return _install_hook("post-checkout", repo_path)
+    except Exception as e:
+        logger.error("Failed to install post-checkout hook", git_dir=str(git_dir), error=str(e))
+        return False
+
+
+def is_postcheckout_hook_installed(git_dir: Path) -> bool:
+    """Check if graphiti post-checkout hook is installed.
+
+    Args:
+        git_dir: Path to the .git directory of the repository
+
+    Returns:
+        True if hook exists and contains GRAPHITI_HOOK_START marker
+    """
+    repo_path = git_dir.parent if git_dir.name == ".git" else git_dir
+    return _is_hook_installed("post-checkout", repo_path)
+
+
+def uninstall_postcheckout_hook(git_dir: Path) -> bool:
+    """Remove graphiti section from post-checkout hook.
+
+    Args:
+        git_dir: Path to the .git directory of the repository
+
+    Returns:
+        True if hook was uninstalled, False if not installed
+    """
+    repo_path = git_dir.parent if git_dir.name == ".git" else git_dir
+    return _uninstall_hook("post-checkout", repo_path)
+
+
+# Public API for post-rewrite hook
+
+
+def install_postrewrite_hook(git_dir: Path) -> bool:
+    """Install post-rewrite hook for background indexing after rebase or amend.
+
+    Triggered by 'git rebase' and 'git commit --amend' to re-index rewritten commits.
+
+    Args:
+        git_dir: Path to the .git directory of the repository
+
+    Returns:
+        True if hook was installed, False if already installed or on error
+    """
+    repo_path = git_dir.parent if git_dir.name == ".git" else git_dir
+    try:
+        return _install_hook("post-rewrite", repo_path)
+    except Exception as e:
+        logger.error("Failed to install post-rewrite hook", git_dir=str(git_dir), error=str(e))
+        return False
+
+
+def is_postrewrite_hook_installed(git_dir: Path) -> bool:
+    """Check if graphiti post-rewrite hook is installed.
+
+    Args:
+        git_dir: Path to the .git directory of the repository
+
+    Returns:
+        True if hook exists and contains GRAPHITI_HOOK_START marker
+    """
+    repo_path = git_dir.parent if git_dir.name == ".git" else git_dir
+    return _is_hook_installed("post-rewrite", repo_path)
+
+
+def uninstall_postrewrite_hook(git_dir: Path) -> bool:
+    """Remove graphiti section from post-rewrite hook.
+
+    Args:
+        git_dir: Path to the .git directory of the repository
+
+    Returns:
+        True if hook was uninstalled, False if not installed
+    """
+    repo_path = git_dir.parent if git_dir.name == ".git" else git_dir
+    return _uninstall_hook("post-rewrite", repo_path)
+
+
+# Upgrade path for Phase 7 to Phase 7.1 migration
+
+
+def _remove_hook_section(hook_path: Path) -> bool:
+    """Remove all graphiti marker sections from a hook file.
+
+    Handles the case where a hook contains an old graphiti section that needs
+    to be replaced with an updated version. Removes content between all
+    GRAPHITI_HOOK_START / GRAPHITI_HOOK_END marker pairs.
+
+    Args:
+        hook_path: Full path to the git hook file
+
+    Returns:
+        True if section was removed, False if no markers found or on error
+    """
+    if not hook_path.exists():
+        return False
+
+    try:
+        content = hook_path.read_text()
+    except Exception as e:
+        logger.error("Failed to read hook file for removal", path=str(hook_path), error=str(e))
+        return False
+
+    if HOOK_START_MARKER not in content:
+        return False
+
+    # Remove all graphiti sections (handles edge case of multiple sections)
+    result = content
+    while HOOK_START_MARKER in result:
+        start_idx = result.find(HOOK_START_MARKER)
+        end_idx = result.find(HOOK_END_MARKER, start_idx)
+
+        if end_idx == -1:
+            # Malformed: start without end — remove from start to end of string
+            result = result[:start_idx].rstrip()
+            break
+
+        # Find end of end-marker line
+        end_line_end = result.find('\n', end_idx)
+        if end_line_end == -1:
+            end_line_end = len(result)
+        else:
+            end_line_end += 1
+
+        before = result[:start_idx].rstrip()
+        after = result[end_line_end:].lstrip()
+        result = before + ("\n\n" + after if after else "")
+
+    result = result.strip()
+
+    if not result or result in ("#!/bin/sh", "#!/bin/bash"):
+        # Hook only contained graphiti content — remove the file
+        hook_path.unlink()
+        logger.info("Removed entire hook file (only graphiti content)", path=str(hook_path))
+    else:
+        hook_path.write_text(result + "\n")
+        logger.info("Removed graphiti section(s) from hook", path=str(hook_path))
+
+    return True
+
+
+def upgrade_postmerge_hook(git_dir: Path) -> bool:
+    """Upgrade a Phase 7 post-merge hook to the Phase 7.1 indexer-based hook.
+
+    Phase 7 installed a post-merge hook that called auto_heal() or replayed
+    journal entries. Phase 7.1 replaces this with a lightweight background
+    graphiti index trigger. This function detects old Phase 7 hooks and
+    upgrades them in place.
+
+    Args:
+        git_dir: Path to the .git directory of the repository
+
+    Returns:
+        True if upgraded or already up-to-date, False on error
+    """
+    repo_path = git_dir.parent if git_dir.name == ".git" else git_dir
+    hook_path = repo_path / ".git" / "hooks" / "post-merge"
+
+    if not hook_path.exists():
+        logger.info("No post-merge hook found, installing fresh", git_dir=str(git_dir))
+        try:
+            _install_hook("post-merge", repo_path)
+            return True
+        except Exception as e:
+            logger.error("Failed to install post-merge hook", git_dir=str(git_dir), error=str(e))
+            return False
+
+    try:
+        content = hook_path.read_text()
+    except Exception as e:
+        logger.error("Failed to read post-merge hook", path=str(hook_path), error=str(e))
+        return False
+
+    # Only attempt upgrade if graphiti installed this hook (has our marker)
+    if HOOK_START_MARKER not in content:
+        logger.info(
+            "post-merge hook not installed by graphiti, skipping upgrade",
+            path=str(hook_path)
+        )
+        return True
+
+    # Detect Phase 7 autoheal / journal-based hook content
+    old_indicators = ("autoheal", "auto_heal", "journal")
+    is_old_phase7_hook = any(indicator in content for indicator in old_indicators)
+
+    if not is_old_phase7_hook:
+        logger.info(
+            "post-merge hook already up-to-date (no Phase 7 journal references)",
+            path=str(hook_path)
+        )
+        return True
+
+    # Remove old hook section and reinstall with new template
+    logger.info(
+        "Upgrading post-merge hook from Phase 7 journal replay to Phase 7.1 git indexer",
+        path=str(hook_path)
+    )
+
+    removed = _remove_hook_section(hook_path)
+    if not removed and hook_path.exists():
+        logger.warning(
+            "Could not remove old hook section, aborting upgrade",
+            path=str(hook_path)
+        )
+        return False
+
+    try:
+        _install_hook("post-merge", repo_path)
+        logger.info(
+            "Successfully upgraded post-merge hook to Phase 7.1 indexer",
+            path=str(hook_path)
+        )
+        return True
+    except Exception as e:
+        logger.error(
+            "Failed to install new post-merge hook after removal",
+            git_dir=str(git_dir),
+            error=str(e)
+        )
+        return False
