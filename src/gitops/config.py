@@ -1,7 +1,10 @@
 """Git configuration file generators for Graphiti.
 
-This module provides utilities to generate and maintain .gitignore and .gitattributes
-files for proper version control of Graphiti knowledge graphs.
+This module provides utilities to generate and maintain .gitignore files
+for proper version control of Graphiti knowledge graphs.
+
+LFS-related helpers (generate_gitattributes, GRAPHITI_GITATTRIBUTES) were
+removed in Phase 7.1 as part of the architectural pivot to local-first indexing.
 """
 
 from pathlib import Path
@@ -31,13 +34,6 @@ queue.db-shm
 audit.log
 """
 
-# Gitattributes content for LFS tracking
-GRAPHITI_GITATTRIBUTES = """# Graphiti Knowledge Graph - Git Attributes
-# LFS tracking for binary database files
-
-.graphiti/database/** filter=lfs diff=lfs merge=lfs -text
-"""
-
 
 def generate_gitignore(project_root: Path) -> Path:
     """Generate .gitignore file for .graphiti directory.
@@ -58,44 +54,8 @@ def generate_gitignore(project_root: Path) -> Path:
     return gitignore_path
 
 
-def generate_gitattributes(project_root: Path) -> Path:
-    """Generate or update .gitattributes file with LFS tracking.
-
-    If the file exists, checks for existing LFS tracking configuration and only
-    appends if not present (idempotent).
-
-    Args:
-        project_root: Root directory of the project
-
-    Returns:
-        Path to the .gitattributes file
-    """
-    gitattributes_path = project_root / ".gitattributes"
-
-    if gitattributes_path.exists():
-        content = gitattributes_path.read_text()
-
-        # Check if LFS tracking is already configured
-        if "filter=lfs" in content and ".graphiti/database/" in content:
-            logger.debug("gitattributes_already_configured", path=str(gitattributes_path))
-            return gitattributes_path
-
-        # Append LFS configuration
-        if not content.endswith("\n"):
-            content += "\n"
-        content += "\n" + GRAPHITI_GITATTRIBUTES.lstrip()
-        gitattributes_path.write_text(content)
-        logger.info("updated_gitattributes", path=str(gitattributes_path))
-    else:
-        # Create new file
-        gitattributes_path.write_text(GRAPHITI_GITATTRIBUTES.lstrip())
-        logger.info("generated_gitattributes", path=str(gitattributes_path))
-
-    return gitattributes_path
-
-
 def ensure_git_config(project_root: Path) -> dict[str, bool]:
-    """Ensure all git configuration files are generated.
+    """Ensure git configuration files are generated.
 
     Best-effort pattern: catches and logs errors, never raises exceptions.
 
@@ -104,9 +64,9 @@ def ensure_git_config(project_root: Path) -> dict[str, bool]:
 
     Returns:
         Dictionary with status of each configuration file:
-        {"gitignore": bool, "gitattributes": bool}
+        {"gitignore": bool}
     """
-    result = {"gitignore": False, "gitattributes": False}
+    result = {"gitignore": False}
 
     # Generate gitignore
     try:
@@ -114,12 +74,5 @@ def ensure_git_config(project_root: Path) -> dict[str, bool]:
         result["gitignore"] = True
     except Exception as e:
         logger.warning("gitignore_generation_failed", error=str(e))
-
-    # Generate gitattributes
-    try:
-        generate_gitattributes(project_root)
-        result["gitattributes"] = True
-    except Exception as e:
-        logger.warning("gitattributes_generation_failed", error=str(e))
 
     return result

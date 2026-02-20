@@ -54,18 +54,6 @@ def compact_command(
         bool,
         typer.Option("--project", "-p", help="Use project scope")
     ] = False,
-    journal: Annotated[
-        bool,
-        typer.Option("--journal", help="Also compact journal (remove old entries)")
-    ] = False,
-    ttl_days: Annotated[
-        int,
-        typer.Option("--ttl-days", help="Journal TTL in days (default: 30)")
-    ] = 30,
-    dry_run: Annotated[
-        bool,
-        typer.Option("--dry-run", help="Preview what would be deleted without deleting")
-    ] = False,
     format: Annotated[
         Optional[str],
         typer.Option("--format", "-f", help="Output format: json")
@@ -75,13 +63,12 @@ def compact_command(
         typer.Option("--quiet", "-q", help="Suppress non-essential output")
     ] = False,
 ):
-    """Compact the knowledge graph by merging duplicates.
+    """Compact the knowledge graph by merging duplicate entities.
 
     This is a maintenance operation that:
     - Identifies and merges duplicate entities
     - Removes redundant relationships
     - Rebuilds indexes for optimal performance
-    - Optionally cleans up old journal entries (--journal)
 
     WARNING: This is a destructive operation that cannot be undone.
     Use --force to skip the confirmation prompt.
@@ -89,8 +76,6 @@ def compact_command(
     Examples:
         graphiti compact
         graphiti compact --force
-        graphiti compact --journal --ttl-days 30
-        graphiti compact --journal --dry-run
         graphiti compact --format json
     """
     try:
@@ -126,15 +111,9 @@ def compact_command(
 
         # Perform compaction with spinner and progress updates
         with console.status("Compacting knowledge graph...") as status:
-            # Simulate multi-step process
             status.update("Merging duplicates...")
-            # Placeholder for actual merge logic
-
             status.update("Rebuilding indexes...")
-            # Placeholder for index rebuild
-
             status.update("Finalizing...")
-            # Placeholder for finalization
 
             # Execute compaction
             result = _compact_graph(scope, project_root)
@@ -160,63 +139,6 @@ def compact_command(
                     f"\n[dim]Size: {old_size_mb:.1f}MB → {new_size_mb:.1f}MB "
                     f"({reduction_pct:.1f}% reduction)[/dim]"
                 )
-
-        # Journal compaction (if requested)
-        if journal:
-            from src.gitops.compact import compact_journal, get_journal_stats
-            from rich.table import Table
-
-            if not quiet and format != "json":
-                console.print("\n[cyan]Journal Compaction[/cyan]")
-
-            # Get journal stats before compaction
-            journal_stats = get_journal_stats(project_root)
-
-            if journal_stats["total_entries"] == 0:
-                if not quiet:
-                    console.print("[dim]No journal entries found[/dim]")
-            else:
-                # Display journal stats
-                if not quiet and format != "json":
-                    table = Table(show_header=True, header_style="bold cyan")
-                    table.add_column("Metric")
-                    table.add_column("Value", justify="right")
-
-                    table.add_row("Total entries", str(journal_stats["total_entries"]))
-                    size_mb = journal_stats["total_size_bytes"] / (1024 * 1024)
-                    table.add_row("Total size", f"{size_mb:.2f} MB")
-                    table.add_row("Before checkpoint", str(journal_stats["before_checkpoint"]))
-                    table.add_row("After checkpoint", str(journal_stats["after_checkpoint"]))
-
-                    if journal_stats["oldest"]:
-                        table.add_row("Oldest entry", journal_stats["oldest"])
-                    if journal_stats["newest"]:
-                        table.add_row("Newest entry", journal_stats["newest"])
-
-                    console.print(table)
-
-                # Perform journal compaction
-                compact_result = compact_journal(project_root, ttl_days=ttl_days, dry_run=dry_run)
-
-                if format == "json":
-                    print_json({"graph": result, "journal": compact_result})
-                else:
-                    if "reason" in compact_result:
-                        console.print(f"\n[yellow]{compact_result['reason']}[/yellow]")
-                    elif compact_result["deleted"] > 0:
-                        freed_mb = compact_result["bytes_freed"] / (1024 * 1024)
-                        if dry_run:
-                            print_success(
-                                f"Dry run: Would delete {compact_result['deleted']} entries "
-                                f"({freed_mb:.2f} MB). {compact_result['remaining']} entries would remain."
-                            )
-                        else:
-                            print_success(
-                                f"Deleted {compact_result['deleted']} old journal entries "
-                                f"({freed_mb:.2f} MB freed). {compact_result['remaining']} entries remain."
-                            )
-                    else:
-                        console.print("\n[dim]No journal entries eligible for deletion[/dim]")
 
     except Exception as e:
         print_error(f"Failed to compact graph: {str(e)}")
