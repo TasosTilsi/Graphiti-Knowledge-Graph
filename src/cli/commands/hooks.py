@@ -17,6 +17,15 @@ from src.hooks import (
     set_hooks_enabled,
     get_hooks_enabled,
 )
+from src.hooks.installer import (
+    install_postcheckout_hook,
+    install_postrewrite_hook,
+    upgrade_postmerge_hook,
+    uninstall_postcheckout_hook,
+    uninstall_postrewrite_hook,
+    is_postcheckout_hook_installed,
+    is_postrewrite_hook_installed,
+)
 
 # Create hooks command group
 hooks_app = typer.Typer(
@@ -61,6 +70,9 @@ def install_command(
         install_git = not claude_only
         install_claude = not git_only
 
+        # Derive .git directory for new hook installer functions
+        git_dir = root / ".git"
+
         # Install hooks
         with console.status("Installing hooks..."):
             result = install_hooks(
@@ -70,8 +82,17 @@ def install_command(
                 force=force
             )
 
+            # Upgrade post-merge hook if it's the old Phase 7 journal-based one
+            upgrade_postmerge_hook(git_dir)
+
+            # Install indexer trigger hooks (post-checkout and post-rewrite)
+            postcheckout_installed = install_postcheckout_hook(git_dir)
+            postrewrite_installed = install_postrewrite_hook(git_dir)
+
         # Output result
         if format == "json":
+            result["postcheckout_installed"] = postcheckout_installed
+            result["postrewrite_installed"] = postrewrite_installed
             print_json(result)
         else:
             # Display what was installed
@@ -79,19 +100,32 @@ def install_command(
             skipped = []
 
             if result.get("git_installed"):
-                installed.append("git post-commit hook")
+                installed.append("post-commit")
             elif install_git:
-                skipped.append("git hook (already installed)")
+                skipped.append("post-commit (already installed)")
 
             if result.get("claude_installed"):
                 installed.append("Claude Code Stop hook")
             elif install_claude:
                 skipped.append("Claude hook (already installed)")
 
+            if postcheckout_installed:
+                installed.append("post-checkout")
+            else:
+                skipped.append("post-checkout (already installed)")
+
+            if postrewrite_installed:
+                installed.append("post-rewrite")
+            else:
+                skipped.append("post-rewrite (already installed)")
+
             # Success message
             if installed:
-                hooks_str = " and ".join(installed)
-                print_success(f"Installed {hooks_str}")
+                hooks_str = ", ".join(installed)
+                print_success(f"Installed hooks: {hooks_str}")
+                console.print(
+                    "[dim]All indexer hooks deployed: pre-commit, post-commit, post-merge, post-checkout, post-rewrite[/dim]"
+                )
 
             if skipped:
                 console.print(f"[dim]Skipped: {', '.join(skipped)}[/dim]")
@@ -140,6 +174,9 @@ def uninstall_command(
         remove_git = not claude_only
         remove_claude = not git_only
 
+        # Derive .git directory for new hook installer functions
+        git_dir = root / ".git"
+
         # Uninstall hooks
         with console.status("Removing hooks..."):
             result = uninstall_hooks(
@@ -148,20 +185,30 @@ def uninstall_command(
                 remove_claude=remove_claude
             )
 
+            # Also remove post-checkout and post-rewrite hooks
+            postcheckout_removed = uninstall_postcheckout_hook(git_dir)
+            postrewrite_removed = uninstall_postrewrite_hook(git_dir)
+
         # Output result
         if format == "json":
+            result["postcheckout_removed"] = postcheckout_removed
+            result["postrewrite_removed"] = postrewrite_removed
             print_json(result)
         else:
             # Display what was removed
             removed = []
 
             if result.get("git_removed"):
-                removed.append("git post-commit hook")
+                removed.append("post-commit hook")
             if result.get("claude_removed"):
                 removed.append("Claude Code Stop hook")
+            if postcheckout_removed:
+                removed.append("post-checkout hook")
+            if postrewrite_removed:
+                removed.append("post-rewrite hook")
 
             if removed:
-                hooks_str = " and ".join(removed)
+                hooks_str = ", ".join(removed)
                 print_success(f"Removed {hooks_str}")
             else:
                 console.print("[dim]No hooks were installed[/dim]")
@@ -199,12 +246,19 @@ def status_command(
         status = get_hook_status(root)
         hooks_enabled = get_hooks_enabled()
 
+        # Derive .git directory for new hook status checks
+        git_dir = root / ".git"
+        postcheckout_installed = is_postcheckout_hook_installed(git_dir)
+        postrewrite_installed = is_postrewrite_hook_installed(git_dir)
+
         # JSON output mode
         if format == "json":
             output = {
                 "enabled": hooks_enabled,
                 "git_installed": status.get("git_installed", False),
                 "claude_installed": status.get("claude_installed", False),
+                "postcheckout_installed": postcheckout_installed,
+                "postrewrite_installed": postrewrite_installed,
             }
             print_json(output)
             raise typer.Exit(EXIT_SUCCESS)
@@ -238,6 +292,16 @@ def status_command(
         table.add_row(
             "Claude Code Stop",
             status_icon(status.get("claude_installed", False)),
+            enabled_display
+        )
+        table.add_row(
+            "Git post-checkout",
+            status_icon(postcheckout_installed),
+            enabled_display
+        )
+        table.add_row(
+            "Git post-rewrite",
+            status_icon(postrewrite_installed),
             enabled_display
         )
 

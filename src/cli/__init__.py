@@ -70,6 +70,7 @@ from src.cli.commands.health import health_command
 from src.cli.commands.queue_cmd import queue_app
 from src.cli.commands.capture import capture_command
 from src.cli.commands.hooks import hooks_app
+from src.cli.commands.index import index_command
 
 
 # Register commands
@@ -120,5 +121,8 @@ app.command(name="capture", help="Capture knowledge from conversations")(capture
 # Register hooks command group
 app.add_typer(hooks_app, name="hooks", help="Manage automatic capture hooks")
 
+# Register index command
+app.command(name="index", help="Index git history into the knowledge graph")(index_command)
 
-# All 12 commands registered: add, search, list, show, delete, summarize, compact, config, health, queue (group), capture, hooks (group)
+
+# All 13 commands registered: add, search, list, show, delete, summarize, compact, config, health, queue (group), capture, hooks (group), index
