@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Context continuity without repetition - Claude remembers your preferences, decisions, and project architecture across all sessions without you stating them again, while project teams can share knowledge safely through git.
-**Current focus:** Phase 6 Complete — Ready for Phase 7
+**Current focus:** Phase 7 Complete — Architectural pivot to local-first indexing → Ready for Phase 7.1
 
 ## Current Position
 
-Phase: 7 of 9 (Git Integration)
-Plan: 5 of 5 complete
-Status: Complete
-Last activity: 2026-02-18 — Completed 07-05-PLAN.md (Git Hook Installation and Auto-heal)
-Next: Phase 08 (MCP Server)
+Phase: 7.1 of 10 (Git Indexing Pivot — INSERTED)
+Plan: 3 of 4 complete
+Status: In progress
+Last activity: 2026-02-20 — 7.1-03 complete: hook templates updated/created and installer extended with post-checkout, post-rewrite, and upgrade_postmerge_hook
+Next: 7.1-04-PLAN.md — graphiti index CLI command; register in app; wire new hook installers
 
-Progress: [█████████████████████████████████▊] 35 of 36 plans complete (97%)
+Progress: [████████████████████████████████░░░░░] 35 plans complete — 3 phases remaining (7.1, 8, 9, 10)
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Progress: [███████████████████████
 | Phase 07 P03 | 447 | 2 tasks | 4 files |
 | Phase 07 P04 | 325 | 2 tasks | 2 files |
 | Phase 07 P05 | 583 | 2 tasks | 7 files |
+| Phase 7.1 P03 | 180 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -209,6 +210,11 @@ Recent decisions affecting current work:
 - [Phase 07-05]: Journal compaction requires checkpoint to ensure safe deletion boundaries
 - [Phase 07-05]: Safety buffer of 7 days prevents accidental deletion of very recent entries
 - [Phase 07-05]: Hook installer generalized with _install_hook helper for DRY across hook types
+- [Architectural pivot 2026-02-20]: Local-first decision — .graphiti/ fully gitignored, no journal committed to git. Journal writer, replay engine, checkpoint tracking, LFS helpers removed in Phase 7.1. Pre-commit hooks (secrets, size) preserved. On-demand git history indexer replaces journal replay as source of knowledge.
+- [Architectural pivot 2026-02-20]: Phase 7.1 inserted to execute the pivot before Phase 8. Phase 10 (Frontend UI) added as final phase — localhost graph visualization + monitoring dashboard. Total phases now 10.
+- [Phase 7.1-03]: post-checkout.sh checks $3 argument after graphiti availability but before config — exits on $3=0 (file checkout), only indexes on $3=1 (branch switch)
+- [Phase 7.1-03]: New hook installer functions take git_dir: Path (the .git directory) while existing helpers take repo_path — new functions derive repo_path via git_dir.parent
+- [Phase 7.1-03]: upgrade_postmerge_hook detects old Phase 7 hooks by 'autoheal', 'auto_heal', 'journal' string presence in hook content; only upgrades hooks with GRAPHITI_HOOK_START marker (graphiti-owned hooks)
 
 ### Pending Todos
 
@@ -226,8 +232,9 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-19 (quick task)
-Stopped at: Completed quick task 1: Fix invalid permission entry in settings.local.json causing Claude startup error
-Resume file: None
+Last session: 2026-02-20 (execute-phase 7.1-03)
+Stopped at: Completed 7.1-03-PLAN.md — hook templates and installer extension
+Resume file: .planning/phases/7.1-git-indexing-pivot-inserted/7.1-CONTEXT.md
 
-**Phase 7 Complete (5 of 5):** Git integration fully implemented with journal-based storage, git configuration, checkpoint tracking, pre-commit validation hooks, post-merge auto-heal, journal compaction, and auto-setup. All git integration components complete and verified. Ready for Phase 08 (MCP Server).
+**Phase 7.1 Context Captured:** Git Indexing Pivot. Key decisions: remove journal/replay/LFS/checkpoint from Phase 7, keep secrets+size pre-commit hooks. Indexer = historical bootstrap (brownfield), Phase 6 = ongoing real-time capture. SHA deduplication prevents overlap. --full flag for clean rebuild. Quality gate skips version-bump/bot/merge/tiny commits. Two-pass extraction (structured Q&A + free-form entity). Stale triggers: post-merge, post-checkout, post-rewrite (NOT post-commit). Cooldown 5 min between auto-triggers.
+**Phase 8 Context Captured:** SKILL.md + MCP Server. Key decisions: all CLI commands as MCP tools (graphiti_ prefix), subprocess wrapper, plain text responses, context from local Kuzu DB (built by Phase 7.1 indexer), mcp.context_tokens config key (default 8192), stdio default + HTTP, graphiti mcp install command for zero-config setup.
