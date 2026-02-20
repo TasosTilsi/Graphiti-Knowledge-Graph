@@ -1,30 +1,36 @@
-#!/bin/bash
+#!/bin/sh
 # Graphiti Knowledge Graph - Pre-commit validation hook
-# Auto-stages journal entries, validates schemas, scans for secrets
+# Scans staged files for secrets and checks repository size
 
 # GRAPHITI_HOOK_START
 # Skip if GRAPHITI_SKIP is set
-if [ "$GRAPHITI_SKIP" = "1" ]; then
-    exit 0
-fi
+[ "$GRAPHITI_SKIP" = "1" ] && exit 0
 
 # Check if graphiti is available
-if ! command -v graphiti &> /dev/null; then
-    exit 0
-fi
+command -v graphiti >/dev/null 2>&1 || exit 0
 
 # Check if hooks are enabled
-ENABLED=$(graphiti config get hooks.enabled 2>/dev/null)
-if [ "$ENABLED" = "false" ]; then
-    exit 0
-fi
+graphiti config get hooks.enabled 2>/dev/null | grep -q "true" || exit 0
 
-# Run pre-commit validation (auto-stage, schema check, secret scan, size check)
+# Scan staged files for secrets (blocks commit if secrets found)
 python -c "
 from pathlib import Path
-from src.gitops.hooks import run_precommit_validation
+from src.security.scanner import scan_staged_secrets
 import sys
-sys.exit(run_precommit_validation(Path('.')))
+result = scan_staged_secrets(Path('.'))
+if result:
+    sys.exit(1)
+sys.exit(0)
 " 2>&1
-exit $?
+SECRETS_EXIT=$?
+[ "$SECRETS_EXIT" -ne 0 ] && exit "$SECRETS_EXIT"
+
+# Check repository size (warns but does not block)
+python -c "
+from pathlib import Path
+from src.security.scanner import check_graphiti_size
+check_graphiti_size(Path('.'))
+" 2>&1
+
+exit 0
 # GRAPHITI_HOOK_END
