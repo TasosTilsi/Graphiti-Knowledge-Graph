@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Context continuity without repetition - Claude remembers your preferences, decisions, and project architecture across all sessions without you stating them again, while project teams can share knowledge safely through git.
-**Current focus:** Phase 7 Complete — Architectural pivot to local-first indexing → Ready for Phase 7.1
+**Current focus:** Phase 7.1 Complete — Local-first git indexing pivot done → Ready for Phase 8 (MCP Server)
 
 ## Current Position
 
-Phase: 7.1 of 10 (Git Indexing Pivot — INSERTED)
-Plan: 4 of 4 complete (7.1-01, 7.1-02, 7.1-03, 7.1-04 done — Phase 7.1 COMPLETE)
-Status: In progress
-Last activity: 2026-02-20 — 7.1-04 complete: graphiti index CLI command registered, hooks install deploys all 5 hook types
-Next: Phase 8 (MCP server — SKILL.md + all CLI commands as MCP tools)
+Phase: 8 of 10 (MCP Server)
+Plan: 0 of TBD — Not started
+Status: Ready to plan
+Last activity: 2026-02-20 — Phase 7.1 VERIFIED (6/6): journal modules removed, src/indexer/ built, hook templates updated, graphiti index CLI registered
+Next: Phase 8 (MCP server — all CLI commands as MCP tools, stdio + HTTP transports, context injection)
 
 Progress: [████████████████████████████████░░░░░] 36 plans complete — 3 phases remaining (8, 9, 10)
 
