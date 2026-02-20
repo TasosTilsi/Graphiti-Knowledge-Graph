@@ -10,10 +10,10 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 7.1 of 10 (Git Indexing Pivot — INSERTED)
-Plan: 3 of 4 complete
+Plan: 2 of 4 complete (7.1-02 and 7.1-03 done; 7.1-01 and 7.1-04 pending)
 Status: In progress
-Last activity: 2026-02-20 — 7.1-03 complete: hook templates updated/created and installer extended with post-checkout, post-rewrite, and upgrade_postmerge_hook
-Next: 7.1-04-PLAN.md — graphiti index CLI command; register in app; wire new hook installers
+Last activity: 2026-02-20 — 7.1-02 complete: src/indexer/ package built with GitIndexer, IndexState, quality gate, two-pass LLM extraction
+Next: 7.1-01-PLAN.md (cleanup) or 7.1-04-PLAN.md (graphiti index CLI command)
 
 Progress: [████████████████████████████████░░░░░] 35 plans complete — 3 phases remaining (7.1, 8, 9, 10)
 
@@ -68,6 +68,8 @@ Progress: [███████████████████████
 | Phase 07 P04 | 325 | 2 tasks | 2 files |
 | Phase 07 P05 | 583 | 2 tasks | 7 files |
 | Phase 7.1 P03 | 180 | 2 tasks | 5 files |
+| Phase 7.1 P02 | 230 | 2 tasks | 5 files |
+| Phase 7.1 P01 | 240 | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -215,6 +217,10 @@ Recent decisions affecting current work:
 - [Phase 7.1-03]: post-checkout.sh checks $3 argument after graphiti availability but before config — exits on $3=0 (file checkout), only indexes on $3=1 (branch switch)
 - [Phase 7.1-03]: New hook installer functions take git_dir: Path (the .git directory) while existing helpers take repo_path — new functions derive repo_path via git_dir.parent
 - [Phase 7.1-03]: upgrade_postmerge_hook detects old Phase 7 hooks by 'autoheal', 'auto_heal', 'journal' string presence in hook content; only upgrades hooks with GRAPHITI_HOOK_START marker (graphiti-owned hooks)
+- [Phase 7.1]: Store only 8-char SHA prefixes in processed_shas list, capped at 10,000 entries to prevent unbounded growth
+- [Phase 7.1]: Two-pass extraction per commit: structured Q&A + free-form entity facts, both tagged git-history-index: for traceability
+- [Phase 7.1]: Quality gate fails open: exception during commit stats check = process the commit rather than skip
+- [Phase 7.1]: save_state() after every processed commit for crash recovery at cost of I/O (crash-safe indexing)
 
 ### Pending Todos
 
