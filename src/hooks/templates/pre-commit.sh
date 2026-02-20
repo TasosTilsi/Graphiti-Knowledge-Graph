@@ -15,7 +15,7 @@ graphiti config get hooks.enabled 2>/dev/null | grep -q "true" || exit 0
 # Scan staged files for secrets (blocks commit if secrets found)
 python -c "
 from pathlib import Path
-from src.security.scanner import scan_staged_secrets
+from src.gitops.hooks import scan_staged_secrets
 import sys
 result = scan_staged_secrets(Path('.'))
 if result:
@@ -28,7 +28,7 @@ SECRETS_EXIT=$?
 # Check repository size (warns but does not block)
 python -c "
 from pathlib import Path
-from src.security.scanner import check_graphiti_size
+from src.gitops.hooks import check_graphiti_size
 check_graphiti_size(Path('.'))
 " 2>&1
 
