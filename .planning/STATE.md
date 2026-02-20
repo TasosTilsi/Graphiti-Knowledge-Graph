@@ -10,12 +10,12 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 7.1 of 10 (Git Indexing Pivot — INSERTED)
-Plan: 3 of 4 complete (7.1-01, 7.1-02, 7.1-03 done; 7.1-04 pending)
+Plan: 4 of 4 complete (7.1-01, 7.1-02, 7.1-03, 7.1-04 done — Phase 7.1 COMPLETE)
 Status: In progress
-Last activity: 2026-02-20 — 7.1-01 complete: deleted 6 journal modules, trimmed gitops package to general git hygiene only
-Next: 7.1-04-PLAN.md (graphiti index CLI command)
+Last activity: 2026-02-20 — 7.1-04 complete: graphiti index CLI command registered, hooks install deploys all 5 hook types
+Next: Phase 8 (MCP server — SKILL.md + all CLI commands as MCP tools)
 
-Progress: [████████████████████████████████░░░░░] 35 plans complete — 3 phases remaining (7.1, 8, 9, 10)
+Progress: [████████████████████████████████░░░░░] 36 plans complete — 3 phases remaining (8, 9, 10)
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Progress: [███████████████████████
 | Phase 07 P03 | 447 | 2 tasks | 4 files |
 | Phase 07 P04 | 325 | 2 tasks | 2 files |
 | Phase 07 P05 | 583 | 2 tasks | 7 files |
+| Phase 7.1 P04 | 300 | 2 tasks | 3 files |
 | Phase 7.1 P03 | 180 | 2 tasks | 5 files |
 | Phase 7.1 P02 | 230 | 2 tasks | 5 files |
 | Phase 7.1 P01 | 240 | 2 tasks | 10 files |
@@ -223,6 +224,10 @@ Recent decisions affecting current work:
 - [Phase 7.1]: save_state() after every processed commit for crash recovery at cost of I/O (crash-safe indexing)
 - [Phase 7.1]: scan_staged_secrets() scans ALL staged files (not just journal/) — broader scope than old scan_journal_secrets()
 - [Phase 7.1]: ensure_git_config() return dict simplified to {gitignore: bool} only — gitattributes key removed with LFS feature
+- [Phase 7.1-04]: Pre-validate git repo with git.Repo() before GitIndexer instantiation for earlier error messaging
+- [Phase 7.1-04]: full=False passed to indexer.run() even after --full; reset_full() handles the wipe step separately
+- [Phase 7.1-04]: upgrade_postmerge_hook() called first in hooks install sequence to migrate Phase 7 hooks before installing new ones
+- [Phase 7.1-04]: git_dir derived as root / '.git' from resolve_scope() result for git_dir-based installer functions
 
 ### Pending Todos
 
@@ -240,8 +245,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-20 (execute-phase 7.1-01)
-Stopped at: Completed 7.1-01-PLAN.md — journal module deletion and gitops package trim
+Last session: 2026-02-20 (execute-phase 7.1-04)
+Stopped at: Completed 7.1-04-PLAN.md — graphiti index CLI command and hooks wiring (Phase 7.1 COMPLETE)
 Resume file: .planning/phases/7.1-git-indexing-pivot-inserted/7.1-CONTEXT.md
 
 **Phase 7.1 Context Captured:** Git Indexing Pivot. Key decisions: remove journal/replay/LFS/checkpoint from Phase 7, keep secrets+size pre-commit hooks. Indexer = historical bootstrap (brownfield), Phase 6 = ongoing real-time capture. SHA deduplication prevents overlap. --full flag for clean rebuild. Quality gate skips version-bump/bot/merge/tiny commits. Two-pass extraction (structured Q&A + free-form entity). Stale triggers: post-merge, post-checkout, post-rewrite (NOT post-commit). Cooldown 5 min between auto-triggers.
