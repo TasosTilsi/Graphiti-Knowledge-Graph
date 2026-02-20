@@ -2,7 +2,7 @@
 
 ## Overview
 
-Transform a basic MCP knowledge graph server into a production-ready, CLI-first system with automatic context capture, git-safe project knowledge graphs, and seamless Claude Code integration. Starting from storage foundation (Kuzu migration) through security filtering, LLM integration, and CLI interface, building toward automatic capture via git hooks and conversations, then adding MCP server integration and advanced features like smart retention and performance optimization.
+Transform a basic MCP knowledge graph server into a production-ready, CLI-first system with automatic context capture, local-first knowledge graphs, and seamless Claude Code integration. Starting from storage foundation (Kuzu migration) through security filtering, LLM integration, and CLI interface, building toward automatic capture via git hooks and conversations, then pivoting to on-demand git indexing (replacing journal-based git storage), adding MCP server integration, advanced features, and a frontend visualization UI.
 
 ## Phases
 
@@ -18,9 +18,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: CLI Interface** - Core operations and configuration
 - [x] **Phase 5: Background Queue** - Async processing for non-blocking operations
 - [x] **Phase 6: Automatic Capture** - Git hooks and conversation capture
-- [x] **Phase 7: Git Integration** - Git-safe knowledge graphs
+- [x] **Phase 7: Git Integration** - Git-safe knowledge graphs (journal-based — superseded by 7.1)
+- [ ] **Phase 7.1: Git Indexing Pivot** [INSERTED] - Replace journal with local-first on-demand git history indexing
 - [ ] **Phase 8: MCP Server** - Context injection and Claude Code integration
 - [ ] **Phase 9: Advanced Features** - Smart retention, performance, and context refresh
+- [ ] **Phase 10: Frontend UI** - Localhost graph visualization and monitoring dashboard
 
 ## Phase Details
 
@@ -158,9 +160,28 @@ Plans:
 - [ ] 07-04-PLAN.md -- Pre-commit validation hooks (staging, schema, secrets, size)
 - [ ] 07-05-PLAN.md -- Auto-heal, compact, hook templates, and auto-setup
 
+### Phase 7.1: Git Indexing Pivot [INSERTED]
+**Goal**: Replace journal-based git storage with local-first on-demand git history indexing. Remove journal writer, replay engine, checkpoint tracking, LFS helpers, and journal-specific hooks. Add git history parser that builds knowledge from commit log and diffs on demand. `.graphiti/` becomes fully gitignored — no knowledge committed to git, ever.
+**Depends on**: Phase 7 (git hooks framework to reuse), Phase 4 (CLI, Kuzu storage)
+**Requirements**: R8.1, R8.2 (revised: local-first replaces git-sharing approach)
+**Success Criteria** (what must be TRUE):
+  1. `graphiti index` (or automatic trigger) builds Kuzu graph from git history without any committed journal files
+  2. Index is rebuilt automatically when new commits arrive (stale detection via git HEAD comparison)
+  3. `.graphiti/` is fully gitignored — no journal, no DB, no LFS tracking
+  4. Background indexing triggered by post-commit/post-merge hooks is non-blocking (<100ms hook overhead)
+  5. Journal writer, replay engine, checkpoint tracking, and LFS helpers are removed from codebase
+  6. Pre-commit secrets scanning and size checks are preserved (still valuable for repo hygiene)
+**Plans**: 4 plans in 2 waves
+
+Plans:
+- [ ] 7.1-01-PLAN.md — Remove journal, LFS, checkpoint, replay, autoheal, compact modules; trim surviving gitops files and compact CLI command
+- [ ] 7.1-02-PLAN.md — Build src/indexer/ package: state management, quality gate, GitIndexer class, two-pass extraction pipeline
+- [ ] 7.1-03-PLAN.md — Update and create hook templates (post-merge, post-checkout, post-rewrite, pre-commit); extend installer with new hook types and upgrade path
+- [ ] 7.1-04-PLAN.md — Create graphiti index CLI command; register in app; wire new hook installers into graphiti hooks install
+
 ### Phase 8: MCP Server
 **Goal**: Provide MCP server interface for Claude Code integration with context injection and conversation capture
-**Depends on**: Phase 4 (wraps core operations), Phase 6 (conversation capture)
+**Depends on**: Phase 7.1 (local Kuzu DB built by indexer), Phase 4 (wraps core operations), Phase 6 (conversation capture)
 **Requirements**: R6.1, R6.2, R6.3
 **Success Criteria** (what must be TRUE):
   1. MCP tools are callable from Claude Code with both stdio and HTTP transports
@@ -188,10 +209,25 @@ Plans:
 Plans:
 - [ ] 09-01: TBD during planning
 
+### Phase 10: Frontend UI
+**Goal**: Localhost web interface for exploring and monitoring the knowledge graph — interactive graph visualization showing entities and connections, plus a monitoring dashboard for capture stats and graph health
+**Depends on**: Phase 9 (all core functionality and advanced features in place)
+**Requirements**: TBD
+**Success Criteria** (what must be TRUE):
+  1. `graphiti ui` starts a localhost web server and opens the browser
+  2. Interactive graph visualization renders entities as nodes and relationships as edges, clickable for detail
+  3. Dashboard view shows capture stats, recent activity, entity counts, and graph health
+  4. Navigation between graph exploration and dashboard is seamless
+  5. UI works fully offline — no external CDN or API dependencies
+**Plans**: TBD
+
+Plans:
+- [ ] 10-01: TBD during planning
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 7.1 -> 8 -> 9 -> 10
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -201,6 +237,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 4. CLI Interface | 11/11 | Complete | 2026-02-12 |
 | 5. Background Queue | 3/3 | Complete | 2026-02-13 |
 | 6. Automatic Capture | 4/4 | Complete | 2026-02-13 |
-| 7. Git Integration | 5/5 | Complete | 2026-02-18 |
+| 7. Git Integration | 5/5 | Complete (superseded by 7.1) | 2026-02-18 |
+| 7.1. Git Indexing Pivot | 0/TBD | Not started | - |
 | 8. MCP Server | 0/TBD | Not started | - |
 | 9. Advanced Features | 0/TBD | Not started | - |
+| 10. Frontend UI | 0/TBD | Not started | - |
