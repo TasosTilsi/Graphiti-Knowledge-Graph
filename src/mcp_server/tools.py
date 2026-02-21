@@ -1,0 +1,417 @@
+"""MCP tool handler functions that wrap the graphiti CLI via subprocess.
+
+Each function in this module is a plain Python callable that will be registered
+with FastMCP using @mcp.tool() decorators in server.py (Plan 03).
+
+IMPORTANT: All logging in this module MUST go to stderr only — never stdout.
+The MCP stdio transport uses stdout for JSON-RPC messages. Any stdout write
+(including print() calls, Rich console output, or structlog) will corrupt the
+protocol. Use `logger.warning(...)` or `logging.getLogger(__name__).error(...)`
+— both route to stderr via the basicConfig below.
+"""
+import json
+import logging
+import os
+import subprocess
+import sys
+from pathlib import Path
+from typing import Optional
+
+logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
+logger = logging.getLogger(__name__)
+
+try:
+    from src.mcp_server.toon_utils import encode_response
+except ImportError:
+    def encode_response(data):
+        return json.dumps(data, indent=2)
+
+
+# ---------------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------------
+
+def _run_graphiti(
+    args: list[str],
+    timeout: int = 30,
+    cwd: str | None = None,
+) -> tuple[int, str, str]:
+    """Run graphiti CLI and return (returncode, stdout, stderr).
+
+    CWD priority:
+    1. GRAPHITI_PROJECT_ROOT env var (explicit override, set by callers who
+       know the project root)
+    2. The ``cwd`` argument (caller-supplied project directory)
+    3. None (inherit the MCP server process CWD, which is Claude Code's CWD)
+
+    Args:
+        args: List of CLI arguments (e.g. ["search", "query", "--limit", "5"]).
+        timeout: Seconds before subprocess.TimeoutExpired is raised.
+        cwd: Working directory for scope detection. Overridden by env var.
+
+    Returns:
+        Tuple of (returncode, stdout, stderr).
+    """
+    effective_cwd = os.environ.get("GRAPHITI_PROJECT_ROOT") or cwd
+    result = subprocess.run(
+        ["graphiti"] + args,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        cwd=effective_cwd,
+    )
+    return result.returncode, result.stdout, result.stderr
+
+
+def _get_cwd() -> str | None:
+    """Get project CWD for subprocess calls (scope detection).
+
+    Returns GRAPHITI_PROJECT_ROOT if set, else None (inherit process CWD).
+    """
+    return os.environ.get("GRAPHITI_PROJECT_ROOT") or None
+
+
+def _scope_flags(scope: str) -> list[str]:
+    """Return CLI flags for the given scope value.
+
+    Args:
+        scope: "global", "project", or "auto" (no flag added for auto).
+
+    Returns:
+        List of zero or one flag strings.
+    """
+    if scope == "global":
+        return ["--global"]
+    if scope == "project":
+        return ["--project"]
+    return []
+
+
+# ---------------------------------------------------------------------------
+# Read-oriented tools (5)
+# ---------------------------------------------------------------------------
+
+def graphiti_search(
+    query: str,
+    limit: int = 10,
+    exact: bool = False,
+    scope: str = "auto",
+) -> str:
+    """Search the knowledge graph for entities matching a query.
+
+    Args:
+        query: The search query string.
+        limit: Maximum number of results to return (default 10).
+        exact: If True, use exact/literal matching instead of semantic search.
+        scope: "auto" (default), "global", or "project".
+
+    Returns:
+        TOON-encoded search results or JSON for small result sets.
+
+    Raises:
+        RuntimeError: If the graphiti CLI returns a non-zero exit code.
+    """
+    cmd = ["search", query, "--limit", str(limit), "--format", "json"]
+    if exact:
+        cmd.append("--exact")
+    cmd.extend(_scope_flags(scope))
+
+    returncode, stdout, stderr = _run_graphiti(cmd, timeout=30, cwd=_get_cwd())
+
+    if returncode != 0:
+        raise RuntimeError(f"graphiti search failed: {stderr.strip()}")
+
+    try:
+        data = json.loads(stdout)
+    except json.JSONDecodeError:
+        logger.warning("graphiti search returned non-JSON output; returning raw stdout")
+        return stdout.strip()
+
+    return encode_response(data)
+
+
+def graphiti_list(
+    limit: int = 15,
+    scope: str = "auto",
+) -> str:
+    """List entities in the knowledge graph.
+
+    Args:
+        limit: Maximum number of entities to return (default 15).
+        scope: "auto" (default), "global", or "project".
+
+    Returns:
+        TOON-encoded entity list or JSON for small result sets.
+
+    Raises:
+        RuntimeError: If the graphiti CLI returns a non-zero exit code.
+    """
+    cmd = ["list", "--limit", str(limit), "--format", "json"]
+    cmd.extend(_scope_flags(scope))
+
+    returncode, stdout, stderr = _run_graphiti(cmd, timeout=30, cwd=_get_cwd())
+
+    if returncode != 0:
+        raise RuntimeError(f"graphiti list failed: {stderr.strip()}")
+
+    try:
+        data = json.loads(stdout)
+    except json.JSONDecodeError:
+        logger.warning("graphiti list returned non-JSON output; returning raw stdout")
+        return stdout.strip()
+
+    return encode_response(data)
+
+
+def graphiti_show(name_or_id: str) -> str:
+    """Show details for a single entity by name or ID.
+
+    Args:
+        name_or_id: The entity name or UUID to look up.
+
+    Returns:
+        JSON-encoded entity details (single object, not TOON).
+
+    Raises:
+        RuntimeError: If the graphiti CLI returns a non-zero exit code.
+    """
+    cmd = ["show", name_or_id, "--format", "json"]
+
+    returncode, stdout, stderr = _run_graphiti(cmd, timeout=30, cwd=_get_cwd())
+
+    if returncode != 0:
+        raise RuntimeError(f"graphiti show failed: {stderr.strip()}")
+
+    try:
+        data = json.loads(stdout)
+    except json.JSONDecodeError:
+        logger.warning("graphiti show returned non-JSON output; returning raw stdout")
+        return stdout.strip()
+
+    # Single item — encode_response() returns JSON (not TOON) for single dicts
+    return encode_response(data)
+
+
+def graphiti_summarize(scope: str = "auto") -> str:
+    """Get a summary of the knowledge graph contents.
+
+    Args:
+        scope: "auto" (default), "global", or "project".
+
+    Returns:
+        JSON-encoded summary dict.
+
+    Raises:
+        RuntimeError: If the graphiti CLI returns a non-zero exit code.
+    """
+    cmd = ["summarize", "--format", "json"]
+    cmd.extend(_scope_flags(scope))
+
+    returncode, stdout, stderr = _run_graphiti(cmd, timeout=60, cwd=_get_cwd())
+
+    if returncode != 0:
+        raise RuntimeError(f"graphiti summarize failed: {stderr.strip()}")
+
+    try:
+        data = json.loads(stdout)
+    except json.JSONDecodeError:
+        logger.warning("graphiti summarize returned non-JSON output; returning raw stdout")
+        return stdout.strip()
+
+    # Summary is a single dict object — return as JSON (not TOON)
+    return encode_response(data)
+
+
+def graphiti_health() -> str:
+    """Check the health status of the graphiti system.
+
+    Health check failures are informational — this function never raises even
+    on non-zero exit. The stderr message is returned as a warning string so
+    the caller (Claude Code) can inform the user about degraded state.
+
+    Returns:
+        Health status string (plain text stdout, or stderr warning on failure).
+    """
+    cmd = ["health", "--format", "json"]
+
+    returncode, stdout, stderr = _run_graphiti(cmd, timeout=15, cwd=_get_cwd())
+
+    if returncode != 0:
+        # Health check failure is informational — return warning, don't raise
+        warning = stderr.strip() or stdout.strip() or "graphiti health check returned non-zero exit code."
+        logger.warning("graphiti health non-zero: %s", warning)
+        return f"Warning: {warning}"
+
+    return stdout.strip()
+
+
+# ---------------------------------------------------------------------------
+# Write / action tools (5)
+# ---------------------------------------------------------------------------
+
+def graphiti_add(
+    content: str,
+    tags: str = "",
+    scope: str = "auto",
+) -> str:
+    """Add knowledge to the graph.
+
+    Args:
+        content: The knowledge content to add.
+        tags: Comma-separated tags to attach (optional).
+        scope: "auto" (default), "global", or "project".
+
+    Returns:
+        Success message from the CLI, or a default message.
+
+    Raises:
+        RuntimeError: If the graphiti CLI returns a non-zero exit code.
+    """
+    cmd = ["add", content]
+    if tags:
+        cmd.extend(["--tags", tags])
+    cmd.extend(_scope_flags(scope))
+
+    returncode, stdout, stderr = _run_graphiti(cmd, timeout=60, cwd=_get_cwd())
+
+    if returncode != 0:
+        raise RuntimeError(f"graphiti add failed: {stderr.strip()}")
+
+    return stdout.strip() or "Knowledge added successfully."
+
+
+def graphiti_delete(
+    name_or_id: str,
+    force: bool = True,
+) -> str:
+    """Delete an entity from the knowledge graph.
+
+    Always passes --force because MCP callers don't have an interactive TTY
+    for confirmation prompts.
+
+    Args:
+        name_or_id: The entity name or UUID to delete.
+        force: Always True for MCP callers (no interactive TTY).
+
+    Returns:
+        Success message from the CLI, or a default message.
+
+    Raises:
+        RuntimeError: If the graphiti CLI returns a non-zero exit code.
+    """
+    cmd = ["delete", name_or_id, "--force"]
+
+    returncode, stdout, stderr = _run_graphiti(cmd, timeout=30, cwd=_get_cwd())
+
+    if returncode != 0:
+        raise RuntimeError(f"graphiti delete failed: {stderr.strip()}")
+
+    return stdout.strip() or "Entity deleted."
+
+
+def graphiti_compact(scope: str = "auto") -> str:
+    """Compact the knowledge graph by deduplicating entities.
+
+    This operation can be slow (LLM-assisted deduplication). Uses a 120-second
+    timeout to accommodate large graphs.
+
+    Args:
+        scope: "auto" (default), "global", or "project".
+
+    Returns:
+        Success message from the CLI, or a default message.
+
+    Raises:
+        RuntimeError: If the graphiti CLI returns a non-zero exit code.
+    """
+    cmd = ["compact"]
+    cmd.extend(_scope_flags(scope))
+
+    returncode, stdout, stderr = _run_graphiti(cmd, timeout=120, cwd=_get_cwd())
+
+    if returncode != 0:
+        raise RuntimeError(f"graphiti compact failed: {stderr.strip()}")
+
+    return stdout.strip() or "Knowledge graph compacted."
+
+
+def graphiti_capture() -> str:
+    """Capture current conversation context into the knowledge graph.
+
+    Runs asynchronously — returns immediately without waiting for completion.
+    Capture operations involve LLM summarization and can take 5-30 seconds.
+    Using subprocess.Popen (non-blocking) rather than subprocess.run (blocking)
+    ensures the MCP server remains responsive.
+
+    Both stdout and stderr are redirected to DEVNULL so the background process
+    does not inherit the stdio transport's file descriptors (which would corrupt
+    the JSON-RPC stream).
+
+    start_new_session=True detaches the subprocess from the MCP server process
+    group, preventing zombie processes when the server exits.
+
+    Returns:
+        Confirmation message that capture started in background.
+
+    Raises:
+        RuntimeError: If the graphiti CLI is not found or cannot be launched.
+    """
+    cwd = _get_cwd()
+    try:
+        subprocess.Popen(
+            ["graphiti", "capture", "--async"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+            cwd=cwd,
+        )
+        return "Conversation capture started in background."
+    except FileNotFoundError:
+        raise RuntimeError(
+            "graphiti CLI not found. Run 'pip install graphiti-knowledge-graph' to install."
+        )
+    except Exception as e:
+        raise RuntimeError(f"Failed to start capture: {e}")
+
+
+def graphiti_config(key: str, value: str = "") -> str:
+    """Get or set a graphiti configuration value.
+
+    If value is empty, reads the current value of the key.
+    If value is non-empty, sets the key to the given value.
+
+    Args:
+        key: Dotted config key path (e.g. "cloud.endpoint", "mcp.context_tokens").
+        value: Value to set. If empty, performs a get operation.
+
+    Returns:
+        Current value (for get) or confirmation (for set) from the CLI.
+
+    Raises:
+        RuntimeError: If the graphiti CLI returns a non-zero exit code.
+    """
+    if value:
+        cmd = ["config", "set", key, value]
+    else:
+        cmd = ["config", "get", key]
+
+    returncode, stdout, stderr = _run_graphiti(cmd, timeout=10, cwd=_get_cwd())
+
+    if returncode != 0:
+        raise RuntimeError(f"graphiti config failed: {stderr.strip()}")
+
+    return stdout.strip()
+
+
+__all__ = [
+    "graphiti_add",
+    "graphiti_search",
+    "graphiti_list",
+    "graphiti_show",
+    "graphiti_delete",
+    "graphiti_summarize",
+    "graphiti_compact",
+    "graphiti_capture",
+    "graphiti_health",
+    "graphiti_config",
+]
