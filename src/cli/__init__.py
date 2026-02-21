@@ -71,6 +71,7 @@ from src.cli.commands.queue_cmd import queue_app
 from src.cli.commands.capture import capture_command
 from src.cli.commands.hooks import hooks_app
 from src.cli.commands.index import index_command
+from src.cli.commands.mcp import mcp_app
 
 
 # Register commands
@@ -124,5 +125,8 @@ app.add_typer(hooks_app, name="hooks", help="Manage automatic capture hooks")
 # Register index command
 app.command(name="index", help="Index git history into the knowledge graph")(index_command)
 
+# Register mcp command group
+app.add_typer(mcp_app, name="mcp", help="MCP server for Claude Code integration")
 
-# All 13 commands registered: add, search, list, show, delete, summarize, compact, config, health, queue (group), capture, hooks (group), index
+
+# All 14 commands registered: add, search, list, show, delete, summarize, compact, config, health, queue (group), capture, hooks (group), index, mcp (group)
