@@ -72,6 +72,7 @@ Progress: [███████████████████████
 | Phase 7.1 P02 | 230 | 2 tasks | 5 files |
 | Phase 7.1 P01 | 240 | 2 tasks | 10 files |
 | Phase 08-mcp-server P01 | 107 | 2 tasks | 3 files |
+| Phase 08 P02 | 270 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -232,6 +233,9 @@ Recent decisions affecting current work:
 - [Phase 08-mcp-server]: mcp[cli]>=1.26.0,<2.0.0 upper bound pins to stable 1.x branch before MCP v2 Q1 2026
 - [Phase 08-mcp-server]: TOON 3-item threshold: encode_response applies TOON for 3+ item lists, JSON for scalars/small responses (header overhead exceeds savings below threshold)
 - [Phase 08-mcp-server]: 4 chars/token approximation for token budget trimming — avoids tiktoken dependency (OpenAI-specific, 12% error for Claude)
+- [Phase 08]: Always pass --force to graphiti_delete: MCP callers have no interactive TTY for confirmation
+- [Phase 08]: graphiti_health never raises on non-zero exit: health check failures are informational status not errors
+- [Phase 08]: graphiti_capture uses subprocess.Popen with start_new_session=True and DEVNULL to prevent stdio corruption and zombie processes
 
 ### Pending Todos
 
@@ -250,8 +254,8 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed 08-mcp-server 08-01-PLAN.md
-Resume file: .planning/phases/08-mcp-server/08-02-PLAN.md
+Stopped at: Completed 08-02-PLAN.md - all 10 MCP tool handlers implemented in src/mcp_server/tools.py
+Resume file: .planning/phases/08-mcp-server/08-03-PLAN.md
 
 **Phase 7.1 Context Captured:** Git Indexing Pivot. Key decisions: remove journal/replay/LFS/checkpoint from Phase 7, keep secrets+size pre-commit hooks. Indexer = historical bootstrap (brownfield), Phase 6 = ongoing real-time capture. SHA deduplication prevents overlap. --full flag for clean rebuild. Quality gate skips version-bump/bot/merge/tiny commits. Two-pass extraction (structured Q&A + free-form entity). Stale triggers: post-merge, post-checkout, post-rewrite (NOT post-commit). Cooldown 5 min between auto-triggers.
 **Phase 8 Context Captured:** SKILL.md + MCP Server. Key decisions: all CLI commands as MCP tools (graphiti_ prefix), subprocess wrapper, plain text responses, context from local Kuzu DB (built by Phase 7.1 indexer), mcp.context_tokens config key (default 8192), stdio default + HTTP, graphiti mcp install command for zero-config setup.
