@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Context continuity without repetition - Claude remembers your preferences, decisions, and project architecture across all sessions without you stating them again, while project teams can share knowledge safely through git.
-**Current focus:** Phase 7.1 Complete — Local-first git indexing pivot done → Ready for Phase 8 (MCP Server)
+**Current focus:** Phase 8 Plan 03 Complete — FastMCP server wired with 10 tools + context resource; graphiti mcp install command ready
 
 ## Current Position
 
 Phase: 8 of 10 (MCP Server)
-Plan: 1 of 4 — In Progress
+Plan: 3 of 4 — Complete
 Status: Executing
-Last activity: 2026-02-21 — Phase 8 Plan 01 COMPLETE: mcp[cli] 1.26.0 + python-toon 0.1.3 installed, src/mcp_server/ scaffolded, TOON encode_response() and trim_to_token_budget() implemented
-Next: Phase 8 Plan 02 (server.py + tools.py — FastMCP app, graphiti_ tool wrappers, subprocess pattern)
+Last activity: 2026-02-21 — Phase 8 Plan 03 COMPLETE: server.py FastMCP app (10 tools + graphiti://context resource), context.py stale detection + TOON encoding, install.py zero-config Claude Code setup + SKILL.md, graphiti mcp CLI command group registered
+Next: Phase 8 Plan 04 (if exists) or Phase 9
 
 Progress: [████████████████████████████████░░░░░] 36 plans complete — 3 phases remaining (8, 9, 10)
 
@@ -73,6 +73,7 @@ Progress: [███████████████████████
 | Phase 7.1 P01 | 240 | 2 tasks | 10 files |
 | Phase 08-mcp-server P01 | 107 | 2 tasks | 3 files |
 | Phase 08 P02 | 270 | 2 tasks | 1 files |
+| Phase 08 P03 | 1577 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -236,6 +237,11 @@ Recent decisions affecting current work:
 - [Phase 08]: Always pass --force to graphiti_delete: MCP callers have no interactive TTY for confirmation
 - [Phase 08]: graphiti_health never raises on non-zero exit: health check failures are informational status not errors
 - [Phase 08]: graphiti_capture uses subprocess.Popen with start_new_session=True and DEVNULL to prevent stdio corruption and zombie processes
+- [Phase 08-03]: graphiti://context resource returns empty string silently for empty graph — no user-visible error or prompt (silent = correct UX for new projects)
+- [Phase 08-03]: Stale index triggers non-blocking background re-index via Popen; context injection returns immediately with current (possibly stale) data
+- [Phase 08-03]: SKILL_MD_CONTENT embedded as constant in install.py — mcp install works from any installation path without external file dependencies
+- [Phase 08-03]: install_mcp_server() merges into existing ~/.claude.json rather than overwriting — preserves other MCP servers' configs
+- [Phase 08-03]: FastMCP registration: mcp.tool()(fn) pattern (not decorator at definition site) keeps tool handlers as plain testable callables
 
 ### Pending Todos
 
@@ -254,8 +260,8 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed 08-02-PLAN.md - all 10 MCP tool handlers implemented in src/mcp_server/tools.py
-Resume file: .planning/phases/08-mcp-server/08-03-PLAN.md
+Stopped at: Completed 08-03-PLAN.md - FastMCP server wired (context.py + server.py + install.py + mcp CLI command group)
+Resume file: .planning/phases/08-mcp-server/08-04-PLAN.md (if it exists)
 
 **Phase 7.1 Context Captured:** Git Indexing Pivot. Key decisions: remove journal/replay/LFS/checkpoint from Phase 7, keep secrets+size pre-commit hooks. Indexer = historical bootstrap (brownfield), Phase 6 = ongoing real-time capture. SHA deduplication prevents overlap. --full flag for clean rebuild. Quality gate skips version-bump/bot/merge/tiny commits. Two-pass extraction (structured Q&A + free-form entity). Stale triggers: post-merge, post-checkout, post-rewrite (NOT post-commit). Cooldown 5 min between auto-triggers.
 **Phase 8 Context Captured:** SKILL.md + MCP Server. Key decisions: all CLI commands as MCP tools (graphiti_ prefix), subprocess wrapper, plain text responses, context from local Kuzu DB (built by Phase 7.1 indexer), mcp.context_tokens config key (default 8192), stdio default + HTTP, graphiti mcp install command for zero-config setup.
