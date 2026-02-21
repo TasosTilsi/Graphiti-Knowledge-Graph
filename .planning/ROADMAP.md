@@ -189,10 +189,13 @@ Plans:
   3. Context injection respects token budget (under 8K tokens)
   4. Conversations are captured automatically via MCP hooks without blocking
   5. Tool errors propagate clearly to Claude Code with actionable messages
-**Plans**: TBD
+**Plans**: 4 plans in 3 waves
 
 Plans:
-- [ ] 08-01: TBD during planning
+- [ ] 08-01-PLAN.md — Package foundation: mcp + python-toon deps, src/mcp_server/ scaffold, TOON utility module
+- [ ] 08-02-PLAN.md — MCP tools layer: 10 subprocess-based graphiti_* tool handler functions
+- [ ] 08-03-PLAN.md — Server wiring: context resource, FastMCP server, mcp install command, CLI registration
+- [ ] 08-04-PLAN.md — Integration smoke tests + human verification checkpoint
 
 ### Phase 9: Advanced Features
 **Goal**: Add smart retention, performance optimization, capture modes, and context refresh for production readiness
