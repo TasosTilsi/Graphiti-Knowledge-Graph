@@ -242,6 +242,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 7.1 -> 8 -> 
 | 6. Automatic Capture | 4/4 | Complete | 2026-02-13 |
 | 7. Git Integration | 5/5 | Complete   | 2026-02-20 |
 | 7.1. Git Indexing Pivot | 4/4 | Complete | 2026-02-20 |
-| 8. MCP Server | 0/TBD | Not started | - |
+| 8. MCP Server | 1/4 | In Progress|  |
 | 9. Advanced Features | 0/TBD | Not started | - |
 | 10. Frontend UI | 0/TBD | Not started | - |

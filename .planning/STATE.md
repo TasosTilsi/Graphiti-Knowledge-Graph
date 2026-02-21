@@ -10,10 +10,10 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 8 of 10 (MCP Server)
-Plan: 0 of TBD — Not started
-Status: Ready to plan
-Last activity: 2026-02-20 — Phase 7.1 VERIFIED (6/6): journal modules removed, src/indexer/ built, hook templates updated, graphiti index CLI registered
-Next: Phase 8 (MCP server — all CLI commands as MCP tools, stdio + HTTP transports, context injection)
+Plan: 1 of 4 — In Progress
+Status: Executing
+Last activity: 2026-02-21 — Phase 8 Plan 01 COMPLETE: mcp[cli] 1.26.0 + python-toon 0.1.3 installed, src/mcp_server/ scaffolded, TOON encode_response() and trim_to_token_budget() implemented
+Next: Phase 8 Plan 02 (server.py + tools.py — FastMCP app, graphiti_ tool wrappers, subprocess pattern)
 
 Progress: [████████████████████████████████░░░░░] 36 plans complete — 3 phases remaining (8, 9, 10)
 
@@ -71,6 +71,7 @@ Progress: [███████████████████████
 | Phase 7.1 P03 | 180 | 2 tasks | 5 files |
 | Phase 7.1 P02 | 230 | 2 tasks | 5 files |
 | Phase 7.1 P01 | 240 | 2 tasks | 10 files |
+| Phase 08-mcp-server P01 | 107 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -228,6 +229,9 @@ Recent decisions affecting current work:
 - [Phase 7.1-04]: full=False passed to indexer.run() even after --full; reset_full() handles the wipe step separately
 - [Phase 7.1-04]: upgrade_postmerge_hook() called first in hooks install sequence to migrate Phase 7 hooks before installing new ones
 - [Phase 7.1-04]: git_dir derived as root / '.git' from resolve_scope() result for git_dir-based installer functions
+- [Phase 08-mcp-server]: mcp[cli]>=1.26.0,<2.0.0 upper bound pins to stable 1.x branch before MCP v2 Q1 2026
+- [Phase 08-mcp-server]: TOON 3-item threshold: encode_response applies TOON for 3+ item lists, JSON for scalars/small responses (header overhead exceeds savings below threshold)
+- [Phase 08-mcp-server]: 4 chars/token approximation for token budget trimming — avoids tiktoken dependency (OpenAI-specific, 12% error for Claude)
 
 ### Pending Todos
 
@@ -245,9 +249,9 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-20 (execute-phase 7.1-04)
-Stopped at: Completed 7.1-04-PLAN.md — graphiti index CLI command and hooks wiring (Phase 7.1 COMPLETE)
-Resume file: .planning/phases/7.1-git-indexing-pivot-inserted/7.1-CONTEXT.md
+Last session: 2026-02-21
+Stopped at: Completed 08-mcp-server 08-01-PLAN.md
+Resume file: .planning/phases/08-mcp-server/08-02-PLAN.md
 
 **Phase 7.1 Context Captured:** Git Indexing Pivot. Key decisions: remove journal/replay/LFS/checkpoint from Phase 7, keep secrets+size pre-commit hooks. Indexer = historical bootstrap (brownfield), Phase 6 = ongoing real-time capture. SHA deduplication prevents overlap. --full flag for clean rebuild. Quality gate skips version-bump/bot/merge/tiny commits. Two-pass extraction (structured Q&A + free-form entity). Stale triggers: post-merge, post-checkout, post-rewrite (NOT post-commit). Cooldown 5 min between auto-triggers.
 **Phase 8 Context Captured:** SKILL.md + MCP Server. Key decisions: all CLI commands as MCP tools (graphiti_ prefix), subprocess wrapper, plain text responses, context from local Kuzu DB (built by Phase 7.1 indexer), mcp.context_tokens config key (default 8192), stdio default + HTTP, graphiti mcp install command for zero-config setup.
