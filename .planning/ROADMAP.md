@@ -20,7 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6: Automatic Capture** - Git hooks and conversation capture
 - [x] **Phase 7: Git Integration** - Git-safe knowledge graphs (journal-based — superseded by 7.1)
 - [x] **Phase 7.1: Git Indexing Pivot** [INSERTED] - Replace journal with local-first on-demand git history indexing
-- [ ] **Phase 8: MCP Server** - Context injection and Claude Code integration
+- [x] **Phase 8: MCP Server** - Context injection and Claude Code integration (completed 2026-02-23)
 - [ ] **Phase 9: Advanced Features** - Smart retention, performance, and context refresh
 - [ ] **Phase 10: Frontend UI** - Localhost graph visualization and monitoring dashboard
 
@@ -242,6 +242,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 7.1 -> 8 -> 
 | 6. Automatic Capture | 4/4 | Complete | 2026-02-13 |
 | 7. Git Integration | 5/5 | Complete   | 2026-02-20 |
 | 7.1. Git Indexing Pivot | 4/4 | Complete | 2026-02-20 |
-| 8. MCP Server | 3/4 | In Progress|  |
+| 8. MCP Server | 4/4 | Complete   | 2026-02-23 |
 | 9. Advanced Features | 0/TBD | Not started | - |
 | 10. Frontend UI | 0/TBD | Not started | - |

@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Context continuity without repetition - Claude remembers your preferences, decisions, and project architecture across all sessions without you stating them again, while project teams can share knowledge safely through git.
-**Current focus:** Phase 8 Plan 03 Complete — FastMCP server wired with 10 tools + context resource; graphiti mcp install command ready
+**Current focus:** Phase 8 COMPLETE — MCP server end-to-end verified in Claude Code; all 10 tools callable, context injection working, non-blocking capture confirmed
 
 ## Current Position
 
-Phase: 8 of 10 (MCP Server)
-Plan: 3 of 4 — Complete
-Status: Executing
-Last activity: 2026-02-21 — Phase 8 Plan 03 COMPLETE: server.py FastMCP app (10 tools + graphiti://context resource), context.py stale detection + TOON encoding, install.py zero-config Claude Code setup + SKILL.md, graphiti mcp CLI command group registered
-Next: Phase 8 Plan 04 (if exists) or Phase 9
+Phase: 8 of 10 (MCP Server) — COMPLETE
+Plan: 4 of 4 — Complete
+Status: Phase 8 Complete — Ready for Phase 9
+Last activity: 2026-02-23 — Phase 8 Plan 04 COMPLETE: all 5 success criteria verified in Claude Code; PATH bug fixed (venv resolution via sys.executable)
+Next: Phase 9
 
-Progress: [████████████████████████████████░░░░░] 36 plans complete — 3 phases remaining (8, 9, 10)
+Progress: [█████████████████████████████████████░░] 37 plans complete — 2 phases remaining (9, 10)
 
 ## Performance Metrics
 
@@ -74,6 +74,7 @@ Progress: [███████████████████████
 | Phase 08-mcp-server P01 | 107 | 2 tasks | 3 files |
 | Phase 08 P02 | 270 | 2 tasks | 1 files |
 | Phase 08 P03 | 1577 | 2 tasks | 5 files |
+| Phase 08-mcp-server P04 | 2173 | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -242,6 +243,8 @@ Recent decisions affecting current work:
 - [Phase 08-03]: SKILL_MD_CONTENT embedded as constant in install.py — mcp install works from any installation path without external file dependencies
 - [Phase 08-03]: install_mcp_server() merges into existing ~/.claude.json rather than overwriting — preserves other MCP servers' configs
 - [Phase 08-03]: FastMCP registration: mcp.tool()(fn) pattern (not decorator at definition site) keeps tool handlers as plain testable callables
+- [Phase 08-mcp-server]: Resolve graphiti CLI via sys.executable parent dir: bare 'graphiti' fails when Claude Code's PATH excludes venv bin/
+- [Phase 08-mcp-server]: MCP 1.x uses newline-delimited JSON protocol (not HTTP Content-Length headers from MCP 0.x)
 
 ### Pending Todos
 
@@ -259,9 +262,9 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-21
-Stopped at: Completed 08-03-PLAN.md - FastMCP server wired (context.py + server.py + install.py + mcp CLI command group)
-Resume file: .planning/phases/08-mcp-server/08-04-PLAN.md (if it exists)
+Last session: 2026-02-23
+Stopped at: Completed 08-04-PLAN.md - Phase 8 MCP server fully verified in Claude Code (all 10 tools, context injection, non-blocking capture, PATH bug fixed)
+Resume file: .planning/phases/09-*/09-01-PLAN.md (Phase 9)
 
 **Phase 7.1 Context Captured:** Git Indexing Pivot. Key decisions: remove journal/replay/LFS/checkpoint from Phase 7, keep secrets+size pre-commit hooks. Indexer = historical bootstrap (brownfield), Phase 6 = ongoing real-time capture. SHA deduplication prevents overlap. --full flag for clean rebuild. Quality gate skips version-bump/bot/merge/tiny commits. Two-pass extraction (structured Q&A + free-form entity). Stale triggers: post-merge, post-checkout, post-rewrite (NOT post-commit). Cooldown 5 min between auto-triggers.
 **Phase 8 Context Captured:** SKILL.md + MCP Server. Key decisions: all CLI commands as MCP tools (graphiti_ prefix), subprocess wrapper, plain text responses, context from local Kuzu DB (built by Phase 7.1 indexer), mcp.context_tokens config key (default 8192), stdio default + HTTP, graphiti mcp install command for zero-config setup.
