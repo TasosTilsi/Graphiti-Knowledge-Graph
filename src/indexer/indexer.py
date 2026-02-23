@@ -53,7 +53,7 @@ def _get_graphiti_for_project(project_root: Path) -> tuple[Any, str]:
     from src.graph.service import get_service
 
     service = get_service()
-    graphiti = service._get_graphiti(GraphScope.PROJECT, project_root)
+    graphiti = asyncio.run(service._get_graphiti(GraphScope.PROJECT, project_root))
     group_id = service._get_group_id(GraphScope.PROJECT, project_root)
     return graphiti, group_id
 
