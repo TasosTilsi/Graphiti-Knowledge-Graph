@@ -20,6 +20,11 @@ from typing import Optional
 logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
+# Resolve the graphiti CLI from the same venv bin/ as the running Python.
+# Using the bare name "graphiti" fails when Claude Code's PATH doesn't include
+# the virtualenv (which is the common case for MCP stdio servers).
+_GRAPHITI_CLI = str(Path(sys.executable).parent / "graphiti")
+
 try:
     from src.mcp_server.toon_utils import encode_response
 except ImportError:
@@ -55,7 +60,7 @@ def _run_graphiti(
     effective_cwd = os.environ.get("GRAPHITI_PROJECT_ROOT") or cwd
     try:
         result = subprocess.run(
-            ["graphiti"] + args,
+            [_GRAPHITI_CLI] + args,
             capture_output=True,
             text=True,
             timeout=timeout,
@@ -364,7 +369,7 @@ def graphiti_capture() -> str:
     cwd = _get_cwd()
     try:
         subprocess.Popen(
-            ["graphiti", "capture", "--async"],
+            [_GRAPHITI_CLI, "capture", "--async"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             start_new_session=True,
