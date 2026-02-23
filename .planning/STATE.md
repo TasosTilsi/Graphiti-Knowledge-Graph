@@ -248,7 +248,8 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet.
+1. **Distribution/polish phase** — PATH detection in `graphiti mcp install`, codebase refactor sweep, Claude plugin configuration (`hooks/hooks.json` + manifest for marketplace distribution)
+   → `.planning/todos/pending/2026-02-23-create-distribution-polish-phase-for-plugin-path-and-refactor.md`
 
 ### Blockers/Concerns
 
