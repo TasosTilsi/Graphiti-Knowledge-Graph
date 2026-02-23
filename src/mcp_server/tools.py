@@ -53,13 +53,18 @@ def _run_graphiti(
         Tuple of (returncode, stdout, stderr).
     """
     effective_cwd = os.environ.get("GRAPHITI_PROJECT_ROOT") or cwd
-    result = subprocess.run(
-        ["graphiti"] + args,
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-        cwd=effective_cwd,
-    )
+    try:
+        result = subprocess.run(
+            ["graphiti"] + args,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            cwd=effective_cwd,
+        )
+    except FileNotFoundError:
+        raise RuntimeError(
+            "graphiti CLI not found. Run 'pip install graphiti-knowledge-graph' to install."
+        )
     return result.returncode, result.stdout, result.stderr
 
 

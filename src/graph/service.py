@@ -11,7 +11,7 @@ It handles:
 
 import asyncio
 import json
-import logging
+import structlog
 import os
 from collections import defaultdict
 from datetime import datetime
@@ -22,14 +22,15 @@ from graphiti_core import Graphiti
 from graphiti_core.nodes import EntityNode, EpisodeType, Node
 
 from src.config.paths import GLOBAL_DB_PATH, get_project_db_path
-from src.graph.adapters import OllamaEmbedder, OllamaLLMClient
+from src.graph.adapters import NoOpCrossEncoder, OllamaEmbedder, OllamaLLMClient
 from src.llm import LLMUnavailableError
 from src.llm import chat as ollama_chat
+from src.llm.config import load_config
 from src.models import GraphScope
 from src.security import sanitize_content as secure_content
 from src.storage import GraphManager
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 # Singleton instance
 _service: Optional["GraphService"] = None
@@ -68,19 +69,7 @@ def run_graph_operation(coro):
     Example:
         result = run_graph_operation(service.add(...))
     """
-    try:
-        # Try to get the current event loop
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            # We're already in async context, can't use asyncio.run()
-            # This shouldn't happen from CLI but handle gracefully
-            raise RuntimeError(
-                "run_graph_operation called from async context. Use await instead."
-            )
-        return asyncio.run(coro)
-    except RuntimeError:
-        # No event loop exists, create one
-        return asyncio.run(coro)
+    return asyncio.run(coro)
 
 
 class GraphService:
@@ -99,11 +88,54 @@ class GraphService:
         # Create adapters (reused across all scopes)
         self._llm_client = OllamaLLMClient()
         self._embedder = OllamaEmbedder()
+        self._cross_encoder = self._create_cross_encoder()
 
         # Cache Graphiti instances per scope
         self._graphiti_instances: dict[str, Graphiti] = {}
 
         logger.debug("GraphService initialized")
+
+    def _create_cross_encoder(self):
+        """Create cross-encoder based on configuration.
+
+        Reads [reranking] config section and returns the appropriate
+        cross-encoder client. Falls back to NoOpCrossEncoder on any error.
+        """
+        config = load_config()
+
+        if not config.reranking_enabled or config.reranking_backend == "none":
+            logger.debug("Reranking disabled, using NoOpCrossEncoder")
+            return NoOpCrossEncoder()
+
+        if config.reranking_backend == "bge":
+            try:
+                from graphiti_core.cross_encoder.bge_reranker_client import BGERerankerClient
+                logger.info("Using BGE reranker (BAAI/bge-reranker-v2-m3)")
+                return BGERerankerClient()
+            except ImportError:
+                logger.warning(
+                    "BGE reranker unavailable, falling back to NoOpCrossEncoder",
+                    hint="Install with: pip install sentence-transformers",
+                )
+                return NoOpCrossEncoder()
+
+        if config.reranking_backend == "openai":
+            try:
+                from graphiti_core.cross_encoder.openai_reranker_client import OpenAIRerankerClient
+                logger.info("Using OpenAI reranker")
+                return OpenAIRerankerClient()
+            except Exception as e:
+                logger.warning(
+                    "OpenAI reranker failed, falling back to NoOpCrossEncoder",
+                    error=str(e),
+                )
+                return NoOpCrossEncoder()
+
+        logger.warning(
+            "Unknown reranking backend, using NoOpCrossEncoder",
+            backend=config.reranking_backend,
+        )
+        return NoOpCrossEncoder()
 
     def _get_cache_key(self, scope: GraphScope, project_root: Optional[Path]) -> str:
         """Get cache key for Graphiti instance.
@@ -121,10 +153,13 @@ class GraphService:
             # Use resolved path string as key
             return f"project:{project_root.resolve()}" if project_root else "project:none"
 
-    def _get_graphiti(
+    async def _get_graphiti(
         self, scope: GraphScope, project_root: Optional[Path] = None
     ) -> Graphiti:
         """Get or create Graphiti instance for scope.
+
+        On first use for a given scope, calls build_indices_and_constraints()
+        to ensure the FTS index and schema exist in the Kuzu database.
 
         Args:
             scope: Graph scope
@@ -150,12 +185,17 @@ class GraphService:
         driver = self._graph_manager.get_driver(scope, project_root)
 
         # Create Graphiti with our adapters
-        # Note: cross_encoder=None skips reranking (not needed for local Kuzu)
         graphiti = Graphiti(
             graph_driver=driver,
             llm_client=self._llm_client,
             embedder=self._embedder,
+            cross_encoder=self._cross_encoder,
         )
+
+        # Build schema, indices, and FTS indexes on first use.
+        # This is idempotent — safe to call on an existing database.
+        await graphiti.build_indices_and_constraints()
+        logger.debug("Built indices and constraints", cache_key=cache_key)
 
         # Cache and return
         self._graphiti_instances[cache_key] = graphiti
@@ -260,7 +300,7 @@ class GraphService:
             )
 
         # Get Graphiti instance
-        graphiti = self._get_graphiti(scope, project_root)
+        graphiti = await self._get_graphiti(scope, project_root)
         group_id = self._get_group_id(scope, project_root)
 
         # Generate episode name
@@ -332,7 +372,7 @@ class GraphService:
             limit=limit,
         )
 
-        graphiti = self._get_graphiti(scope, project_root)
+        graphiti = await self._get_graphiti(scope, project_root)
         group_id = self._get_group_id(scope, project_root)
 
         try:
@@ -397,7 +437,7 @@ class GraphService:
 
         try:
             # Get graphiti instance and group_id
-            graphiti = self._get_graphiti(scope, project_root)
+            graphiti = await self._get_graphiti(scope, project_root)
             group_id = self._get_group_id(scope, project_root)
 
             # Query entities from graph using EntityNode.get_by_group_ids()
@@ -462,7 +502,7 @@ class GraphService:
 
         try:
             # Get graphiti instance and group_id
-            graphiti = self._get_graphiti(scope, project_root)
+            graphiti = await self._get_graphiti(scope, project_root)
             driver = graphiti.driver
             group_id = self._get_group_id(scope, project_root)
 
@@ -585,7 +625,7 @@ class GraphService:
 
         try:
             # Get graphiti instance and group_id
-            graphiti = self._get_graphiti(scope, project_root)
+            graphiti = await self._get_graphiti(scope, project_root)
             driver = graphiti.driver
             group_id = self._get_group_id(scope, project_root)
 
@@ -643,7 +683,7 @@ class GraphService:
         logger.info("Generating summary", scope=scope.value, topic=topic)
 
         # Get graphiti instance and group_id
-        graphiti = self._get_graphiti(scope, project_root)
+        graphiti = await self._get_graphiti(scope, project_root)
         group_id = self._get_group_id(scope, project_root)
 
         # Load entities using EntityNode.get_by_group_ids
@@ -725,7 +765,7 @@ class GraphService:
 
         try:
             # Get graphiti instance, driver, and group_id
-            graphiti = self._get_graphiti(scope, project_root)
+            graphiti = await self._get_graphiti(scope, project_root)
             driver = graphiti.driver
             group_id = self._get_group_id(scope, project_root)
 
@@ -815,7 +855,7 @@ class GraphService:
 
         try:
             # Get graphiti instance and group_id
-            graphiti = self._get_graphiti(scope, project_root)
+            graphiti = await self._get_graphiti(scope, project_root)
             driver = graphiti.driver
             group_id = self._get_group_id(scope, project_root)
 

@@ -9,9 +9,11 @@ but our OllamaClient is synchronous.
 
 import asyncio
 import json
-import logging
+import re
+import structlog
 from typing import Any, Iterable
 
+from graphiti_core.cross_encoder.client import CrossEncoderClient
 from graphiti_core.embedder.client import EmbedderClient
 from graphiti_core.llm_client.client import LLMClient
 from graphiti_core.llm_client.config import LLMConfig as GraphitiLLMConfig, ModelSize
@@ -20,7 +22,21 @@ from pydantic import BaseModel
 
 from src.llm import chat as ollama_chat, embed as ollama_embed
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
+
+
+class NoOpCrossEncoder(CrossEncoderClient):
+    """No-op cross encoder that returns passages with descending scores.
+
+    Used when no reranking service is available (e.g., local Ollama setup
+    without OpenAI). Passages are returned in their original order with
+    linearly decreasing scores.
+    """
+
+    async def rank(self, query: str, passages: list[str]) -> list[tuple[str, float]]:
+        """Return passages in original order with descending scores."""
+        n = len(passages)
+        return [(p, 1.0 - i / max(n, 1)) for i, p in enumerate(passages)]
 
 
 class OllamaLLMClient(LLMClient):
@@ -47,6 +63,35 @@ class OllamaLLMClient(LLMClient):
         config = GraphitiLLMConfig(model=None)
         super().__init__(config)
         logger.debug("OllamaLLMClient initialized")
+
+    def _strip_schema_suffix(self, message_dicts: list[dict]) -> list[dict]:
+        """Strip embedded JSON schema from the last user/system message.
+
+        graphiti-core appends a JSON schema to prompt messages in this form:
+            "Respond with a JSON object in the following format:\n\n{...schema...}"
+
+        When using Ollama's format= parameter (constrained generation), the schema
+        in the prompt is redundant: the format= parameter already constrains output.
+        Removing it shortens the prompt significantly and speeds up inference.
+        """
+        if not message_dicts:
+            return message_dicts
+
+        result = list(message_dicts)
+        for i in range(len(result) - 1, -1, -1):
+            msg = result[i]
+            if msg.get("role") in ("user", "system"):
+                content = msg.get("content", "")
+                stripped = re.sub(
+                    r"\s*Respond with a JSON object in the following format:\s*\n\s*\{.*$",
+                    "",
+                    content,
+                    flags=re.DOTALL,
+                )
+                if stripped != content:
+                    result[i] = {**msg, "content": stripped.rstrip()}
+                    break
+        return result
 
     async def _generate_response(
         self,
@@ -79,11 +124,25 @@ class OllamaLLMClient(LLMClient):
         )
 
         try:
+            # When a response model is provided, pass its JSON schema as the Ollama
+            # `format` parameter to enable grammar-based constrained generation.
+            # This forces the model to emit valid JSON matching the schema rather
+            # than echoing the schema back or wrapping it in prose/code fences.
+            call_kwargs: dict[str, Any] = {}
+            if response_model is not None:
+                call_kwargs["format"] = response_model.model_json_schema()
+                # graphiti-core appends the full JSON schema to prompts like:
+                #   "Respond with a JSON object in the following format:\n\n{...schema...}"
+                # With format= (constrained generation), this schema is redundant and
+                # makes prompts much longer, slowing constrained sampling significantly.
+                # Strip it so the model only processes the semantic instruction.
+                message_dicts = self._strip_schema_suffix(message_dicts)
+
             # Call our sync ollama_chat in executor to avoid blocking event loop
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
                 None,
-                lambda: ollama_chat(messages=message_dicts),
+                lambda: ollama_chat(messages=message_dicts, **call_kwargs),
             )
 
             # Extract response content
@@ -92,8 +151,13 @@ class OllamaLLMClient(LLMClient):
             # If response_model provided, parse as JSON and validate
             if response_model is not None:
                 try:
+                    # Strip markdown code fences if present (safety net for non-constrained paths)
+                    clean_text = response_text.strip()
+                    if clean_text.startswith("```"):
+                        clean_text = re.sub(r'^```(?:json)?\s*\n?', '', clean_text)
+                        clean_text = re.sub(r'\n?```\s*$', '', clean_text).strip()
                     # Try to parse the response as JSON
-                    parsed_data = json.loads(response_text)
+                    parsed_data = json.loads(clean_text)
                     # Validate against the model
                     validated = response_model.model_validate(parsed_data)
                     # Return as dict
@@ -131,6 +195,18 @@ class OllamaEmbedder(EmbedderClient):
         """Initialize OllamaEmbedder."""
         super().__init__()
         logger.debug("OllamaEmbedder initialized")
+
+    async def create_batch(self, input_data_list: list[str]) -> list[list[float]]:
+        """Create embeddings for a batch of strings.
+
+        graphiti-core calls this when embedding multiple nodes at once.
+        Delegates to create() for each item since our Ollama client is per-request.
+        """
+        results = []
+        for text in input_data_list:
+            embedding = await self.create(text)
+            results.append(embedding)
+        return results
 
     async def create(
         self, input_data: str | list[str] | Iterable[int] | Iterable[Iterable[int]]

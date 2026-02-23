@@ -26,6 +26,8 @@ VALID_CONFIG_KEYS = {
     "quota.rate_limit_cooldown_seconds": {"type": int, "desc": "Rate limit cooldown"},
     "queue.max_size": {"type": int, "desc": "Request queue max size"},
     "queue.item_ttl_hours": {"type": int, "desc": "Queue item TTL in hours"},
+    "reranking.enabled": {"type": bool, "desc": "Enable cross-encoder reranking"},
+    "reranking.backend": {"type": str, "desc": "Reranking backend (none, bge, openai)"},
 }
 
 
@@ -251,6 +253,8 @@ def config_command(
                 "quota.rate_limit_cooldown_seconds": "rate_limit_cooldown_seconds",
                 "queue.max_size": "queue_max_size",
                 "queue.item_ttl_hours": "queue_item_ttl_hours",
+                "reranking.enabled": "reranking_enabled",
+                "reranking.backend": "reranking_backend",
             }
             attr_name = attr_map.get(get_key)
             if attr_name:
@@ -294,6 +298,10 @@ def config_command(
                 "max_size": config.queue_max_size,
                 "item_ttl_hours": config.queue_item_ttl_hours,
             },
+            "reranking": {
+                "enabled": config.reranking_enabled,
+                "backend": config.reranking_backend,
+            },
         }
         print_json(config_data)
     else:
@@ -322,6 +330,8 @@ def config_command(
             ("quota.rate_limit_cooldown_seconds", str(config.rate_limit_cooldown_seconds)),
             ("queue.max_size", str(config.queue_max_size)),
             ("queue.item_ttl_hours", str(config.queue_item_ttl_hours)),
+            ("reranking.enabled", str(config.reranking_enabled)),
+            ("reranking.backend", config.reranking_backend),
         ]
 
         for key, value in rows:

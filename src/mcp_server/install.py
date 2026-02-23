@@ -91,13 +91,24 @@ for project-specific decisions.
 """
 
 
-def _find_graphiti_executable() -> str:
-    """Find the graphiti executable path."""
+def _find_graphiti_executable() -> tuple[str, list[str]]:
+    """Find the graphiti executable and return (command, extra_args).
+
+    Returns:
+        Tuple of (command, extra_args) where command is the executable path
+        and extra_args are prepended before the caller's args.
+    """
+    # First check PATH
     path = shutil.which("graphiti")
     if path:
-        return path
-    # Fallback: invoke as a Python module
-    return f"{sys.executable} -m src.cli"
+        return path, []
+    # Check the same venv/prefix as the running Python interpreter
+    exe_dir = Path(sys.executable).parent
+    venv_graphiti = exe_dir / "graphiti"
+    if venv_graphiti.exists():
+        return str(venv_graphiti), []
+    # Last resort: use the console_scripts entry point via python -c
+    return sys.executable, ["-c", "from src.cli import cli_entry; cli_entry()"]
 
 
 def install_mcp_server(force: bool = False) -> dict:
@@ -114,7 +125,7 @@ def install_mcp_server(force: bool = False) -> dict:
         Dict with 'claude_json_updated' and 'skill_md_installed' boolean results
     """
     results = {"claude_json_updated": False, "skill_md_installed": False}
-    graphiti_path = _find_graphiti_executable()
+    command, extra_args = _find_graphiti_executable()
 
     # --- 1. Write to ~/.claude.json ---
     claude_json_path = Path.home() / ".claude.json"
@@ -132,8 +143,8 @@ def install_mcp_server(force: bool = False) -> dict:
     if not already_present or force:
         config["mcpServers"]["graphiti"] = {
             "type": "stdio",
-            "command": graphiti_path,
-            "args": ["mcp", "serve"],
+            "command": command,
+            "args": extra_args + ["mcp", "serve"],
             "env": {}
         }
         claude_json_path.write_text(json.dumps(config, indent=2))

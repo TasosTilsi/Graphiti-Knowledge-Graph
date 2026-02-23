@@ -36,8 +36,8 @@ class LLMConfig:
     retry_max_attempts: int = 3  # 1 initial + 2 retries
     retry_delay_seconds: int = 10  # Fixed delay
 
-    # Timeout configuration
-    request_timeout_seconds: int = 90
+    # Timeout configuration (local models need more time for structured output prompts)
+    request_timeout_seconds: int = 180
 
     # Quota management
     quota_warning_threshold: float = 0.8  # Warn at 80%
@@ -49,6 +49,10 @@ class LLMConfig:
     # Queue management
     queue_max_size: int = 1000  # Bounded queue
     queue_item_ttl_hours: int = 24  # Skip stale items
+
+    # Reranking configuration
+    reranking_enabled: bool = False
+    reranking_backend: str = "none"  # "none", "bge", "openai"
 
 
 def load_config(config_path: Path | None = None) -> LLMConfig:
@@ -81,6 +85,7 @@ def load_config(config_path: Path | None = None) -> LLMConfig:
     quota = config_data.get("quota", {})
     logging = config_data.get("logging", {})
     queue = config_data.get("queue", {})
+    reranking = config_data.get("reranking", {})
 
     # Apply environment variable overrides
     cloud_endpoint = os.getenv("OLLAMA_CLOUD_ENDPOINT", cloud.get("endpoint", "https://ollama.com"))
@@ -102,6 +107,8 @@ def load_config(config_path: Path | None = None) -> LLMConfig:
         failover_logging=logging.get("failover", True),
         queue_max_size=queue.get("max_size", 1000),
         queue_item_ttl_hours=queue.get("item_ttl_hours", 24),
+        reranking_enabled=reranking.get("enabled", False),
+        reranking_backend=reranking.get("backend", "none"),
     )
 
 

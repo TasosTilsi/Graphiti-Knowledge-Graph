@@ -88,10 +88,10 @@ class OllamaClient:
             timeout=cloud_timeout,
         )
 
-        # Configure local client with shorter timeouts
+        # Configure local client timeouts (read uses config to handle large structured prompts)
         local_timeout = httpx.Timeout(
             connect=2.0,
-            read=60.0,
+            read=float(config.request_timeout_seconds),
             write=10.0,
             pool=5.0,
         )
@@ -280,7 +280,10 @@ class OllamaClient:
         """
         try:
             response = self.local_client.list()
-            return [model["name"] for model in response.get("models", [])]
+            # Ollama SDK v0.6+ returns Pydantic models with .models attribute
+            # and each model has .model (not ["name"])
+            models = getattr(response, "models", None) or response.get("models", [])
+            return [getattr(m, "model", None) or m.get("name", "") for m in models]
         except Exception as e:
             raise LLMUnavailableError(
                 "Local Ollama not running. Start with: ollama serve"
@@ -305,12 +308,16 @@ class OllamaClient:
 
         # Determine which model to use
         if model is not None:
-            # Specific model requested
-            if model not in available_models:
+            # Specific model requested - check exact name or with :latest suffix
+            # (Ollama stores models as "name:tag"; config may omit ":latest")
+            model_with_tag = model if ":" in model else f"{model}:latest"
+            if model not in available_models and model_with_tag not in available_models:
                 raise LLMUnavailableError(
                     f"Model {model} not available. Run: ollama pull {model}"
                 )
-            models_to_try = [model]
+            # Use the canonical name that is actually listed
+            canonical = model if model in available_models else model_with_tag
+            models_to_try = [canonical]
         else:
             # Use fallback chain
             models_to_try = [

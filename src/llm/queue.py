@@ -55,8 +55,10 @@ class LLMRequestQueue:
         self._queue_path = queue_path or (Path.home() / ".graphiti" / "llm_queue")
         self._queue_path.mkdir(parents=True, exist_ok=True)
 
-        # Initialize SQLite-backed queue with auto-commit
-        self._queue = SQLiteAckQueue(str(self._queue_path), auto_commit=True)
+        # Initialize SQLite-backed queue with auto-commit.
+        # multithreading=True sets check_same_thread=False so the queue can be
+        # accessed from executor threads (ollama_chat is called via run_in_executor).
+        self._queue = SQLiteAckQueue(str(self._queue_path), auto_commit=True, multithreading=True)
 
         self._logger = structlog.get_logger()
         self._max_size = config.queue_max_size
