@@ -3,6 +3,7 @@
 Provides graphiti mcp serve and graphiti mcp install subcommands.
 """
 import typer
+from pathlib import Path
 from typing import Annotated, Optional
 
 from src.cli.output import console, print_success, print_json, print_error
@@ -71,7 +72,13 @@ def install_command(
         else:
             console.print("[dim]SKILL.md already installed (use --force to update)[/dim]")
 
-        if results["claude_json_updated"] or results["skill_md_installed"]:
+        if results.get("hooks_installed"):
+            settings_path = Path.cwd() / ".claude" / "settings.json"
+            print_success(f"Stop hook installed in {settings_path}")
+        else:
+            console.print("[dim]Stop hook already installed (use --force to update)[/dim]")
+
+        if results["claude_json_updated"] or results["skill_md_installed"] or results.get("hooks_installed"):
             console.print("\n[cyan]Restart Claude Code to activate the graphiti MCP server.[/cyan]")
 
     except Exception as e:

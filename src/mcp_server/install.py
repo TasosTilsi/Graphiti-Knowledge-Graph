@@ -111,20 +111,92 @@ def _find_graphiti_executable() -> tuple[str, list[str]]:
     return sys.executable, ["-c", "from src.cli import cli_entry; cli_entry()"]
 
 
+def _install_project_hooks(graphiti_cmd: str, force: bool = False) -> bool:
+    """Write the Claude Code Stop hook to .claude/settings.json in the current directory.
+
+    The hook reads transcript_path and session_id from the Stop event JSON (stdin)
+    and fires `graphiti capture --auto` asynchronously so it never blocks Claude.
+
+    Args:
+        graphiti_cmd: Full absolute path to the graphiti executable.
+        force: Overwrite an existing graphiti Stop hook if already present.
+
+    Returns:
+        True if the hook was written/updated, False if already present and force=False.
+    """
+    settings_dir = Path.cwd() / ".claude"
+    settings_path = settings_dir / "settings.json"
+
+    config: dict = {}
+    if settings_path.exists():
+        try:
+            config = json.loads(settings_path.read_text())
+        except (json.JSONDecodeError, IOError):
+            config = {}
+
+    # The Stop event passes session_id and transcript_path as stdin JSON fields,
+    # not as environment variables — read them with jq.
+    hook_command = (
+        "INPUT=$(cat); "
+        'transcript=$(echo "$INPUT" | jq -r \'.transcript_path\'); '
+        'session=$(echo "$INPUT" | jq -r \'.session_id\'); '
+        f'"{graphiti_cmd}" capture --auto --transcript-path "$transcript" --session-id "$session"'
+    )
+
+    stop_hooks: list = config.get("hooks", {}).get("Stop", [])
+
+    # Check whether our hook is already installed (keyed by executable path)
+    graphiti_already_installed = any(
+        graphiti_cmd in h.get("command", "")
+        for entry in stop_hooks
+        for h in entry.get("hooks", [])
+    )
+    if graphiti_already_installed and not force:
+        return False
+
+    # Remove stale graphiti Stop entries before re-adding (handles force=True and
+    # path changes after venv recreation).
+    stop_hooks = [
+        entry for entry in stop_hooks
+        if not any("graphiti" in h.get("command", "") for h in entry.get("hooks", []))
+    ]
+
+    stop_hooks.append({
+        "hooks": [
+            {
+                "type": "command",
+                "command": hook_command,
+                "async": True,
+                "timeout": 120,
+            }
+        ]
+    })
+
+    if "hooks" not in config:
+        config["hooks"] = {}
+    config["hooks"]["Stop"] = stop_hooks
+
+    settings_dir.mkdir(parents=True, exist_ok=True)
+    settings_path.write_text(json.dumps(config, indent=2) + "\n")
+    return True
+
+
 def install_mcp_server(force: bool = False) -> dict:
     """Write graphiti MCP server config to ~/.claude.json and install SKILL.md.
 
     This enables zero-config Claude Code integration:
     1. Adds 'graphiti' entry to mcpServers in ~/.claude.json
     2. Writes SKILL.md to ~/.claude/skills/graphiti/SKILL.md
+    3. Writes Stop hook to .claude/settings.json in the current directory
 
     Args:
         force: Overwrite existing entries even if already present
 
     Returns:
-        Dict with 'claude_json_updated' and 'skill_md_installed' boolean results
+        Dict with 'claude_json_updated', 'skill_md_installed', and
+        'hooks_installed' boolean results
     """
-    results = {"claude_json_updated": False, "skill_md_installed": False}
+    results = {"claude_json_updated": False, "skill_md_installed": False, "hooks_installed": False}
     command, extra_args = _find_graphiti_executable()
 
     # --- 1. Write to ~/.claude.json ---
@@ -158,5 +230,8 @@ def install_mcp_server(force: bool = False) -> dict:
         skill_dir.mkdir(parents=True, exist_ok=True)
         skill_path.write_text(SKILL_MD_CONTENT)
         results["skill_md_installed"] = True
+
+    # --- 3. Install Stop hook into .claude/settings.json (current project) ---
+    results["hooks_installed"] = _install_project_hooks(command, force=force)
 
     return results
