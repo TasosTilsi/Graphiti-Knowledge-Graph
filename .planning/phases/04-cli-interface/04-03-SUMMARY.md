@@ -30,6 +30,7 @@ metrics:
   files_modified: 1
   commits: 2
   completed_at: 2026-02-10T22:23:04Z
+requirements-completed: [R2.1, R2.2, R2.3]
 ---
 
 # Phase 04 Plan 03: List, Show, and Delete Commands Summary

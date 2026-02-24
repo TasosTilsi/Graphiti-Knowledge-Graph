@@ -56,6 +56,7 @@ metrics:
   commit_count: 2
   lines_added: 800
   completed_at: "2026-02-13T19:06:12Z"
+requirements-completed: [R4.1, R4.2]
 ---
 
 # Phase 6 Plan 1: Capture Pipeline Core Summary

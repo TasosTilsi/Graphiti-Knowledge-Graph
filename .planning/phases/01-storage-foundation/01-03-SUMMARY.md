@@ -41,6 +41,8 @@ patterns-established:
 # Metrics
 duration: 18min
 completed: 2026-02-03
+
+requirements-completed: [R1.1, R1.2]
 ---
 
 # Phase 01 Plan 03: Persistence and Isolation Tests Summary

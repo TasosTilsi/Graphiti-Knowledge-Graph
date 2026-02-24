@@ -30,6 +30,7 @@ metrics:
   files_modified: 1
   commits: 2
   completed_at: 2026-02-11T00:17:24Z
+requirements-completed: [R2.1, R2.2, R2.3]
 ---
 
 # Phase 04 Plan 01: CLI Foundation Summary

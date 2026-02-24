@@ -43,6 +43,8 @@ patterns-established:
 # Metrics
 duration: 73.1min
 completed: 2026-02-12
+
+requirements-completed: [R2.1, R2.2, R2.3]
 ---
 
 # Phase 04 Plan 08: CLI-to-Graph Wiring Summary

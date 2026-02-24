@@ -46,6 +46,7 @@ metrics:
   commit_count: 2
   lines_added: 440
   completed_at: "2026-02-13T19:59:09Z"
+requirements-completed: [R4.1, R4.2]
 ---
 
 # Phase 6 Plan 4: CLI Integration Summary

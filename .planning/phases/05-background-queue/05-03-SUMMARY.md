@@ -47,6 +47,8 @@ patterns-established:
 # Metrics
 duration: 141s
 completed: 2026-02-12T23:14:22Z
+
+requirements-completed: [R4.3]
 ---
 
 # Phase 5 Plan 3: CLI Commands Summary
