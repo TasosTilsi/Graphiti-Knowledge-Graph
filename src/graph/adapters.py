@@ -93,6 +93,64 @@ class OllamaLLMClient(LLMClient):
                     break
         return result
 
+    def _schema_to_example(self, schema: dict) -> Any:
+        """Recursively build a minimal concrete example value from a JSON schema.
+
+        Resolves $ref references against $defs. Returns the smallest valid
+        instance of each type so the injected example stays compact.
+        """
+        defs = schema.get("$defs", {})
+        return self._resolve_node(schema, defs)
+
+    def _resolve_node(self, node: dict, defs: dict) -> Any:
+        """Resolve one schema node to a concrete example value."""
+        if "$ref" in node:
+            ref_name = node["$ref"].split("/")[-1]
+            return self._resolve_node(defs.get(ref_name, {}), defs)
+
+        type_ = node.get("type")
+
+        if type_ == "object":
+            return {
+                k: self._resolve_node(v, defs)
+                for k, v in node.get("properties", {}).items()
+            }
+        if type_ == "array":
+            item = self._resolve_node(node.get("items", {}), defs)
+            return [item]
+        if type_ == "string":
+            return "example"
+        if type_ == "integer":
+            return 0
+        if type_ == "number":
+            return 0.0
+        if type_ == "boolean":
+            return True
+        return None
+
+    def _inject_example(
+        self, message_dicts: list[dict], response_model: type[BaseModel]
+    ) -> list[dict]:
+        """Append a concrete one-line JSON example to the last user/system message.
+
+        Cloud models that ignore the format= schema constraint can use this as a
+        concrete template to copy, reducing field-name mismatches. Local models
+        with grammar-based constrained generation ignore the extra text.
+
+        The example is appended AFTER _strip_schema_suffix() so the verbose
+        schema block is replaced by a compact single-line concrete instance.
+        """
+        example = self._schema_to_example(response_model.model_json_schema())
+        suffix = f"\n\nExample output: {json.dumps(example, separators=(',', ':'))}"
+
+        result = list(message_dicts)
+        for i in range(len(result) - 1, -1, -1):
+            msg = result[i]
+            if msg.get("role") in ("user", "system"):
+                result[i] = {**msg, "content": msg.get("content", "") + suffix}
+                break
+        return result
+
     async def _generate_response(
         self,
         messages: list[Message],
@@ -137,6 +195,9 @@ class OllamaLLMClient(LLMClient):
                 # makes prompts much longer, slowing constrained sampling significantly.
                 # Strip it so the model only processes the semantic instruction.
                 message_dicts = self._strip_schema_suffix(message_dicts)
+                # Append a compact concrete example so cloud models that ignore
+                # format= still have a template with exact field names to copy.
+                message_dicts = self._inject_example(message_dicts, response_model)
 
             # Call our sync ollama_chat in executor to avoid blocking event loop
             loop = asyncio.get_event_loop()
