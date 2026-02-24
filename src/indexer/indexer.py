@@ -235,6 +235,7 @@ class GitIndexer:
                 )
 
                 # Run two-pass LLM extraction (sync wrapper around async)
+                result = {"passes": 0}
                 try:
                     result = asyncio.run(
                         extract_commit_knowledge(
@@ -273,17 +274,22 @@ class GitIndexer:
                             error=str(e),
                         )
 
-                # Update state after each commit for crash recovery
-                add_processed_sha(state, commit.hexsha)
-                state.last_indexed_sha = commit.hexsha
-                state.indexed_commits_count += 1
-                save_state(self.project_root, state)
+                # Only mark as processed if extraction succeeded.
+                # LLM failures (passes=0) leave the commit unprocessed so
+                # the next `graphiti index` run retries it when Ollama is available.
+                extraction_ok = result.get("passes", 0) > 0
+                if extraction_ok:
+                    add_processed_sha(state, commit.hexsha)
+                    state.last_indexed_sha = commit.hexsha
+                    state.indexed_commits_count += 1
+                    save_state(self.project_root, state)
 
                 commits_processed += 1
                 self._logger.info(
                     "commit_indexed",
                     sha=commit.hexsha[:8],
                     total=commits_processed,
+                    extraction_ok=extraction_ok,
                 )
 
         except Exception as e:
