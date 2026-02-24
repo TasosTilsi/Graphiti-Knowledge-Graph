@@ -329,8 +329,14 @@ class OllamaClient:
                     f"No configured models available. Run: ollama pull {missing}"
                 )
 
-            # Select largest available model
-            models_to_try = [get_largest_available_model(models_to_try, available_models)]
+            # Sort largest-first so we prefer quality, but keep all models for fallback.
+            # get_largest_available_model() would reduce to one entry — removing the
+            # fallback chain entirely. Instead, sort by param count and try each in turn.
+            models_to_try = sorted(
+                models_to_try,
+                key=lambda m: _extract_param_count(m),
+                reverse=True,
+            )
 
         # Try each model in order
         last_error = None
@@ -555,6 +561,15 @@ class OllamaClient:
         return (success, failure)
 
 
+def _extract_param_count(model_name: str) -> int:
+    """Extract parameter count from a model name string.
+
+    Examples: "gemma2:9b" -> 9_000_000_000, "llama3.2:3B" -> 3_000_000_000
+    """
+    match = re.search(r"(\d+)b", model_name.lower())
+    return int(match.group(1)) * 1_000_000_000 if match else 0
+
+
 def get_largest_available_model(models: list[str], available: list[str]) -> str | None:
     """Select largest model from list based on parameter count.
 
@@ -572,18 +587,5 @@ def get_largest_available_model(models: list[str], available: list[str]) -> str 
     if not candidates:
         return None
 
-    def extract_params(model_name: str) -> int:
-        """Extract parameter count from model name.
-
-        Examples:
-            "gemma2:9b" -> 9_000_000_000
-            "llama3.2:3B" -> 3_000_000_000
-            "nomic-embed-text" -> 0
-        """
-        match = re.search(r"(\d+)b", model_name.lower())
-        if match:
-            return int(match.group(1)) * 1_000_000_000
-        return 0
-
     # Sort by parameter count descending, return largest
-    return max(candidates, key=extract_params)
+    return max(candidates, key=_extract_param_count)

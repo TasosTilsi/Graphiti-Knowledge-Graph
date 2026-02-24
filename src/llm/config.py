@@ -27,7 +27,7 @@ class LLMConfig:
     # Local endpoint configuration
     local_endpoint: str = "http://localhost:11434"
     local_auto_start: bool = False
-    local_models: list[str] = field(default_factory=lambda: ["gemma2:9b", "llama3.2:3b"])
+    local_models: list[str] = field(default_factory=lambda: ["gemma2:9b", "qwen2.5-coder:7b", "llama3.2:3b"])
 
     # Embeddings model
     embeddings_model: str = "nomic-embed-text"
