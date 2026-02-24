@@ -315,10 +315,27 @@ Plans:
 Plans:
 - [ ] 10-01: TBD during planning
 
+### Phase 11: Multi-Provider LLM Support
+**Goal**: Replace the Ollama-only client with a provider-agnostic LLM layer that supports OpenAI, Anthropic, Groq, Mistral, and any OpenAI-compatible endpoint — configured via a new `[provider]` section in `llm.toml`, with no code changes required to switch providers.
+**Depends on**: Phase 10 (all core functionality and UI in place)
+**Requirements**: TBD
+**Success Criteria** (what must be TRUE):
+  1. `[provider] type = "openai"` in `llm.toml` routes all LLM calls through the OpenAI SDK with configurable `base_url` and `api_key`
+  2. `[provider] type = "ollama"` (default) preserves all existing behaviour — no regression for current users
+  3. Any OpenAI-compatible service (Groq, Mistral, Together AI, LM Studio, etc.) works by setting `type = "openai"` and the appropriate `base_url`
+  4. Embeddings provider is independently configurable — can mix Ollama embeddings with OpenAI chat, or vice versa
+  5. Failover logic (cloud → local) works for OpenAI-type providers the same as for Ollama
+  6. `graphiti config` shows the active provider type and endpoint
+  7. The concrete example injection and bare list normalisation in the adapter continue to work regardless of provider
+**Plans**: TBD
+
+Plans:
+- [ ] 11-01: TBD during planning
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 7.1 -> 8 -> 8.1/8.2/8.3/8.5 (parallel) -> 8.4 -> 9 -> 10
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 7.1 -> 8 -> 8.1/8.2/8.3/8.5 (parallel) -> 8.4 -> 9 -> 10 -> 11
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -338,3 +355,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 7.1 -> 8 -> 
 | 8.5. Gap Closure — Human Runtime Verification | 2/2 | Complete | 2026-02-24 |
 | 9. Advanced Features | 0/TBD | Not started | - |
 | 10. Frontend UI | 0/TBD | Not started | - |
+| 11. Multi-Provider LLM Support | 0/TBD | Not started | - |
