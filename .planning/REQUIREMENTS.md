@@ -458,4 +458,4 @@ Mapping of requirements to phases in ROADMAP.md:
 ---
 
 *Requirements defined: 2026-02-02*
-*Status: 17/19 Complete — R4.1 pending human runtime verification (Phase 8.5 guide ready)*
+*Status: 18/19 Complete — R4.1 pending human runtime verification (Phase 8.5 guide ready)*
