@@ -21,7 +21,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 7: Git Integration** - Git-safe knowledge graphs (journal-based — superseded by 7.1)
 - [x] **Phase 7.1: Git Indexing Pivot** [INSERTED] - Replace journal with local-first on-demand git history indexing
 - [x] **Phase 8: MCP Server** - Context injection and Claude Code integration (completed 2026-02-23)
-- [ ] **Phase 8.1: Gap Closure — Verification Files** [INSERTED] - Write VERIFICATION.md for Phases 03 and 08 to satisfy 3-source cross-reference protocol
+- [x] **Phase 8.1: Gap Closure — Verification Files** [INSERTED] - Write VERIFICATION.md for Phases 03 and 08 to satisfy 3-source cross-reference protocol (completed 2026-02-24)
 - [ ] **Phase 8.2: Gap Closure — MCP Server Bugs** [INSERTED] - Fix --async flag bug in capture, context.py bare path, and _auto_install_hooks key mismatch
 - [ ] **Phase 8.3: Gap Closure — Queue Dispatch** [INSERTED] - Fix BackgroundWorker._replay_command() dispatch for capture_git_commits jobs (restores Flow 3)
 - [ ] **Phase 8.4: Gap Closure — Documentation Traceability** [INSERTED] - Update REQUIREMENTS.md checkboxes and add requirements-completed frontmatter to SUMMARY.md files (depends on 8.1, 8.2, 8.3)
@@ -331,7 +331,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 7.1 -> 8 -> 
 | 7. Git Integration | 5/5 | Complete   | 2026-02-20 |
 | 7.1. Git Indexing Pivot | 4/4 | Complete | 2026-02-20 |
 | 8. MCP Server | 4/4 | Complete   | 2026-02-24 |
-| 8.1. Gap Closure — Verification Files | 2/2 | Complete | 2026-02-24 |
+| 8.1. Gap Closure — Verification Files | 2/2 | Complete    | 2026-02-24 |
 | 8.2. Gap Closure — MCP Server Bugs | 0/2 | Planned (2026-02-24) | - |
 | 8.3. Gap Closure — Queue Dispatch | 0/2 | Not started | - |
 | 8.4. Gap Closure — Documentation Traceability | 0/1 | Not started (blocked by 8.1–8.3) | - |
