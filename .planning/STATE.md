@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Context continuity without repetition - Claude remembers your preferences, decisions, and project architecture across all sessions without you stating them again, while project teams can share knowledge safely through git.
-**Current focus:** Phase 8.1 Gap Closure — Verification files inserted for Phase 03 (LLM Integration) and Phase 08 (MCP Server); R5.1/R5.2/R5.3/R6.1 declared SATISFIED with 3-source cross-reference records
+**Current focus:** Phase 8.4 Gap Closure — Documentation traceability complete; REQUIREMENTS.md 17/19 Complete; requirements-completed frontmatter added to all 31 SUMMARY.md files across phases 01-06
 
 ## Current Position
 
-Phase: 8.1 of 10 (Gap Closure — Verification Files) — IN PROGRESS
-Plan: 1 of 2 — Complete (Plan 8.1-01: Phase 03 VERIFICATION.md)
-Status: Phase 8.1 Plan 01 Complete — Phase 03 LLM Integration VERIFICATION.md inserted
-Last activity: 2026-02-24 — Phase 8.1 Plan 01 COMPLETE: Phase 03 VERIFICATION.md created (da89497), R5.1/R5.2/R5.3 SATISFIED
-Next: Phase 8.1 Plan 02 (Phase 08 VERIFICATION.md — already committed in da89497/685dde3)
+Phase: 8.4 of 10 (Gap Closure — Documentation Traceability) — COMPLETE
+Plan: 1 of 1 — Complete (Plan 8.4-01: REQUIREMENTS.md + SUMMARY.md frontmatter)
+Status: Phase 8.4 Plan 01 Complete — Traceability updated, 31 SUMMARY.md files annotated
+Last activity: 2026-02-24 — Phase 8.4 Plan 01 COMPLETE: REQUIREMENTS.md 17/19 Complete (b1c63e2), 31 SUMMARY.md annotated (d7aac45)
+Next: Phase 9 (Advanced Features — Smart Retention, Context Refresh)
 
-Progress: [███████████████████████████████████████░] 39 plans complete — 2 phases remaining (9, 10)
+Progress: [████████████████████████████████████████░] 40 plans complete — 2 phases remaining (9, 10)
 
 ## Performance Metrics
 
@@ -77,6 +77,7 @@ Progress: [███████████████████████
 | Phase 08-mcp-server P04 | 2173 | 2 tasks | 13 files |
 | Phase 8.1-gap-closure-verification-files-inserted P02 | 117 | 1 tasks | 1 files |
 | Phase 8.1-gap-closure-verification-files-inserted P01 | 300 | 1 tasks | 1 files |
+| Phase 8.4-gap-closure-documentation-traceability-inserted P01 | 900 | 2 tasks | 32 files |
 
 ## Accumulated Context
 
@@ -250,6 +251,9 @@ Recent decisions affecting current work:
 - [Phase 8.1-gap-closure-verification-files-inserted]: Phase 08 VERIFICATION.md status is 'passed' — post-verification bug discovery does not retroactively block procedural verification
 - [Phase 8.1-gap-closure-verification-files-inserted]: R6.2 and R6.3 declared SATISFIED (issues noted) with forward reference to Phase 8.2 gap closure — known-issue notes distinguish procedural completion from post-verification bug tracking
 - [Phase 8.1-gap-closure-verification-files-inserted]: Synthesize Phase 03 VERIFICATION.md from UAT.md + SUMMARY files — evidence complete for retrospective verification
+- [Phase 8.4-gap-closure-documentation-traceability-inserted]: Apply gap-closure phase reality over plan spec: when dependency phases already ran, mark requirements Complete rather than Pending
+- [Phase 8.4-gap-closure-documentation-traceability-inserted]: requirements-completed YAML frontmatter in SUMMARY.md makes requirement tracking machine-readable and consistent with REQUIREMENTS.md traceability table
+- [Phase 8.4-gap-closure-documentation-traceability-inserted]: R4.1 stays Pending until human runs Phase 8.5 verification guide — guide written != human execution confirmed
 
 ### Pending Todos
 
@@ -269,8 +273,8 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 8.1-01-PLAN.md - Phase 03 LLM Integration VERIFICATION.md inserted; R5.1/R5.2/R5.3 SATISFIED
-Resume file: .planning/phases/08.1-gap-closure-verification-files-inserted/8.1-02-PLAN.md (Phase 8.1 Plan 02 — Phase 08 VERIFICATION.md already committed in da89497)
+Stopped at: Completed 8.4-01-PLAN.md — REQUIREMENTS.md traceability 17/19 Complete; 31 SUMMARY.md files annotated with requirements-completed frontmatter
+Resume file: .planning/ — Phase 8.4 complete; next is Phase 9 (Advanced Features)
 
 **Phase 7.1 Context Captured:** Git Indexing Pivot. Key decisions: remove journal/replay/LFS/checkpoint from Phase 7, keep secrets+size pre-commit hooks. Indexer = historical bootstrap (brownfield), Phase 6 = ongoing real-time capture. SHA deduplication prevents overlap. --full flag for clean rebuild. Quality gate skips version-bump/bot/merge/tiny commits. Two-pass extraction (structured Q&A + free-form entity). Stale triggers: post-merge, post-checkout, post-rewrite (NOT post-commit). Cooldown 5 min between auto-triggers.
 **Phase 8 Context Captured:** SKILL.md + MCP Server. Key decisions: all CLI commands as MCP tools (graphiti_ prefix), subprocess wrapper, plain text responses, context from local Kuzu DB (built by Phase 7.1 indexer), mcp.context_tokens config key (default 8192), stdio default + HTTP, graphiti mcp install command for zero-config setup.

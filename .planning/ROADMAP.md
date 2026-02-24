@@ -24,7 +24,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 8.1: Gap Closure — Verification Files** [INSERTED] - Write VERIFICATION.md for Phases 03 and 08 to satisfy 3-source cross-reference protocol (completed 2026-02-24)
 - [ ] **Phase 8.2: Gap Closure — MCP Server Bugs** [INSERTED] - Fix --async flag bug in capture, context.py bare path, and _auto_install_hooks key mismatch
 - [ ] **Phase 8.3: Gap Closure — Queue Dispatch** [INSERTED] - Fix BackgroundWorker._replay_command() dispatch for capture_git_commits jobs (restores Flow 3)
-- [ ] **Phase 8.4: Gap Closure — Documentation Traceability** [INSERTED] - Update REQUIREMENTS.md checkboxes and add requirements-completed frontmatter to SUMMARY.md files (depends on 8.1, 8.2, 8.3)
+- [x] **Phase 8.4: Gap Closure — Documentation Traceability** [INSERTED] - Update REQUIREMENTS.md checkboxes and add requirements-completed frontmatter to SUMMARY.md files (depends on 8.1, 8.2, 8.3)
 - [ ] **Phase 8.5: Gap Closure — Human Runtime Verification** [INSERTED] - Step-by-step verification checklists for Phases 02 (security) and 06 (automatic capture)
 - [ ] **Phase 9: Advanced Features** - Smart retention, performance, and context refresh
 - [ ] **Phase 10: Frontend UI** - Localhost graph visualization and monitoring dashboard
@@ -266,7 +266,7 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 8.4-01-PLAN.md — Update REQUIREMENTS.md and add requirements-completed frontmatter to all SUMMARY.md files
+- [x] 8.4-01-PLAN.md — Update REQUIREMENTS.md and add requirements-completed frontmatter to all SUMMARY.md files
 
 ### Phase 8.5: Gap Closure — Human Runtime Verification [INSERTED]
 **Goal**: Create guided human verification checklists for Phase 02 (Security Filtering) and Phase 06 (Automatic Capture). These phases have `human_needed` status because static analysis can't substitute for live runtime testing. This phase produces runnable verification scripts and step-by-step guides.
@@ -332,9 +332,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 7.1 -> 8 -> 
 | 7.1. Git Indexing Pivot | 4/4 | Complete | 2026-02-20 |
 | 8. MCP Server | 4/4 | Complete   | 2026-02-24 |
 | 8.1. Gap Closure — Verification Files | 2/2 | Complete    | 2026-02-24 |
-| 8.2. Gap Closure — MCP Server Bugs | 0/2 | Planned (2026-02-24) | - |
-| 8.3. Gap Closure — Queue Dispatch | 0/2 | Not started | - |
-| 8.4. Gap Closure — Documentation Traceability | 0/1 | Not started (blocked by 8.1–8.3) | - |
-| 8.5. Gap Closure — Human Runtime Verification | 0/2 | Not started | - |
+| 8.2. Gap Closure — MCP Server Bugs | 2/2 | Complete | 2026-02-24 |
+| 8.3. Gap Closure — Queue Dispatch | 2/2 | Complete | 2026-02-24 |
+| 8.4. Gap Closure — Documentation Traceability | 1/1 | Complete | 2026-02-24 |
+| 8.5. Gap Closure — Human Runtime Verification | 2/2 | Complete | 2026-02-24 |
 | 9. Advanced Features | 0/TBD | Not started | - |
 | 10. Frontend UI | 0/TBD | Not started | - |
