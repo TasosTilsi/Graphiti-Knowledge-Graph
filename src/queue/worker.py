@@ -15,6 +15,7 @@ Thread safety: Worker runs in its own thread with ThreadPoolExecutor for paralle
 batches. JobQueue handles its own thread safety via persistqueue.
 """
 
+import asyncio
 import subprocess
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -261,12 +262,27 @@ class BackgroundWorker:
         This is the CLI-first architecture: worker replays commands, CLI remains
         single source of truth (per user decision).
 
+        For job types that do not use the generic CLI-replay format (i.e., they
+        have a structured payload rather than a 'command' key), dispatch to a
+        dedicated handler before falling through to the generic path.
+
         Args:
             item: Job dict with payload containing command and args
 
         Raises:
             RuntimeError: If command execution fails (non-zero exit code)
         """
+        # Dispatch by job type for structured payloads (not generic CLI replay)
+        job_type = item.get('job_type', '')
+        if job_type == 'capture_git_commits':
+            success = self._handle_capture_git_commits(item)
+            if not success:
+                raise RuntimeError(
+                    f"capture_git_commits handler failed for job {item['id']}: "
+                    "payload missing 'pending_file' key"
+                )
+            return
+
         payload = item['payload']
 
         # Extract command and arguments from payload
@@ -299,6 +315,55 @@ class BackgroundWorker:
             args=args,
             kwargs=kwargs
         )
+
+    def _handle_capture_git_commits(self, item: dict) -> bool:
+        """Handle capture_git_commits job type.
+
+        This job type is enqueued by src/capture/git_worker.enqueue_git_processing()
+        with payload={"pending_file": "/path/to/pending_commits"}. It does NOT use
+        the generic CLI-replay format (no 'command' key), so it must be dispatched
+        directly to process_pending_commits().
+
+        Calling process_pending_commits() directly (rather than via subprocess) avoids
+        the PATH dependency of the generic replay path and is safe because
+        process_pending_commits() is pure Python with no global state mutations.
+
+        Args:
+            item: Job dict; payload must contain 'pending_file' key
+
+        Returns:
+            True if handler dispatched successfully, False if payload is malformed
+        """
+        payload = item.get('payload', {})
+        pending_file_str = payload.get('pending_file')
+
+        if not pending_file_str:
+            self._logger.error(
+                "capture_git_commits_missing_pending_file",
+                job_id=item['id'],
+                payload=payload
+            )
+            return False
+
+        from pathlib import Path
+        from src.capture.git_worker import process_pending_commits
+
+        pending_file = Path(pending_file_str)
+
+        self._logger.info(
+            "capture_git_commits_dispatching",
+            job_id=item['id'],
+            pending_file=str(pending_file)
+        )
+
+        asyncio.run(process_pending_commits(pending_file=pending_file))
+
+        self._logger.info(
+            "capture_git_commits_complete",
+            job_id=item['id'],
+            pending_file=str(pending_file)
+        )
+        return True
 
     @staticmethod
     def _kwargs_to_flags(kwargs: dict) -> list[str]:
