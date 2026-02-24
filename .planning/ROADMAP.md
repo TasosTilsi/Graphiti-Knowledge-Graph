@@ -21,6 +21,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 7: Git Integration** - Git-safe knowledge graphs (journal-based — superseded by 7.1)
 - [x] **Phase 7.1: Git Indexing Pivot** [INSERTED] - Replace journal with local-first on-demand git history indexing
 - [x] **Phase 8: MCP Server** - Context injection and Claude Code integration (completed 2026-02-23)
+- [ ] **Phase 8.1: Gap Closure — Verification Files** [INSERTED] - Write VERIFICATION.md for Phases 03 and 08 to satisfy 3-source cross-reference protocol
+- [ ] **Phase 8.2: Gap Closure — MCP Server Bugs** [INSERTED] - Fix --async flag bug in capture, context.py bare path, and _auto_install_hooks key mismatch
+- [ ] **Phase 8.3: Gap Closure — Queue Dispatch** [INSERTED] - Fix BackgroundWorker._replay_command() dispatch for capture_git_commits jobs (restores Flow 3)
+- [ ] **Phase 8.4: Gap Closure — Documentation Traceability** [INSERTED] - Update REQUIREMENTS.md checkboxes and add requirements-completed frontmatter to SUMMARY.md files (depends on 8.1, 8.2, 8.3)
+- [ ] **Phase 8.5: Gap Closure — Human Runtime Verification** [INSERTED] - Step-by-step verification checklists for Phases 02 (security) and 06 (automatic capture)
 - [ ] **Phase 9: Advanced Features** - Smart retention, performance, and context refresh
 - [ ] **Phase 10: Frontend UI** - Localhost graph visualization and monitoring dashboard
 
@@ -197,6 +202,89 @@ Plans:
 - [ ] 08-03-PLAN.md — Server wiring: context resource, FastMCP server, mcp install command, CLI registration
 - [ ] 08-04-PLAN.md — Integration smoke tests + human verification checkpoint
 
+### Phase 8.1: Gap Closure — Verification Files [INSERTED]
+**Goal**: Write VERIFICATION.md files for Phase 03 (LLM Integration) and Phase 08 (MCP Server) to satisfy the 3-source cross-reference protocol required by milestone audit. Evidence already exists — this phase synthesizes it into the required format.
+**Depends on**: Phase 8 (evidence source — 08-04-SUMMARY.md)
+**Gap Closure**: Closes procedural gaps for R5.1, R5.2, R5.3 (Phase 03) and R6.1, R6.2, R6.3 (Phase 08)
+**Requirements**: R5.1, R5.2, R5.3, R6.1, R6.2, R6.3
+**Success Criteria** (what must be TRUE):
+  1. `.planning/phases/03-llm-integration/VERIFICATION.md` exists and cites UAT.md as evidence source
+  2. `.planning/phases/08-mcp-server/VERIFICATION.md` exists and cites 08-04-SUMMARY.md as evidence source
+  3. Both files list the requirements they cover
+  4. Known issues (R6.3 --async bug, R6.2 path bug) noted as "tracked in Phase 8.2"
+  5. 3-source cross-reference is now satisfiable for both phases
+**Plans**: TBD
+
+Plans:
+- [ ] 8.1-01-PLAN.md — Write VERIFICATION.md for Phase 03 (LLM Integration)
+- [ ] 8.1-02-PLAN.md — Write VERIFICATION.md for Phase 08 (MCP Server)
+
+### Phase 8.2: Gap Closure — MCP Server Bugs [INSERTED]
+**Goal**: Fix three bugs in the MCP server layer that cause silent functional failures — capture calls a non-existent CLI flag, context injection always fails without venv on PATH, and success logging is dead code due to wrong key names.
+**Depends on**: Phase 8 (fixes bugs introduced in Phase 8 code)
+**Gap Closure**: Closes R6.3 (functional bug), R6.2 (flow gap), R4.2 (observability)
+**Requirements**: R6.2, R6.3, R4.2
+**Success Criteria** (what must be TRUE):
+  1. `graphiti_capture()` in `src/mcp_server/tools.py` no longer calls `--async`; uses `--quiet` or equivalent
+  2. `src/mcp_server/context.py` resolves graphiti binary via `_GRAPHITI_CLI` path logic, not bare `"graphiti"` string
+  3. `_auto_install_hooks()` in `src/cli/commands/add.py` checks `git_hook`/`claude_hook` keys correctly
+  4. Flow 4 (MCP context injection) completes end-to-end without PATH dependency
+  5. MCP conversation capture completes without silent subprocess failure
+**Plans**: TBD
+
+Plans:
+- [ ] 8.2-01-PLAN.md — Fix graphiti_capture --async flag and context.py bare path
+- [ ] 8.2-02-PLAN.md — Fix _auto_install_hooks key names and add integration verification
+
+### Phase 8.3: Gap Closure — Queue Dispatch [INSERTED]
+**Goal**: Fix BackgroundWorker._replay_command() to correctly dispatch capture_git_commits jobs. Currently all queue-mediated git commit captures land in the dead letter queue because the worker reads payload.get('command', '') which returns empty string for this job type.
+**Depends on**: Phase 5 (Background Queue), Phase 6 (Automatic Capture)
+**Gap Closure**: Closes R4.3, R4.2 — restores Flow 3 (git commit → hook → queue → worker → LLM → Kuzu)
+**Requirements**: R4.2, R4.3
+**Success Criteria** (what must be TRUE):
+  1. `_replay_command()` in `src/queue/worker.py` detects `job_type="capture_git_commits"` and dispatches correctly
+  2. Git capture jobs process successfully instead of landing in dead letter queue
+  3. Direct `process_pending_commits()` path remains functional (not broken by changes)
+  4. Flow 3 end-to-end: post-commit hook → enqueue → worker → process_pending_commits() → knowledge captured
+  5. Dead letter queue is empty after processing a test git commit
+**Plans**: TBD
+
+Plans:
+- [ ] 8.3-01-PLAN.md — Fix _replay_command dispatch and add job-type routing for capture_git_commits
+- [ ] 8.3-02-PLAN.md — Integration test for Flow 3 end-to-end
+
+### Phase 8.4: Gap Closure — Documentation Traceability [INSERTED]
+**Goal**: Update REQUIREMENTS.md traceability table to reflect actual completion state, and add requirements-completed frontmatter to phases 01–07 SUMMARY.md files. Pure documentation — no code changes.
+**Depends on**: Phase 8.1 (verification files must exist), Phase 8.2 (bugs fixed), Phase 8.3 (queue fixed) — so docs reflect accurate final state
+**Gap Closure**: Updates global traceability for all 19 v1.0 requirements
+**Requirements**: All
+**Success Criteria** (what must be TRUE):
+  1. REQUIREMENTS.md traceability table checkboxes match actual completion state
+  2. Phases 01–07 SUMMARY.md files each have `requirements-completed:` frontmatter listing their requirement IDs
+  3. Coverage count at top of REQUIREMENTS.md reflects updated state
+  4. All `[x]` checkboxes correspond to requirements with confirmed VERIFICATION.md evidence
+**Plans**: TBD
+
+Plans:
+- [ ] 8.4-01-PLAN.md — Update REQUIREMENTS.md and add requirements-completed frontmatter to all SUMMARY.md files
+
+### Phase 8.5: Gap Closure — Human Runtime Verification [INSERTED]
+**Goal**: Create guided human verification checklists for Phase 02 (Security Filtering) and Phase 06 (Automatic Capture). These phases have `human_needed` status because static analysis can't substitute for live runtime testing. This phase produces runnable verification scripts and step-by-step guides.
+**Depends on**: Nothing (independent)
+**Gap Closure**: Provides path to close R3.1, R3.2, R3.3 (security) and R4.1, R4.2 (automatic capture) from human_needed → verified
+**Requirements**: R3.1, R3.2, R3.3, R4.1, R4.2
+**Success Criteria** (what must be TRUE):
+  1. Phase 02 verification guide: commands to test AWS key detection, .env exclusion, audit log writing in a live environment
+  2. Phase 06 verification guide: commands to test git hook timing (<100ms), conversation lag, excluded file E2E, captured knowledge queryability
+  3. Both guides are runnable by a human without reading source code
+  4. Guides include expected output for each check so the human knows pass/fail
+  5. Both VERIFICATION.md files updated to `status: passed` after human completes checklist
+**Plans**: TBD
+
+Plans:
+- [ ] 8.5-01-PLAN.md — Human verification guide for Phase 02 (Security Filtering)
+- [ ] 8.5-02-PLAN.md — Human verification guide for Phase 06 (Automatic Capture)
+
 ### Phase 9: Advanced Features
 **Goal**: Add smart retention, performance optimization, capture modes, and context refresh for production readiness
 **Depends on**: Phase 8 (all core functionality in place)
@@ -230,7 +318,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 7.1 -> 8 -> 9 -> 10
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 7.1 -> 8 -> 8.1/8.2/8.3/8.5 (parallel) -> 8.4 -> 9 -> 10
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -243,5 +331,10 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 7.1 -> 8 -> 
 | 7. Git Integration | 5/5 | Complete   | 2026-02-20 |
 | 7.1. Git Indexing Pivot | 4/4 | Complete | 2026-02-20 |
 | 8. MCP Server | 4/4 | Complete   | 2026-02-23 |
+| 8.1. Gap Closure — Verification Files | 0/2 | Not started | - |
+| 8.2. Gap Closure — MCP Server Bugs | 0/2 | Not started | - |
+| 8.3. Gap Closure — Queue Dispatch | 0/2 | Not started | - |
+| 8.4. Gap Closure — Documentation Traceability | 0/1 | Not started (blocked by 8.1–8.3) | - |
+| 8.5. Gap Closure — Human Runtime Verification | 0/2 | Not started | - |
 | 9. Advanced Features | 0/TBD | Not started | - |
 | 10. Frontend UI | 0/TBD | Not started | - |
