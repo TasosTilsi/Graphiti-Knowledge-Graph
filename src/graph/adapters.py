@@ -158,20 +158,32 @@ class OllamaLLMClient(LLMClient):
                         clean_text = re.sub(r'\n?```\s*$', '', clean_text).strip()
                     # Try to parse the response as JSON
                     parsed_data = json.loads(clean_text)
-                    # Some cloud models (e.g. glm-5:cloud, kimi-k2.5:cloud) return a bare
-                    # list instead of the expected wrapped object, even when format= is set.
-                    # Auto-wrap by finding the first list-typed field in the response model.
+                    # Some cloud models return a bare list instead of the expected wrapped
+                    # object, even when format= is set. Try wrapping the list under each
+                    # list-typed field in the model and return the first that validates.
+                    # This avoids blindly picking the first field when multiple list fields
+                    # exist, and avoids silently accepting a wrong-field wrap.
                     if isinstance(parsed_data, list):
                         for field_name, field_info in response_model.model_fields.items():
                             origin = getattr(field_info.annotation, '__origin__', None)
                             if origin is list:
-                                logger.debug(
-                                    "bare_list_normalised",
-                                    field=field_name,
-                                    model=response_model.__name__,
-                                )
-                                parsed_data = {field_name: parsed_data}
-                                break
+                                try:
+                                    validated = response_model.model_validate(
+                                        {field_name: parsed_data}
+                                    )
+                                    logger.debug(
+                                        "bare_list_normalised",
+                                        field=field_name,
+                                        model=response_model.__name__,
+                                    )
+                                    return validated.model_dump()
+                                except (ValueError, Exception):
+                                    continue
+                        # No list field accepted the bare list — let the fallback handle it
+                        raise ValueError(
+                            f"Bare list response did not match any list field "
+                            f"in {response_model.__name__}"
+                        )
                     # Validate against the model
                     validated = response_model.model_validate(parsed_data)
                     # Return as dict
