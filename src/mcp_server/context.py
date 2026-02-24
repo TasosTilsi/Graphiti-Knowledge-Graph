@@ -15,6 +15,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from src.mcp_server.tools import _GRAPHITI_CLI
+
 logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
@@ -67,7 +69,7 @@ def _trigger_background_reindex(project_root: str | None) -> None:
         return
     try:
         subprocess.Popen(
-            ["graphiti", "index"],
+            [_GRAPHITI_CLI, "index"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             start_new_session=True,
@@ -82,7 +84,7 @@ def _get_token_budget() -> int:
     """Read mcp.context_tokens from config. Default 8192."""
     try:
         result = subprocess.run(
-            ["graphiti", "config", "get", "mcp.context_tokens"],
+            [_GRAPHITI_CLI, "config", "get", "mcp.context_tokens"],
             capture_output=True, text=True, timeout=5
         )
         if result.returncode == 0 and result.stdout.strip().isdigit():
@@ -114,7 +116,7 @@ def get_context() -> str:
     # Query for high-priority context: decisions + architecture first
     try:
         result = subprocess.run(
-            ["graphiti", "search", "decisions architecture patterns", "--limit", "20", "--format", "json"],
+            [_GRAPHITI_CLI, "search", "decisions architecture patterns", "--limit", "20", "--format", "json"],
             capture_output=True, text=True, timeout=30,
             cwd=project_root,
         )

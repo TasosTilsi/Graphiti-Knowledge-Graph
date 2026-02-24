@@ -369,7 +369,7 @@ def graphiti_capture() -> str:
     cwd = _get_cwd()
     try:
         subprocess.Popen(
-            [_GRAPHITI_CLI, "capture", "--async"],
+            [_GRAPHITI_CLI, "capture", "--quiet"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             start_new_session=True,

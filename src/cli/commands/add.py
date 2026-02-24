@@ -96,12 +96,12 @@ def _auto_install_hooks(project_root: Path) -> None:
             install_claude=True
         )
 
-        if result.get("git_installed") or result.get("claude_installed"):
+        if result.get("git_hook") or result.get("claude_hook"):
             logger.info(
                 "auto_install_hooks",
                 action="hooks_installed",
-                git=result.get("git_installed", False),
-                claude=result.get("claude_installed", False)
+                git=result.get("git_hook", False),
+                claude=result.get("claude_hook", False)
             )
 
     except Exception as e:
