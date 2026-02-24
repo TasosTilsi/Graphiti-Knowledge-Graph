@@ -158,6 +158,20 @@ class OllamaLLMClient(LLMClient):
                         clean_text = re.sub(r'\n?```\s*$', '', clean_text).strip()
                     # Try to parse the response as JSON
                     parsed_data = json.loads(clean_text)
+                    # Some cloud models (e.g. glm-5:cloud, kimi-k2.5:cloud) return a bare
+                    # list instead of the expected wrapped object, even when format= is set.
+                    # Auto-wrap by finding the first list-typed field in the response model.
+                    if isinstance(parsed_data, list):
+                        for field_name, field_info in response_model.model_fields.items():
+                            origin = getattr(field_info.annotation, '__origin__', None)
+                            if origin is list:
+                                logger.debug(
+                                    "bare_list_normalised",
+                                    field=field_name,
+                                    model=response_model.__name__,
+                                )
+                                parsed_data = {field_name: parsed_data}
+                                break
                     # Validate against the model
                     validated = response_model.model_validate(parsed_data)
                     # Return as dict
