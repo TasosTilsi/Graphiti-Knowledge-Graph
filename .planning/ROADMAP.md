@@ -330,8 +330,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 7.1 -> 8 -> 
 | 6. Automatic Capture | 4/4 | Complete | 2026-02-13 |
 | 7. Git Integration | 5/5 | Complete   | 2026-02-20 |
 | 7.1. Git Indexing Pivot | 4/4 | Complete | 2026-02-20 |
-| 8. MCP Server | 4/4 | Complete   | 2026-02-23 |
-| 8.1. Gap Closure — Verification Files | 1/2 | In Progress|  |
+| 8. MCP Server | 4/4 | Complete   | 2026-02-24 |
+| 8.1. Gap Closure — Verification Files | 2/2 | Complete | 2026-02-24 |
 | 8.2. Gap Closure — MCP Server Bugs | 0/2 | Planned (2026-02-24) | - |
 | 8.3. Gap Closure — Queue Dispatch | 0/2 | Not started | - |
 | 8.4. Gap Closure — Documentation Traceability | 0/1 | Not started (blocked by 8.1–8.3) | - |

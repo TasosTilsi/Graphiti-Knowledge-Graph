@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Context continuity without repetition - Claude remembers your preferences, decisions, and project architecture across all sessions without you stating them again, while project teams can share knowledge safely through git.
-**Current focus:** Phase 8 COMPLETE — MCP server end-to-end verified in Claude Code; all 10 tools callable, context injection working, non-blocking capture confirmed
+**Current focus:** Phase 8.1 Gap Closure — Verification files inserted for Phase 03 (LLM Integration) and Phase 08 (MCP Server); R5.1/R5.2/R5.3/R6.1 declared SATISFIED with 3-source cross-reference records
 
 ## Current Position
 
-Phase: 8 of 10 (MCP Server) — COMPLETE
-Plan: 4 of 4 — Complete
-Status: Phase 8 Complete — Ready for Phase 9
-Last activity: 2026-02-23 — Phase 8 Plan 04 COMPLETE: all 5 success criteria verified in Claude Code; PATH bug fixed (venv resolution via sys.executable)
-Next: Phase 9
+Phase: 8.1 of 10 (Gap Closure — Verification Files) — IN PROGRESS
+Plan: 1 of 2 — Complete (Plan 8.1-01: Phase 03 VERIFICATION.md)
+Status: Phase 8.1 Plan 01 Complete — Phase 03 LLM Integration VERIFICATION.md inserted
+Last activity: 2026-02-24 — Phase 8.1 Plan 01 COMPLETE: Phase 03 VERIFICATION.md created (da89497), R5.1/R5.2/R5.3 SATISFIED
+Next: Phase 8.1 Plan 02 (Phase 08 VERIFICATION.md — already committed in da89497/685dde3)
 
-Progress: [█████████████████████████████████████░░] 37 plans complete — 2 phases remaining (9, 10)
+Progress: [███████████████████████████████████████░] 39 plans complete — 2 phases remaining (9, 10)
 
 ## Performance Metrics
 
@@ -76,6 +76,7 @@ Progress: [███████████████████████
 | Phase 08 P03 | 1577 | 2 tasks | 5 files |
 | Phase 08-mcp-server P04 | 2173 | 2 tasks | 13 files |
 | Phase 8.1-gap-closure-verification-files-inserted P02 | 117 | 1 tasks | 1 files |
+| Phase 8.1-gap-closure-verification-files-inserted P01 | 300 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -248,6 +249,7 @@ Recent decisions affecting current work:
 - [Phase 08-mcp-server]: MCP 1.x uses newline-delimited JSON protocol (not HTTP Content-Length headers from MCP 0.x)
 - [Phase 8.1-gap-closure-verification-files-inserted]: Phase 08 VERIFICATION.md status is 'passed' — post-verification bug discovery does not retroactively block procedural verification
 - [Phase 8.1-gap-closure-verification-files-inserted]: R6.2 and R6.3 declared SATISFIED (issues noted) with forward reference to Phase 8.2 gap closure — known-issue notes distinguish procedural completion from post-verification bug tracking
+- [Phase 8.1-gap-closure-verification-files-inserted]: Synthesize Phase 03 VERIFICATION.md from UAT.md + SUMMARY files — evidence complete for retrospective verification
 
 ### Pending Todos
 
@@ -266,9 +268,9 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-23
-Stopped at: Completed 08-04-PLAN.md - Phase 8 MCP server fully verified in Claude Code (all 10 tools, context injection, non-blocking capture, PATH bug fixed)
-Resume file: .planning/phases/09-*/09-01-PLAN.md (Phase 9)
+Last session: 2026-02-24
+Stopped at: Completed 8.1-01-PLAN.md - Phase 03 LLM Integration VERIFICATION.md inserted; R5.1/R5.2/R5.3 SATISFIED
+Resume file: .planning/phases/08.1-gap-closure-verification-files-inserted/8.1-02-PLAN.md (Phase 8.1 Plan 02 — Phase 08 VERIFICATION.md already committed in da89497)
 
 **Phase 7.1 Context Captured:** Git Indexing Pivot. Key decisions: remove journal/replay/LFS/checkpoint from Phase 7, keep secrets+size pre-commit hooks. Indexer = historical bootstrap (brownfield), Phase 6 = ongoing real-time capture. SHA deduplication prevents overlap. --full flag for clean rebuild. Quality gate skips version-bump/bot/merge/tiny commits. Two-pass extraction (structured Q&A + free-form entity). Stale triggers: post-merge, post-checkout, post-rewrite (NOT post-commit). Cooldown 5 min between auto-triggers.
 **Phase 8 Context Captured:** SKILL.md + MCP Server. Key decisions: all CLI commands as MCP tools (graphiti_ prefix), subprocess wrapper, plain text responses, context from local Kuzu DB (built by Phase 7.1 indexer), mcp.context_tokens config key (default 8192), stdio default + HTTP, graphiti mcp install command for zero-config setup.

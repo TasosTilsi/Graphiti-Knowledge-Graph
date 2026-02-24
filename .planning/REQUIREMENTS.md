@@ -430,9 +430,9 @@ Mapping of requirements to phases in ROADMAP.md:
 | R3.1: File-Level Exclusions | Phase 2: Security Filtering | Complete |
 | R3.2: Entity-Level Sanitization | Phase 2: Security Filtering | Complete |
 | R3.3: Pre-Commit Validation | Phase 2: Security Filtering | Complete |
-| R5.1: Cloud Ollama Primary | Phase 8.1: Gap Closure — Verification Files | Pending |
-| R5.2: Local Ollama Fallback | Phase 8.1: Gap Closure — Verification Files | Pending |
-| R5.3: Fallback Hierarchy | Phase 8.1: Gap Closure — Verification Files | Pending |
+| R5.1: Cloud Ollama Primary | Phase 8.1: Gap Closure — Verification Files | Complete |
+| R5.2: Local Ollama Fallback | Phase 8.1: Gap Closure — Verification Files | Complete |
+| R5.3: Fallback Hierarchy | Phase 8.1: Gap Closure — Verification Files | Complete |
 | R2.1: Core Operations | Phase 4: CLI Interface | Pending |
 | R2.2: Configuration Management | Phase 4: CLI Interface | Pending |
 | R2.3: Health & Diagnostics | Phase 4: CLI Interface | Pending |
