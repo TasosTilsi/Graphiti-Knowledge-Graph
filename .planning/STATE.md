@@ -75,6 +75,7 @@ Progress: [███████████████████████
 | Phase 08 P02 | 270 | 2 tasks | 1 files |
 | Phase 08 P03 | 1577 | 2 tasks | 5 files |
 | Phase 08-mcp-server P04 | 2173 | 2 tasks | 13 files |
+| Phase 8.1-gap-closure-verification-files-inserted P02 | 117 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -245,6 +246,8 @@ Recent decisions affecting current work:
 - [Phase 08-03]: FastMCP registration: mcp.tool()(fn) pattern (not decorator at definition site) keeps tool handlers as plain testable callables
 - [Phase 08-mcp-server]: Resolve graphiti CLI via sys.executable parent dir: bare 'graphiti' fails when Claude Code's PATH excludes venv bin/
 - [Phase 08-mcp-server]: MCP 1.x uses newline-delimited JSON protocol (not HTTP Content-Length headers from MCP 0.x)
+- [Phase 8.1-gap-closure-verification-files-inserted]: Phase 08 VERIFICATION.md status is 'passed' — post-verification bug discovery does not retroactively block procedural verification
+- [Phase 8.1-gap-closure-verification-files-inserted]: R6.2 and R6.3 declared SATISFIED (issues noted) with forward reference to Phase 8.2 gap closure — known-issue notes distinguish procedural completion from post-verification bug tracking
 
 ### Pending Todos
 

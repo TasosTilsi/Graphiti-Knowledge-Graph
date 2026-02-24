@@ -230,7 +230,7 @@ Plans:
   3. `_auto_install_hooks()` in `src/cli/commands/add.py` checks `git_hook`/`claude_hook` keys correctly
   4. Flow 4 (MCP context injection) completes end-to-end without PATH dependency
   5. MCP conversation capture completes without silent subprocess failure
-**Plans**: TBD
+**Plans**: 2 plans in 2 waves
 
 Plans:
 - [ ] 8.2-01-PLAN.md — Fix graphiti_capture --async flag and context.py bare path
@@ -331,8 +331,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 7.1 -> 8 -> 
 | 7. Git Integration | 5/5 | Complete   | 2026-02-20 |
 | 7.1. Git Indexing Pivot | 4/4 | Complete | 2026-02-20 |
 | 8. MCP Server | 4/4 | Complete   | 2026-02-23 |
-| 8.1. Gap Closure — Verification Files | 0/2 | Not started | - |
-| 8.2. Gap Closure — MCP Server Bugs | 0/2 | Not started | - |
+| 8.1. Gap Closure — Verification Files | 1/2 | In Progress|  |
+| 8.2. Gap Closure — MCP Server Bugs | 0/2 | Planned (2026-02-24) | - |
 | 8.3. Gap Closure — Queue Dispatch | 0/2 | Not started | - |
 | 8.4. Gap Closure — Documentation Traceability | 0/1 | Not started (blocked by 8.1–8.3) | - |
 | 8.5. Gap Closure — Human Runtime Verification | 0/2 | Not started | - |
