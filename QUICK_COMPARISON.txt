@@ -1,0 +1,162 @@
+═══════════════════════════════════════════════════════════════════════════════
+  oh-my-claude vs oh-my-claudecode: Quick Reference
+═══════════════════════════════════════════════════════════════════════════════
+
+📊 HEAD-TO-HEAD COMPARISON
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ DIMENSION           │ oh-my-claude      │ oh-my-claudecode                  │
+├─────────────────────┼───────────────────┼──────────────────────────────────┤
+│ Purpose             │ Quality gates     │ Multi-agent orchestration        │
+│ Best For            │ Individual devs   │ Large teams/enterprises          │
+│ Agents              │ 5 specialized     │ 32+ comprehensive                │
+│ Models              │ Claude only       │ Claude, Codex, Gemini            │
+│ Scope               │ Single session    │ Cross-model coordination         │
+│ Execution           │ Sequential        │ Parallel                         │
+│ Complexity          │ Low-medium        │ High                             │
+│ Learning Curve      │ Gentle (~30min)   │ Steep (~2-3hrs)                 │
+│ Setup Time          │ ~5 minutes        │ ~30 minutes                      │
+│ Dependencies        │ Minimal           │ More (tmux, multiple APIs)       │
+│ Integration Focus   │ Claude Code       │ External systems (Slack, etc.)   │
+└─────────────────────┴───────────────────┴──────────────────────────────────┘
+
+🎯 QUICK DECISION
+
+Choose oh-my-claude if:
+  ✓ Solo developer or small team
+  ✓ Single project focus (like graphiti-knowledge-graph)
+  ✓ Using Claude only (no multi-model needs)
+  ✓ Want light overhead with strong quality gates
+  ✓ Already using GSD methodology (phases, verification)
+  ✓ Need context protection and validation
+
+Choose oh-my-claudecode if:
+  ✓ Large team / enterprise scale
+  ✓ Multiple concurrent projects
+  ✓ Using multiple AI models (Claude + Codex + Gemini)
+  ✓ Need parallel agent execution
+  ✓ Heavy automation and orchestration requirements
+  ✓ Want real-time HUD with metrics
+
+⚠️ DON'T CHOOSE if:
+  oh-my-claude  ❌ if you need multi-model coordination or parallel execution
+  oh-my-claudecode ❌ if you're a solo dev or want simplicity over features
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📋 FEATURE COMPARISON
+
+                                oh-my-claude    oh-my-claudecode
+Context Protection               ★★★★★          ★★★★
+Quality Gates                    ★★★★★          ★★★★
+Multi-Model Support              ❌              ✓
+Parallel Execution               ⚠️ Limited      ★★★★★
+Orchestration Complexity         ★★             ★★★★★
+Learning Simplicity              ★★★★★          ★★
+Specialization Breadth           ★★             ★★★★★
+Enterprise Integration           ★★★            ★★★★★
+Project Fit (Your Setup)         ★★★★★          ★★
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🏗️ ARCHITECTURE SUMMARY
+
+oh-my-claude:
+┌─────────────────────────────────────┐
+│   Claude Code Session               │
+├─────────────────────────────────────┤
+│  7 Background Hooks                 │
+│  ├─ context-guardian                │
+│  ├─ ultrawork-detector              │
+│  ├─ safe-permissions                │
+│  ├─ todo-enforcer                   │
+│  ├─ context-monitor                 │
+│  ├─ subagent-quality-validator      │
+│  └─ precompact-context              │
+├─────────────────────────────────────┤
+│  5 Subagents                        │
+│  ├─ advisor (gap analysis)          │
+│  ├─ critic (plan review)            │
+│  ├─ librarian (summarization)       │
+│  ├─ validator (QA)                  │
+│  └─ worker (implementation)         │
+├─────────────────────────────────────┤
+│  Commands & Skills                  │
+│  ├─ /prime (context recovery)       │
+│  ├─ /worktree (git automation)      │
+│  └─ /ralph-plan (PRD generation)    │
+└─────────────────────────────────────┘
+
+oh-my-claudecode:
+┌──────────────────────────────────────────┐
+│   Orchestration Framework                │
+├──────────────────────────────────────────┤
+│  Execution Modes                         │
+│  ├─ Team (canonical 5-stage pipeline)   │
+│  ├─ tmux CLI (parallel processes)       │
+│  ├─ Autopilot (single-agent)            │
+│  ├─ Ralph (persistent verify/fix)       │
+│  └─ Legacy (swarm, ultrapilot)          │
+├──────────────────────────────────────────┤
+│  32+ Agents (organized by domain)        │
+│  ├─ Architecture agents                  │
+│  ├─ Research agents                      │
+│  ├─ Design agents                        │
+│  ├─ Testing agents                       │
+│  ├─ Data Science agents                  │
+│  └─ Engineering agents                   │
+├──────────────────────────────────────────┤
+│  Intelligence Layer                      │
+│  ├─ Smart model routing                  │
+│  ├─ Automatic task delegation            │
+│  ├─ Real-time HUD metrics                │
+│  └─ Token usage analytics                │
+├──────────────────────────────────────────┤
+│  Multi-Model Support                     │
+│  ├─ Claude API                           │
+│  ├─ Codex API                            │
+│  ├─ Gemini API                           │
+│  └─ Parallel coordination (ccg mode)     │
+└──────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🧪 MAGIC KEYWORDS
+
+oh-my-claude:
+  ultrawork   (ulw)   → Parallel execution with relentless tracking
+  ultraresearch (ulr) → Exhaustive research with cross-referencing
+  ultradebug  (uld)   → 7-step systematic debugging
+
+oh-my-claudecode:
+  team        → 5-stage pipeline orchestration
+  autopilot   → Autonomous single-agent execution
+  ralph       → Persistent verify/fix loops
+  plan        → Structured planning mode
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ RECOMMENDATION FOR YOUR PROJECT
+
+For graphiti-knowledge-graph:
+  🏆 oh-my-claude is the better fit
+
+Reasons:
+  1. You're already using GSD methodology (phases, verification)
+  2. Single project, single model focus
+  3. Your existing hooks already provide similar functionality
+  4. Lower complexity, higher focus on quality gates
+  5. Complements your auto-capture and context protection
+
+How it integrates:
+  • Advisor: Pre-planning gap analysis for each phase
+  • Critic: Reviews phase plans before execution
+  • Librarian: Summarizes large files for graphiti entries
+  • Validator: Runs tests, validates changes
+  • Worker: Focused implementation of phase tasks
+
+Result: oh-my-claude + GSD = powerful, lightweight enhancement
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📄 Full Analysis: See OH_MY_CLAUDE_COMPARISON.md for detailed comparison
