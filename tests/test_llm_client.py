@@ -22,9 +22,10 @@ def mock_config(tmp_path):
     return LLMConfig(
         cloud_endpoint="https://test-cloud.com",
         cloud_api_key="test_api_key",
+        cloud_models=["test-cloud-model"],
         local_endpoint="http://localhost:11434",
         local_models=["test-model:3b", "test-model:1b"],
-        embeddings_model="test-embed",
+        embeddings_models=["test-embed"],
         retry_max_attempts=2,  # 1 initial + 1 retry
         retry_delay_seconds=1,  # Fast for tests
         quota_warning_threshold=0.8,
@@ -51,34 +52,44 @@ def mock_queue_path(tmp_path):
 class TestCloudAvailability:
     """Test cloud availability checks."""
 
-    def test_cloud_available_with_api_key(self, mock_config, mock_state_path, mock_queue_path):
-        """Cloud available when API key set and not in cooldown."""
+    def test_cloud_available_with_api_key_and_models(self, mock_config, mock_state_path, mock_queue_path):
+        """Cloud available for chat when API key and cloud_models set."""
         client = OllamaClient(mock_config)
-        assert client._is_cloud_available() is True
+        assert client._is_cloud_available("chat") is True
 
     def test_cloud_unavailable_without_api_key(self, mock_config, mock_state_path, mock_queue_path):
         """Cloud unavailable when no API key."""
         config_no_key = LLMConfig(
-            cloud_api_key=None,  # No API key
+            cloud_api_key=None,
         )
         client = OllamaClient(config_no_key)
-        assert client._is_cloud_available() is False
+        assert client._is_cloud_available("chat") is False
+
+    def test_cloud_unavailable_without_cloud_models(self, mock_config, mock_state_path, mock_queue_path):
+        """Cloud unavailable for chat when cloud_models is empty."""
+        config_no_models = LLMConfig(
+            cloud_api_key="test_key",
+            cloud_models=[],
+        )
+        client = OllamaClient(config_no_models)
+        assert client._is_cloud_available("chat") is False
+
+    def test_cloud_unavailable_for_embed(self, mock_config, mock_state_path, mock_queue_path):
+        """Cloud always unavailable for embed (no cloud embedding support)."""
+        client = OllamaClient(mock_config)
+        assert client._is_cloud_available("embed") is False
 
     def test_cloud_unavailable_during_cooldown(self, mock_config, mock_state_path, mock_queue_path):
         """Cloud unavailable when in rate-limit cooldown."""
         client = OllamaClient(mock_config)
-
-        # Set cooldown in the future
         client.cloud_cooldown_until = time.time() + 100
-        assert client._is_cloud_available() is False
+        assert client._is_cloud_available("chat") is False
 
     def test_cloud_available_after_cooldown_expires(self, mock_config, mock_state_path, mock_queue_path):
         """Cloud becomes available after cooldown expires."""
         client = OllamaClient(mock_config)
-
-        # Set cooldown in the past
         client.cloud_cooldown_until = time.time() - 1
-        assert client._is_cloud_available() is True
+        assert client._is_cloud_available("chat") is True
 
 
 class TestCooldownManagement:
@@ -101,22 +112,34 @@ class TestCooldownManagement:
         assert client.cloud_cooldown_until <= after_time + mock_config.rate_limit_cooldown_seconds + 1
 
     def test_non_rate_limit_error_no_cooldown(self, mock_config, mock_state_path, mock_queue_path):
-        """Non-429 errors do NOT set cooldown."""
+        """Non-429 errors do NOT set cooldown (401 denies operation instead)."""
         client = OllamaClient(mock_config)
 
-        # Record initial cooldown state (should be 0)
         initial_cooldown = client.cloud_cooldown_until
 
-        # Simulate non-429 errors
-        for status_code in [500, 502, 503, 504, 400, 401, 403]:
+        # 5xx errors: no cooldown, no denial
+        for status_code in [500, 502, 503, 504]:
             error = ResponseError(error="Server error", status_code=status_code)
             client._handle_cloud_error(error)
-
-            # Cooldown should NOT be modified
             assert client.cloud_cooldown_until == initial_cooldown
 
-        # Cloud should still be available (assuming API key set)
-        assert client._is_cloud_available() is True
+        # Cloud should still be available for chat
+        assert client._is_cloud_available("chat") is True
+
+    def test_401_denies_operation(self, mock_config, mock_state_path, mock_queue_path):
+        """401 error denies specific operation without setting cooldown."""
+        client = OllamaClient(mock_config)
+
+        initial_cooldown = client.cloud_cooldown_until
+        error = ResponseError(error="unauthorized", status_code=401)
+        client._handle_cloud_error(error, operation="embed")
+
+        # Cooldown NOT set
+        assert client.cloud_cooldown_until == initial_cooldown
+        # But embed is denied
+        assert "embed" in client._cloud_denied_ops
+        # Chat still available
+        assert client._is_cloud_available("chat") is True
 
     def test_cooldown_state_persisted(self, mock_config, mock_state_path, mock_queue_path):
         """Cooldown saved to llm_state.json."""
@@ -202,7 +225,7 @@ class TestFailoverBehavior:
             assert result1 == {"message": {"content": "local response 1"}}
 
             # Verify cloud was NOT in cooldown after 500 error
-            assert client._is_cloud_available() is True
+            assert client._is_cloud_available("chat") is True
 
             # Second request - cloud should be tried again (not skipped)
             # This time cloud succeeds
@@ -375,6 +398,7 @@ class TestRetryLogic:
             # Config with retry_max_attempts=3 (1 initial + 2 retries)
             config_with_retry = LLMConfig(
                 cloud_api_key="test_key",
+                cloud_models=["test-cloud-model"],
                 retry_max_attempts=3,
                 retry_delay_seconds=0.1,  # Fast retry for test
             )

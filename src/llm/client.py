@@ -105,6 +105,12 @@ class OllamaClient:
         self.cloud_cooldown_until = 0  # Unix timestamp
         self._load_cooldown_state()
 
+        # Per-operation 401 tracking: when an operation gets 401 from cloud,
+        # stop trying cloud for that operation for the rest of the session.
+        # This prevents hammering cloud with embed calls when the API key
+        # doesn't include embedding access (chat may still work fine).
+        self._cloud_denied_ops: set[str] = set()
+
         # Initialize quota tracker and request queue
         self._quota_tracker = QuotaTracker(config.quota_warning_threshold)
         self._request_queue = LLMRequestQueue(config)
@@ -124,17 +130,36 @@ class OllamaClient:
             has_api_key=bool(config.cloud_api_key),
         )
 
-    def _is_cloud_available(self) -> bool:
-        """Check if cloud Ollama can be used.
+    def _is_cloud_available(self, operation: str | None = None) -> bool:
+        """Check if cloud Ollama can be used for the given operation.
 
-        IMPORTANT: This method ONLY checks rate-limit cooldown. Non-429 errors do NOT
-        set any cooldown, so cloud is always tried again on the very next request after
-        a non-rate-limit failure. This is by design per CONTEXT.md.
+        Checks: API key set, cloud models configured for the operation,
+        per-operation 401 denials, and rate-limit cooldown.
+
+        Args:
+            operation: Operation to check ("chat", "generate", "embed").
+                      If None, only checks global availability.
 
         Returns:
-            True if cloud API key is set and not in rate-limit cooldown
+            True if cloud can handle this operation.
         """
         if not self.config.cloud_api_key:
+            return False
+
+        # Require cloud_models configured for chat/generate operations
+        if operation in ("chat", "generate") and not self.config.cloud_models:
+            return False
+
+        # Embed: skip cloud entirely (no cloud embedding support configured)
+        if operation == "embed":
+            return False
+
+        # Check per-operation denial (e.g. 401 on a specific endpoint)
+        if operation and operation in self._cloud_denied_ops:
+            logger.debug(
+                "Cloud denied for operation (prior 401)",
+                operation=operation,
+            )
             return False
 
         current_time = time.time()
@@ -185,11 +210,12 @@ class OllamaClient:
                 error=str(e),
             )
 
-    def _handle_cloud_error(self, error: ResponseError):
+    def _handle_cloud_error(self, error: ResponseError, operation: str | None = None):
         """Handle cloud error with appropriate cooldown and logging.
 
         Args:
             error: ResponseError from cloud Ollama
+            operation: Operation that failed ("chat", "generate", "embed")
         """
         if error.status_code == 429:
             # Rate limit: Set 10-minute cooldown
@@ -200,10 +226,19 @@ class OllamaClient:
                 cooldown_seconds=self.config.rate_limit_cooldown_seconds,
                 cooldown_until=self.cloud_cooldown_until,
             )
+        elif error.status_code == 401 and operation:
+            # 401 on a specific operation: the API key lacks access for this
+            # endpoint (e.g. embed). Stop trying cloud for this operation
+            # for the rest of the session to avoid repeated failed round-trips.
+            self._cloud_denied_ops.add(operation)
+            logger.warning(
+                "Cloud denied (401) for operation — disabling cloud for this op",
+                operation=operation,
+                error=str(error.error),
+            )
         else:
-            # CONTEXT.md decision: Non-rate-limit errors do NOT set cooldown.
+            # Non-rate-limit, non-401 errors do NOT set cooldown.
             # Cloud will be tried again on the very next request.
-            # Only 429 errors trigger the 10-minute cooldown period.
             logger.warning(
                 "Cloud error (non-rate-limit)",
                 status_code=error.status_code,
@@ -396,14 +431,12 @@ class OllamaClient:
         """
         try:
             # Try cloud if available
-            if self._is_cloud_available():
+            if self._is_cloud_available("chat"):
                 try:
-                    cloud_model = model or self.config.local_models[0]  # Default to first configured
-                    # The https://ollama.com cloud endpoint does not support the `format=`
-                    # parameter — including it causes HTTP 401 "unauthorized" regardless of
-                    # key validity. Strip it before sending to cloud. Cloud models rely on
-                    # the example injected into the prompt by OllamaLLMClient._inject_example()
-                    # for structured-output guidance instead.
+                    cloud_model = model or self.config.cloud_models[0]
+                    # Cloud models may not support Ollama's format= constrained generation.
+                    # Strip it; cloud relies on the example injected into the prompt by
+                    # OllamaLLMClient._inject_example() for structured-output guidance.
                     cloud_kwargs = {k: v for k, v in kwargs.items() if k != "format"}
                     return self._retry_cloud("chat", model=cloud_model, messages=messages, **cloud_kwargs)
                 except (ResponseError, RetryError) as e:
@@ -413,7 +446,7 @@ class OllamaClient:
                         if hasattr(e.last_attempt, 'exception') and e.last_attempt.exception():
                             e = e.last_attempt.exception()
                     if isinstance(e, ResponseError):
-                        self._handle_cloud_error(e)
+                        self._handle_cloud_error(e, operation="chat")
                     # Fall through to local
 
             # Fallback to local
@@ -446,9 +479,9 @@ class OllamaClient:
         """
         try:
             # Try cloud if available
-            if self._is_cloud_available():
+            if self._is_cloud_available("generate"):
                 try:
-                    cloud_model = model or self.config.local_models[0]  # Default to first configured
+                    cloud_model = model or self.config.cloud_models[0]
                     return self._retry_cloud("generate", model=cloud_model, prompt=prompt, **kwargs)
                 except (ResponseError, RetryError) as e:
                     # Extract ResponseError from RetryError if needed
@@ -456,7 +489,7 @@ class OllamaClient:
                         if hasattr(e.last_attempt, 'exception') and e.last_attempt.exception():
                             e = e.last_attempt.exception()
                     if isinstance(e, ResponseError):
-                        self._handle_cloud_error(e)
+                        self._handle_cloud_error(e, operation="generate")
                     # Fall through to local
 
             # Fallback to local
@@ -492,7 +525,7 @@ class OllamaClient:
             embed_model = model or self.config.embeddings_models[0]
 
             # Try cloud if available
-            if self._is_cloud_available():
+            if self._is_cloud_available("embed"):
                 try:
                     return self._retry_cloud("embed", model=embed_model, input=input, **kwargs)
                 except (ResponseError, RetryError) as e:
@@ -501,7 +534,7 @@ class OllamaClient:
                         if hasattr(e.last_attempt, 'exception') and e.last_attempt.exception():
                             e = e.last_attempt.exception()
                     if isinstance(e, ResponseError):
-                        self._handle_cloud_error(e)
+                        self._handle_cloud_error(e, operation="embed")
                     # Fall through to local
 
             # Local fallback: if specific model requested, delegate to _try_local

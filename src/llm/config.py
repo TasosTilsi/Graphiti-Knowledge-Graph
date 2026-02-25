@@ -23,14 +23,14 @@ class LLMConfig:
     # Cloud endpoint configuration
     cloud_endpoint: str = "https://ollama.com"
     cloud_api_key: str | None = None
+    cloud_models: list[str] = field(default_factory=list)  # empty = skip cloud for chat/generate
 
     # Local endpoint configuration
     local_endpoint: str = "http://localhost:11434"
     local_auto_start: bool = False
     local_models: list[str] = field(default_factory=lambda: ["gemma2:9b", "llama3.2:3b"])
 
-    # Embeddings models (cloud-first list, same pattern as local_models)
-    # First entry used for cloud; all entries tried for local fallback in order
+    # Embeddings models (local only — cloud embed not supported by current API key)
     embeddings_models: list[str] = field(default_factory=lambda: ["nomic-embed-text"])
 
     # Retry configuration
@@ -100,6 +100,7 @@ def load_config(config_path: Path | None = None) -> LLMConfig:
     return LLMConfig(
         cloud_endpoint=cloud_endpoint,
         cloud_api_key=cloud_api_key,
+        cloud_models=cloud.get("models", []),
         local_endpoint=local_endpoint,
         local_auto_start=local.get("auto_start", False),
         local_models=local.get("models", ["gemma2:9b", "llama3.2:3b"]),

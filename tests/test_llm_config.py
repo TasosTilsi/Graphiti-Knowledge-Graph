@@ -33,11 +33,12 @@ class TestConfigDefaults:
         assert config.cloud_api_key is None
         assert config.local_endpoint == "http://localhost:11434"
         assert config.local_auto_start is False
+        assert config.cloud_models == []
         assert config.local_models == ["gemma2:9b", "llama3.2:3b"]
-        assert config.embeddings_model == "nomic-embed-text"
+        assert config.embeddings_models == ["nomic-embed-text"]
         assert config.retry_max_attempts == 3
         assert config.retry_delay_seconds == 10
-        assert config.request_timeout_seconds == 90
+        assert config.request_timeout_seconds == 180
         assert config.quota_warning_threshold == 0.8
         assert config.rate_limit_cooldown_seconds == 600
         assert config.failover_logging is True
@@ -68,7 +69,7 @@ auto_start = true
 models = ["llama3.2:1b", "gemma2:2b"]
 
 [embeddings]
-model = "all-minilm-l6-v2"
+models = ["all-minilm-l6-v2"]
 
 [retry]
 max_attempts = 5
@@ -97,7 +98,7 @@ item_ttl_hours = 48
         assert config.local_endpoint == "http://localhost:9999"
         assert config.local_auto_start is True
         assert config.local_models == ["llama3.2:1b", "gemma2:2b"]
-        assert config.embeddings_model == "all-minilm-l6-v2"
+        assert config.embeddings_models == ["all-minilm-l6-v2"]
         assert config.retry_max_attempts == 5
         assert config.retry_delay_seconds == 15
         assert config.request_timeout_seconds == 120
