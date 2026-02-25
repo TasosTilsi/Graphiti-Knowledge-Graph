@@ -399,7 +399,13 @@ class OllamaClient:
             if self._is_cloud_available():
                 try:
                     cloud_model = model or self.config.local_models[0]  # Default to first configured
-                    return self._retry_cloud("chat", model=cloud_model, messages=messages, **kwargs)
+                    # The https://ollama.com cloud endpoint does not support the `format=`
+                    # parameter — including it causes HTTP 401 "unauthorized" regardless of
+                    # key validity. Strip it before sending to cloud. Cloud models rely on
+                    # the example injected into the prompt by OllamaLLMClient._inject_example()
+                    # for structured-output guidance instead.
+                    cloud_kwargs = {k: v for k, v in kwargs.items() if k != "format"}
+                    return self._retry_cloud("chat", model=cloud_model, messages=messages, **cloud_kwargs)
                 except (ResponseError, RetryError) as e:
                     # Extract ResponseError from RetryError if needed
                     if isinstance(e, RetryError):
