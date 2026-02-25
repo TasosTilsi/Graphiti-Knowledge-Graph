@@ -29,8 +29,9 @@ class LLMConfig:
     local_auto_start: bool = False
     local_models: list[str] = field(default_factory=lambda: ["gemma2:9b", "llama3.2:3b"])
 
-    # Embeddings model
-    embeddings_model: str = "nomic-embed-text"
+    # Embeddings models (cloud-first list, same pattern as local_models)
+    # First entry used for cloud; all entries tried for local fallback in order
+    embeddings_models: list[str] = field(default_factory=lambda: ["nomic-embed-text"])
 
     # Retry configuration
     retry_max_attempts: int = 3  # 1 initial + 2 retries
@@ -53,6 +54,9 @@ class LLMConfig:
     # Reranking configuration
     reranking_enabled: bool = False
     reranking_backend: str = "none"  # "none", "bge", "openai"
+
+    # Hooks configuration
+    hooks_enabled: bool = False  # Enable/disable automatic capture hooks
 
 
 def load_config(config_path: Path | None = None) -> LLMConfig:
@@ -86,6 +90,7 @@ def load_config(config_path: Path | None = None) -> LLMConfig:
     logging = config_data.get("logging", {})
     queue = config_data.get("queue", {})
     reranking = config_data.get("reranking", {})
+    hooks = config_data.get("hooks", {})
 
     # Apply environment variable overrides
     cloud_endpoint = os.getenv("OLLAMA_CLOUD_ENDPOINT", cloud.get("endpoint", "https://ollama.com"))
@@ -98,7 +103,7 @@ def load_config(config_path: Path | None = None) -> LLMConfig:
         local_endpoint=local_endpoint,
         local_auto_start=local.get("auto_start", False),
         local_models=local.get("models", ["gemma2:9b", "llama3.2:3b"]),
-        embeddings_model=embeddings.get("model", "nomic-embed-text"),
+        embeddings_models=embeddings.get("models", [embeddings.get("model", "nomic-embed-text")]),
         retry_max_attempts=retry.get("max_attempts", 3),
         retry_delay_seconds=retry.get("delay_seconds", 10),
         request_timeout_seconds=timeout.get("request_seconds", 180),
@@ -109,6 +114,7 @@ def load_config(config_path: Path | None = None) -> LLMConfig:
         queue_item_ttl_hours=queue.get("item_ttl_hours", 24),
         reranking_enabled=reranking.get("enabled", False),
         reranking_backend=reranking.get("backend", "none"),
+        hooks_enabled=hooks.get("enabled", False),
     )
 
 

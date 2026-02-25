@@ -15,7 +15,7 @@ import structlog
 
 from src.security import sanitize_content
 from src.llm import chat, LLMUnavailableError
-from src.graph import get_service, run_graph_operation
+from src.graph import get_service
 from src.models import GraphScope
 
 logger = structlog.get_logger()
@@ -196,13 +196,11 @@ async def summarize_and_store(
     try:
         service = get_service()
 
-        result = run_graph_operation(
-            service.add(
-                content=summary,
-                scope=scope,
-                project_root=project_root,
-                tags=tags,
-            )
+        result = await service.add(
+            content=summary,
+            scope=scope,
+            project_root=project_root,
+            tags=tags,
         )
 
         logger.info(

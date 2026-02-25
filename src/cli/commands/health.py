@@ -139,9 +139,10 @@ def _check_quota() -> dict:
         client = get_client()
         quota_status = client.get_quota_status()
 
-        usage_pct = quota_status.get("usage_percent", 0)
-        used = quota_status.get("used", 0)
-        limit = quota_status.get("limit", 0)
+        usage_pct = quota_status.usage_percent or 0
+        limit = quota_status.limit or 0
+        remaining = quota_status.remaining or 0
+        used = limit - remaining if (limit and remaining) else 0
 
         # Determine status based on usage
         if usage_pct >= 95:

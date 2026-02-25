@@ -234,10 +234,18 @@ class OllamaClient:
             ResponseError: If all retry attempts fail
         """
 
+        def _is_retryable(exc: BaseException) -> bool:
+            """Only retry transient errors (connection issues, 5xx). Never retry 4xx."""
+            if isinstance(exc, ResponseError):
+                return exc.status_code >= 500
+            return isinstance(exc, ConnectionError)
+
         @retry(
             stop=stop_after_attempt(self.config.retry_max_attempts),
             wait=wait_fixed(self.config.retry_delay_seconds),
-            retry=retry_if_exception_type((ConnectionError, ResponseError)),
+            retry=lambda retry_state: _is_retryable(retry_state.outcome.exception())
+            if retry_state.outcome.exception()
+            else False,
             before_sleep=lambda retry_state: logger.info(
                 "Retrying cloud request",
                 attempt=retry_state.attempt_number,
@@ -474,8 +482,8 @@ class OllamaClient:
             LLMUnavailableError: If both cloud and local fail (request queued with ID)
         """
         try:
-            # Default to embeddings model
-            embed_model = model or self.config.embeddings_model
+            # Cloud: use explicit model or first in embeddings_models list
+            embed_model = model or self.config.embeddings_models[0]
 
             # Try cloud if available
             if self._is_cloud_available():
@@ -490,8 +498,29 @@ class OllamaClient:
                         self._handle_cloud_error(e)
                     # Fall through to local
 
-            # Fallback to local
-            return self._try_local("embed", embed_model, input=input, **kwargs)
+            # Local fallback: if specific model requested, delegate to _try_local
+            if model is not None:
+                return self._try_local("embed", model, input=input, **kwargs)
+
+            # No specific model: try each embeddings_models entry that exists locally
+            available_models = self._check_local_models()
+            last_error = None
+            for m in self.config.embeddings_models:
+                canonical = m if m in available_models else (
+                    f"{m}:latest" if f"{m}:latest" in available_models else None
+                )
+                if canonical is None:
+                    continue
+                try:
+                    result = self.local_client.embed(model=canonical, input=input, **kwargs)
+                    self._current_provider = "local"
+                    return result
+                except Exception as e:
+                    last_error = e
+                    continue
+            raise LLMUnavailableError(
+                f"No embedding models available locally. Last error: {last_error}"
+            )
 
         except LLMUnavailableError as e:
             # Both cloud and local failed - queue the request
