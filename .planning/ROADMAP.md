@@ -26,6 +26,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 8.3: Gap Closure — Queue Dispatch** [INSERTED] - Fix BackgroundWorker._replay_command() dispatch for capture_git_commits jobs (restores Flow 3)
 - [x] **Phase 8.4: Gap Closure — Documentation Traceability** [INSERTED] - Update REQUIREMENTS.md checkboxes and add requirements-completed frontmatter to SUMMARY.md files (depends on 8.1, 8.2, 8.3)
 - [ ] **Phase 8.5: Gap Closure — Human Runtime Verification** [INSERTED] - Step-by-step verification checklists for Phases 02 (security) and 06 (automatic capture)
+- [ ] **Phase 8.6: Gap Closure — Runtime Bug Fixes** [INSERTED] - Fix LLM output `.name` field parsing failure and `process_queue()` race condition (discovered during Phase 06 human verification run 2026-02-26)
 - [ ] **Phase 9: Advanced Features** - Smart retention, performance, and context refresh
 - [ ] **Phase 10: Frontend UI** - Localhost graph visualization and monitoring dashboard
 
@@ -284,6 +285,20 @@ Plans:
 Plans:
 - [ ] 8.5-01-PLAN.md — Human verification guide for Phase 02 (Security Filtering)
 - [ ] 8.5-02-PLAN.md — Human verification guide for Phase 06 (Automatic Capture)
+
+### Phase 8.6: Gap Closure — Runtime Bug Fixes [INSERTED]
+**Goal**: Fix two bugs discovered during Phase 06 human runtime verification (2026-02-26): (1) LLM returns `".name"` (dot-prefixed) instead of `"name"` field key when processing dot-prefixed filenames, causing Pydantic validation failure and 0 entities stored; (2) `process_queue()` race condition — `qsize()` drops to 0 when jobs are "in-flight" (unacked), causing the main loop to stop the worker before processing completes.
+**Depends on**: Phase 8.5 (discovered during verification run)
+**Gap Closure**: Unblocks Phase 06 human verification Tests 3 and 4 (end-to-end pipeline)
+**Requirements**: R4.1, R4.2
+**Success Criteria** (what must be TRUE):
+  1. `process_pending_commits()` successfully stores entities even when commit touches dot-prefixed files (e.g., `.env.test_verification`)
+  2. `graphiti queue process` completes all queued jobs without stopping the worker prematurely
+  3. Both fixes verified by re-running the affected pipeline step
+
+Plans:
+- [ ] 8.6-01-PLAN.md — Fix LLM output `.name` field normalization in `src/graph/adapters.py`
+- [ ] 8.6-02-PLAN.md — Fix `process_queue()` race condition in `src/queue/__init__.py`
 
 ### Phase 9: Advanced Features
 **Goal**: Add smart retention, performance optimization, capture modes, and context refresh for production readiness

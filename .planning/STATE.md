@@ -262,7 +262,20 @@ Recent decisions affecting current work:
 
 ### Blockers/Concerns
 
-None yet.
+**BLOCKING Phase 06 human verification (Tests 3 & 4) — discovered 2026-02-26:**
+
+1. **Bug: LLM `.name` field parsing** (`src/graph/adapters.py`)
+   - Cloud models return `{".name": "value"}` instead of `{"name": "value"}` when processing commits that touch dot-prefixed filenames (e.g., `.env.test_verification`)
+   - Pydantic raises `Field required` for `extracted_entities[N].name` → entire batch stored: 0
+   - Fix plan: `8.6-01-PLAN.md` — add `_normalize_field_names()` to strip leading dots before `model_validate()`
+
+2. **Bug: `process_queue()` race condition** (`src/queue/__init__.py`)
+   - `SQLiteAckQueue.qsize()` returns 0 when jobs are "in-flight" (unacked), not just when done
+   - Main thread sees 0, stops worker while job is mid-execution → worker killed before `process_pending_commits()` is called
+   - `pending_commits` file never cleared; queue shows pending=2 forever
+   - Fix plan: `8.6-02-PLAN.md` — replace qsize() polling with `worker.stop(timeout=120)` join
+
+**Phase 06 verification status**: Tests 1 (hook install) and 2 (timing) PASSED. Tests 3 and 4 blocked by above bugs. Must re-run after Phase 8.6 is executed.
 
 ### Quick Tasks Completed
 
