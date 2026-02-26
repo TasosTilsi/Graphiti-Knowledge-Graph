@@ -78,8 +78,7 @@ def install_command(
             result = install_hooks(
                 root,
                 install_git=install_git,
-                install_claude=install_claude,
-                force=force
+                install_claude=install_claude
             )
 
             # Upgrade post-merge hook if it's the old Phase 7 journal-based one
@@ -244,7 +243,6 @@ def status_command(
 
         # Get hook status
         status = get_hook_status(root)
-        hooks_enabled = get_hooks_enabled()
 
         # Derive .git directory for new hook status checks
         git_dir = root / ".git"
@@ -254,9 +252,8 @@ def status_command(
         # JSON output mode
         if format == "json":
             output = {
-                "enabled": hooks_enabled,
-                "git_installed": status.get("git_installed", False),
-                "claude_installed": status.get("claude_installed", False),
+                "git_installed": status.get("git_hook_installed", False),
+                "claude_installed": status.get("claude_hook_installed", False),
                 "postcheckout_installed": postcheckout_installed,
                 "postrewrite_installed": postrewrite_installed,
             }
@@ -271,47 +268,33 @@ def status_command(
         )
         table.add_column("Hook Type", style="white")
         table.add_column("Installed", style="white")
-        table.add_column("Enabled", style="white")
 
         # Helper for checkmark/X display
         def status_icon(installed: bool) -> str:
             return "[green]✓[/green]" if installed else "[red]✗[/red]"
 
-        # Enabled/Disabled display
-        enabled_display = (
-            "[green]enabled[/green]" if hooks_enabled
-            else "[yellow]disabled[/yellow]"
-        )
-
         # Add rows for each hook type
         table.add_row(
             "Git post-commit",
-            status_icon(status.get("git_installed", False)),
-            enabled_display
+            status_icon(status.get("git_hook_installed", False))
         )
         table.add_row(
             "Claude Code Stop",
-            status_icon(status.get("claude_installed", False)),
-            enabled_display
+            status_icon(status.get("claude_hook_installed", False))
         )
         table.add_row(
             "Git post-checkout",
-            status_icon(postcheckout_installed),
-            enabled_display
+            status_icon(postcheckout_installed)
         )
         table.add_row(
             "Git post-rewrite",
-            status_icon(postrewrite_installed),
-            enabled_display
+            status_icon(postrewrite_installed)
         )
 
         console.print(table)
 
         # Show helpful hints based on status
-        if not hooks_enabled:
-            console.print("\n[yellow]⚠[/yellow] Hooks are disabled via config")
-            console.print("[dim]Run 'graphiti config set hooks.enabled true' to enable[/dim]")
-        elif not status.get("git_installed") and not status.get("claude_installed"):
+        if not status.get("git_hook_installed") and not status.get("claude_hook_installed"):
             console.print("\n[yellow]⚠[/yellow] No hooks are installed")
             console.print("[dim]Run 'graphiti hooks install' to install hooks[/dim]")
 

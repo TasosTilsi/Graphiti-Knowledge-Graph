@@ -527,16 +527,15 @@ def test_compact_json(mock_resolve_scope, mock_stats, mock_compact):
 # ==================== Config Command Tests ====================
 
 
-@patch("src.cli.commands.config.load_config")
-def test_config_show_all(mock_load_config):
-    """Test config command shows all settings."""
+def _create_mock_config():
+    """Create a properly configured Mock LLMConfig with all required attributes."""
     mock_config = Mock()
     mock_config.cloud_endpoint = "https://cloud.ollama.ai"
     mock_config.cloud_api_key = "test-key"
     mock_config.local_endpoint = "http://localhost:11434"
     mock_config.local_auto_start = True
     mock_config.local_models = ["llama3", "mistral"]
-    mock_config.embeddings_model = "nomic-embed-text"
+    mock_config.embeddings_models = ["nomic-embed-text"]  # FIXED: now plural
     mock_config.retry_max_attempts = 3
     mock_config.retry_delay_seconds = 10
     mock_config.request_timeout_seconds = 30
@@ -544,6 +543,15 @@ def test_config_show_all(mock_load_config):
     mock_config.rate_limit_cooldown_seconds = 300
     mock_config.queue_max_size = 1000
     mock_config.queue_item_ttl_hours = 24
+    mock_config.reranking_enabled = False  # FIXED: added missing attribute
+    mock_config.reranking_backend = "none"  # FIXED: added missing attribute
+    return mock_config
+
+
+@patch("src.cli.commands.config.load_config")
+def test_config_show_all(mock_load_config):
+    """Test config command shows all settings."""
+    mock_config = _create_mock_config()
     mock_load_config.return_value = mock_config
 
     result = runner.invoke(app, ["config"])
@@ -579,20 +587,7 @@ def test_config_invalid_key():
 @patch("src.cli.commands.config.load_config")
 def test_config_json(mock_load_config):
     """Test config with JSON output."""
-    mock_config = Mock()
-    mock_config.cloud_endpoint = "https://cloud.ollama.ai"
-    mock_config.cloud_api_key = "test-key"
-    mock_config.local_endpoint = "http://localhost:11434"
-    mock_config.local_auto_start = True
-    mock_config.local_models = ["llama3"]
-    mock_config.embeddings_model = "nomic-embed-text"
-    mock_config.retry_max_attempts = 3
-    mock_config.retry_delay_seconds = 10
-    mock_config.request_timeout_seconds = 30
-    mock_config.quota_warning_threshold = 0.8
-    mock_config.rate_limit_cooldown_seconds = 300
-    mock_config.queue_max_size = 1000
-    mock_config.queue_item_ttl_hours = 24
+    mock_config = _create_mock_config()
     mock_load_config.return_value = mock_config
 
     result = runner.invoke(app, ["config", "--format", "json"])

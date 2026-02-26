@@ -10,6 +10,11 @@
             "timeout": 120
           }
         ]
+      },
+      {
+        "command": "graphiti capture --auto --transcript-path \"$transcript_path\" --session-id \"$session_id\"",
+        "async": true,
+        "timeout": 10
       }
     ]
   }

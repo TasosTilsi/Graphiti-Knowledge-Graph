@@ -32,7 +32,7 @@ def get_hooks_enabled() -> bool:
     """
     try:
         result = subprocess.run(
-            ["graphiti", "config", "get", "hooks.enabled"],
+            ["graphiti", "config", "--get", "hooks.enabled"],
             capture_output=True,
             text=True,
             timeout=5
@@ -42,7 +42,8 @@ def get_hooks_enabled() -> bool:
         if result.returncode == 0 and "true" in result.stdout.lower():
             return True
         else:
-            return False
+            # Config key doesn't exist or is not set - default to enabled
+            return True
 
     except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError) as e:
         # graphiti not in PATH or config error - default to enabled
@@ -59,7 +60,7 @@ def set_hooks_enabled(enabled: bool) -> None:
     """
     try:
         result = subprocess.run(
-            ["graphiti", "config", "set", "hooks.enabled", str(enabled).lower()],
+            ["graphiti", "config", "--set", f"hooks.enabled={str(enabled).lower()}"],
             capture_output=True,
             text=True,
             timeout=5
