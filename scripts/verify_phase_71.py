@@ -145,11 +145,8 @@ def test_hooks_install(r: Runner) -> None:
 
     r.banner("Test 2: Installed hooks are executable (R8.1)")
 
-    # graphiti hooks install deploys 4 auto-hooks.
-    # pre-commit has a template (src/hooks/templates/pre-commit.sh) but is not
-    # wired into the CLI install command — it must be installed via
-    # install_precommit_hook() from src.hooks.installer if desired.
-    auto_installed_hooks = ["post-commit", "post-merge", "post-checkout", "post-rewrite"]
+    # graphiti hooks install deploys all 5 hooks (8.7-02 fix: pre-commit now auto-installed)
+    auto_installed_hooks = ["pre-commit", "post-commit", "post-merge", "post-checkout", "post-rewrite"]
 
     all_present = True
     for hook_name in auto_installed_hooks:
@@ -178,20 +175,6 @@ def test_hooks_install(r: Runner) -> None:
 
     if all_present:
         r.ok(f"All {len(auto_installed_hooks)} auto-installed hooks present and executable")
-
-    # Check pre-commit separately (template exists, but CLI doesn't auto-install it)
-    precommit = hooks_dir / "pre-commit"
-    if precommit.exists():
-        if precommit.stat().st_mode & 0o111:
-            r.ok("pre-commit: exists and executable (manually installed)")
-        else:
-            r.fail("pre-commit: exists but not executable")
-    else:
-        r.info(
-            "pre-commit not auto-installed by 'graphiti hooks install' "
-            "(template exists at src/hooks/templates/pre-commit.sh)"
-        )
-        r.info("Install manually via: from src.hooks.installer import install_precommit_hook")
 
 
 # ── Test 3: Hook idempotency ──────────────────────────────────────────────────

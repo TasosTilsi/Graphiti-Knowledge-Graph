@@ -167,9 +167,6 @@ def test_secret_detection(r: Runner) -> None:
         _init_temp_repo(tmp_root)
 
         # Commit a clean config.py first, then modify it to add a fake AWS key.
-        # Note: scan_staged_secrets only scans MODIFIED files (change_type=M), not
-        # brand-new files. This is a known limitation of the repo.index.diff("HEAD")
-        # approach — new files appear as deleted_file=True from HEAD's perspective.
         config_file = tmp_root / "config.py"
         config_file.write_text("# App configuration\nDEBUG = False\n")
         run(["git", "add", "config.py"], cwd=tmp_root)
@@ -208,6 +205,19 @@ def test_secret_detection(r: Runner) -> None:
                 f"False positive: {len(clean_warnings)} warning(s) for clean file",
                 detail=str(clean_warnings),
             )
+
+        # Commit the clean version so index is clean again
+        run(["git", "commit", "-m", "restore clean config"], cwd=tmp_root)
+
+        # Sub-test: brand-new file (not previously in HEAD) — tests the 8.7-01 fix
+        new_file = tmp_root / "new_secrets.py"
+        new_file.write_text("TOKEN = 'AKIAIOSFODNN7EXAMPLE'\n")
+        run(["git", "add", "new_secrets.py"], cwd=tmp_root)
+        new_file_warnings = scan_staged_secrets(tmp_root)
+        if new_file_warnings:
+            r.ok("New staged file (not in HEAD) — secrets detected (8.7-01 fix confirmed)")
+        else:
+            r.fail("New staged file not scanned — 8.7-01 fix not applied")
 
 
 # ── Test 3: GRAPHITI_SKIP=1 bypass ────────────────────────────────────────────
