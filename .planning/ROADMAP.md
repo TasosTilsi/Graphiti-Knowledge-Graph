@@ -25,8 +25,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 8.2: Gap Closure — MCP Server Bugs** [INSERTED] - Fix --async flag bug in capture, context.py bare path, and _auto_install_hooks key mismatch
 - [ ] **Phase 8.3: Gap Closure — Queue Dispatch** [INSERTED] - Fix BackgroundWorker._replay_command() dispatch for capture_git_commits jobs (restores Flow 3)
 - [x] **Phase 8.4: Gap Closure — Documentation Traceability** [INSERTED] - Update REQUIREMENTS.md checkboxes and add requirements-completed frontmatter to SUMMARY.md files (depends on 8.1, 8.2, 8.3)
-- [ ] **Phase 8.5: Gap Closure — Human Runtime Verification** [INSERTED] - Step-by-step verification checklists for Phases 02 (security) and 06 (automatic capture)
+- [x] **Phase 8.5: Gap Closure — Human Runtime Verification** [INSERTED] - Step-by-step verification checklists for Phases 02 (security) and 06 (automatic capture) (completed 2026-02-24)
 - [x] **Phase 8.6: Gap Closure — Runtime Bug Fixes** [INSERTED] - Fix LLM output `.name` field parsing failure and `process_queue()` race condition (discovered during Phase 06 human verification run 2026-02-26) (completed 2026-02-27)
+- [ ] **Phase 8.7: Gap Closure — Hook Security Gaps** [INSERTED] - Fix two gaps found during Phase 07/7.1 human verification: (1) `scan_staged_secrets()` silently skips newly staged files due to inverted `deleted_file` check; (2) `graphiti hooks install` does not deploy pre-commit hook despite template and installer function existing
 - [ ] **Phase 9: Advanced Features** - Smart retention, performance, and context refresh
 - [ ] **Phase 10: Frontend UI** - Localhost graph visualization and monitoring dashboard
 
@@ -283,8 +284,8 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 8.5-01-PLAN.md — Human verification guide for Phase 02 (Security Filtering)
-- [ ] 8.5-02-PLAN.md — Human verification guide for Phase 06 (Automatic Capture)
+- [x] 8.5-01-PLAN.md — Human verification guide for Phase 02 (Security Filtering)
+- [x] 8.5-02-PLAN.md — Human verification guide for Phase 06 (Automatic Capture)
 
 ### Phase 8.6: Gap Closure — Runtime Bug Fixes [INSERTED]
 **Goal**: Fix two bugs discovered during Phase 06 human runtime verification (2026-02-26): (1) LLM returns `".name"` (dot-prefixed) instead of `"name"` field key when processing dot-prefixed filenames, causing Pydantic validation failure and 0 entities stored; (2) `process_queue()` race condition — `qsize()` drops to 0 when jobs are "in-flight" (unacked), causing the main loop to stop the worker before processing completes.
@@ -299,6 +300,24 @@ Plans:
 Plans:
 - [ ] 8.6-01-PLAN.md — Fix LLM output `.name` field normalization in `src/graph/adapters.py`
 - [ ] 8.6-02-PLAN.md — Fix `process_queue()` race condition in `src/queue/__init__.py`
+
+### Phase 8.7: Gap Closure — Hook Security Gaps [INSERTED]
+**Goal**: Fix two security/wiring gaps discovered during Phase 07/7.1 human verification runs (2026-02-27): (1) `scan_staged_secrets()` inverts the GitPython `deleted_file` semantics — files staged for the first time (new files in index, not in HEAD) appear as `deleted_file=True` and are silently skipped, meaning a developer can commit a brand-new `config.py` containing an AWS key with no warning; (2) `graphiti hooks install` deploys only 4 of 5 planned hooks — `install_precommit_hook()` exists in `src/hooks/installer.py` but is never called from the CLI install command, leaving the secrets/size pre-commit check unwired.
+**Depends on**: Phase 8.6 (follows gap closure series)
+**Gap Closure**: Closes R8.1 gaps — new-file secrets bypass and missing pre-commit deployment
+**Requirements**: R8.1
+**Success Criteria** (what must be TRUE):
+  1. `scan_staged_secrets()` detects secrets in newly staged files (not previously in HEAD)
+  2. `graphiti hooks install` deploys all 5 hooks: post-commit, pre-commit, post-merge, post-checkout, post-rewrite
+  3. `graphiti hooks uninstall` removes the pre-commit hook
+  4. `graphiti hooks status` reports pre-commit installation state
+  5. `verify_phase_07.py` tests new-file secret detection and passes
+  6. `verify_phase_71.py` tests 5-hook deployment and passes
+
+Plans:
+- [ ] 8.7-01-PLAN.md — Fix `scan_staged_secrets()` inverted deleted_file check in `src/gitops/hooks.py`
+- [ ] 8.7-02-PLAN.md — Wire `install_precommit_hook()` into CLI install/uninstall/status commands
+- [ ] 8.7-03-PLAN.md — Update verification scripts to test fixed behaviour
 
 ### Phase 9: Advanced Features
 **Goal**: Add smart retention, performance optimization, capture modes, and context refresh for production readiness

@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Context continuity without repetition - Claude remembers your preferences, decisions, and project architecture across all sessions without you stating them again, while project teams can share knowledge safely through git.
-**Current focus:** Phase 8.6 Gap Closure COMPLETE — Both runtime bugs fixed; next is Phase 9 (Advanced Features — Smart Retention, Context Refresh)
+**Current focus:** Phase 8.7 Gap Closure — Hook Security Gaps (2 bugs from 07/7.1 verification: scan_staged_secrets skips new files + pre-commit hook not deployed)
 
 ## Current Position
 
-Phase: 8.6 of 10 (Gap Closure — Runtime Bugs) — COMPLETE
-Plan: 2 of 2 — Complete (Plan 8.6-02: process_queue() race condition fix)
-Status: Phase 8.6 COMPLETE — Both bugs fixed: dot-prefixed LLM field names (7f55287) + process_queue() race condition (df7d984)
-Last activity: 2026-02-27 — Phase 8.6 Plan 02 COMPLETE: process_queue() race condition fixed in src/queue/__init__.py (df7d984)
-Next: Phase 9 (Advanced Features — Smart Retention, Context Refresh)
+Phase: 8.7 of 10 (Gap Closure — Hook Security Gaps) — IN PROGRESS
+Plan: 0 of 3 — Pending
+Status: Phase 8.7 planned — 3 plans ready to execute (8.7-01: scan_staged_secrets fix, 8.7-02: wire pre-commit hook, 8.7-03: update verify scripts)
+Last activity: 2026-02-27 — Phase 8.7 gap plan created (3 PLAN.md files), Phase 8.5 ROADMAP checkboxes corrected
+Next: Execute Phase 8.7 (/gsd:execute-phase 8.7)
 
 Progress: [████████████████████████████████████████░] 40 plans complete — 2 phases remaining (9, 10)
 
@@ -289,7 +289,7 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 8.6-02-PLAN.md — process_queue() race condition fixed in src/queue/__init__.py; worker.stop(timeout=120) ensures in-flight SQLiteAckQueue jobs complete before returning
+Stopped at: Ad-hoc verification scripts complete (79dfecf) — verify_phase_07.py (17/17), verify_phase_71.py (15/15+1skip), verify_all.py updated. Ready for Phase 9.
 Resume file: .planning/ — Phase 8.6 COMPLETE (both bugs fixed); next is Phase 9 (Advanced Features — Smart Retention, Context Refresh)
 
 **Phase 7.1 Context Captured:** Git Indexing Pivot. Key decisions: remove journal/replay/LFS/checkpoint from Phase 7, keep secrets+size pre-commit hooks. Indexer = historical bootstrap (brownfield), Phase 6 = ongoing real-time capture. SHA deduplication prevents overlap. --full flag for clean rebuild. Quality gate skips version-bump/bot/merge/tiny commits. Two-pass extraction (structured Q&A + free-form entity). Stale triggers: post-merge, post-checkout, post-rewrite (NOT post-commit). Cooldown 5 min between auto-triggers.
