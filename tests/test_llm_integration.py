@@ -70,9 +70,10 @@ def test_config(tmp_path):
     return LLMConfig(
         cloud_endpoint="https://test-cloud.com",
         cloud_api_key="test_key",
+        cloud_models=["test-cloud-model"],
         local_endpoint="http://localhost:11434",
         local_models=["test-model:3b"],
-        embeddings_model="test-embed",
+        embeddings_models=["test-embed"],
         retry_max_attempts=2,
         retry_delay_seconds=0.1,
         rate_limit_cooldown_seconds=10,
@@ -140,11 +141,10 @@ class TestRateLimitBehavior:
             mock_cloud = Mock()
             mock_local = Mock()
 
-            # First request: 429 rate limit
+            # First request: 429 rate limit (4xx errors are NOT retried — only 5xx/ConnectionError)
             mock_cloud.chat.side_effect = [
                 ResponseError(error="Rate limited", status_code=429),
-                ResponseError(error="Rate limited", status_code=429),  # Both retries
-                # Second request would NOT be called (cooldown active)
+                # Second request would NOT reach cloud (cooldown active)
             ]
 
             mock_local.list.return_value = {"models": [{"name": "test-model:3b"}]}
@@ -167,9 +167,8 @@ class TestRateLimitBehavior:
             result2 = chat([{"role": "user", "content": "test2"}])
             assert result2 == {"message": {"content": "local response"}}
 
-            # Cloud should only have been called once (first request, both retries)
-            # Second request skipped cloud entirely
-            assert mock_cloud.chat.call_count == 2  # Both retries from first request
+            # Cloud called exactly once (first request only — 429 not retried, second skipped)
+            assert mock_cloud.chat.call_count == 1
 
     def test_chat_non_429_error_cloud_retried(self, test_config):
         """Non-429 errors do NOT set cooldown; cloud retried on next request."""
@@ -250,13 +249,13 @@ class TestEmbeddings:
     """Integration tests for embeddings."""
 
     def test_embed_uses_nomic(self, test_config):
-        """Embed uses configured embeddings model."""
+        """Embed uses configured embeddings model (always local — cloud embed disabled)."""
         with patch("src.llm.client.Client") as MockClient:
             mock_cloud = Mock()
-            mock_cloud.embed.return_value = {
-                "embeddings": [[0.1, 0.2, 0.3]]
-            }
             mock_local = Mock()
+            # Embed is local-only (_is_cloud_available("embed") hard-returns False)
+            mock_local.list.return_value = {"models": [{"name": "test-embed:latest"}]}
+            mock_local.embed.return_value = {"embeddings": [[0.1, 0.2, 0.3]]}
 
             MockClient.side_effect = [mock_cloud, mock_local]
 
@@ -265,10 +264,10 @@ class TestEmbeddings:
 
             assert response == {"embeddings": [[0.1, 0.2, 0.3]]}
 
-            # Verify embed was called with configured model
-            mock_cloud.embed.assert_called_once()
-            call_args = mock_cloud.embed.call_args
-            assert call_args[1]["model"] == "test-embed"
+            # Verify embed was called locally with the configured model
+            mock_local.embed.assert_called_once()
+            call_args = mock_local.embed.call_args
+            assert call_args[1]["model"] in ("test-embed", "test-embed:latest")
 
 
 class TestStatusAndMonitoring:
