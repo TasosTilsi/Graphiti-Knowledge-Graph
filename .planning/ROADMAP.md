@@ -27,7 +27,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 8.4: Gap Closure — Documentation Traceability** [INSERTED] - Update REQUIREMENTS.md checkboxes and add requirements-completed frontmatter to SUMMARY.md files (depends on 8.1, 8.2, 8.3)
 - [x] **Phase 8.5: Gap Closure — Human Runtime Verification** [INSERTED] - Step-by-step verification checklists for Phases 02 (security) and 06 (automatic capture) (completed 2026-02-24)
 - [x] **Phase 8.6: Gap Closure — Runtime Bug Fixes** [INSERTED] - Fix LLM output `.name` field parsing failure and `process_queue()` race condition (discovered during Phase 06 human verification run 2026-02-26) (completed 2026-02-27)
-- [ ] **Phase 8.7: Gap Closure — Hook Security Gaps** [INSERTED] - Fix two gaps found during Phase 07/7.1 human verification: (1) `scan_staged_secrets()` silently skips newly staged files due to inverted `deleted_file` check; (2) `graphiti hooks install` does not deploy pre-commit hook despite template and installer function existing
+- [x] **Phase 8.7: Gap Closure — Hook Security Gaps** [INSERTED] - Fix two gaps found during Phase 07/7.1 human verification: (1) `scan_staged_secrets()` silently skips newly staged files due to inverted `deleted_file` check; (2) `graphiti hooks install` does not deploy pre-commit hook despite template and installer function existing (completed 2026-02-27)
 - [ ] **Phase 9: Advanced Features** - Smart retention, performance, and context refresh
 - [ ] **Phase 10: Frontend UI** - Localhost graph visualization and monitoring dashboard
 
@@ -317,7 +317,7 @@ Plans:
 Plans:
 - [x] 8.7-01-PLAN.md — Fix `scan_staged_secrets()` inverted deleted_file check in `src/gitops/hooks.py`
 - [x] 8.7-02-PLAN.md — Wire `install_precommit_hook()` into CLI install/uninstall/status commands
-- [ ] 8.7-03-PLAN.md — Update verification scripts to test fixed behaviour
+- [x] 8.7-03-PLAN.md — Update verification scripts to test fixed behaviour
 
 ### Phase 9: Advanced Features
 **Goal**: Add smart retention, performance optimization, capture modes, and context refresh for production readiness
@@ -387,6 +387,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 7.1 -> 8 -> 
 | 8.3. Gap Closure — Queue Dispatch | 2/2 | Complete | 2026-02-24 |
 | 8.4. Gap Closure — Documentation Traceability | 1/1 | Complete    | 2026-02-24 |
 | 8.5. Gap Closure — Human Runtime Verification | 2/2 | Complete | 2026-02-24 |
+| 8.6. Gap Closure — Runtime Bug Fixes | 2/2 | Complete | 2026-02-27 |
+| 8.7. Gap Closure — Hook Security Gaps | 3/3 | Complete | 2026-02-27 |
 | 9. Advanced Features | 0/TBD | Not started | - |
 | 10. Frontend UI | 0/TBD | Not started | - |
 | 11. Multi-Provider LLM Support | 0/TBD | Not started | - |

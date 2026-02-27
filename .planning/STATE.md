@@ -18,7 +18,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Context continuity without repetition - Claude remembers your preferences, decisions, and project architecture across all sessions without you stating them again, while project teams can share knowledge safely through git.
-**Current focus:** Phase 8.7 Gap Closure — Hook Security Gaps (2 bugs from 07/7.1 verification: scan_staged_secrets skips new files + pre-commit hook not deployed)
+**Current focus:** Phase 8.7 complete — hook security gaps closed. Ready for Phase 9 (Advanced Features)
 
 ## Current Position
 
@@ -312,8 +312,8 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 8.7-03-PLAN.md (3da319a) — verify_phase_07.py + verify_phase_71.py updated to confirm 8.7-01/02 fixes. Phase 8.7 gap closure fully complete (3/3 plans done).
-Resume file: .planning/ — Phase 8.7 COMPLETE; next is Phase 9 or Phase 10
+Stopped at: Phase 8.7 executed and verified (3/3 plans, passed 3/3). ROADMAP updated. Ready for Phase 9.
+Resume file: .planning/ — Phase 8.7 COMPLETE; next is Phase 9 (Advanced Features)
 
 **Phase 7.1 Context Captured:** Git Indexing Pivot. Key decisions: remove journal/replay/LFS/checkpoint from Phase 7, keep secrets+size pre-commit hooks. Indexer = historical bootstrap (brownfield), Phase 6 = ongoing real-time capture. SHA deduplication prevents overlap. --full flag for clean rebuild. Quality gate skips version-bump/bot/merge/tiny commits. Two-pass extraction (structured Q&A + free-form entity). Stale triggers: post-merge, post-checkout, post-rewrite (NOT post-commit). Cooldown 5 min between auto-triggers.
 **Phase 8 Context Captured:** SKILL.md + MCP Server. Key decisions: all CLI commands as MCP tools (graphiti_ prefix), subprocess wrapper, plain text responses, context from local Kuzu DB (built by Phase 7.1 indexer), mcp.context_tokens config key (default 8192), stdio default + HTTP, graphiti mcp install command for zero-config setup.
