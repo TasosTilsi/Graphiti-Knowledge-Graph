@@ -128,6 +128,30 @@ class OllamaLLMClient(LLMClient):
             return True
         return None
 
+    @staticmethod
+    def _normalize_field_names(data: Any) -> Any:
+        """Recursively strip leading dots from dict keys in LLM JSON output.
+
+        Some cloud models mirror dot-prefixed filenames from content into
+        field names, producing {".name": "value"} instead of {"name": "value"}.
+        This normalizes keys before Pydantic validation to prevent spurious
+        'Field required' errors.
+
+        Args:
+            data: Parsed JSON value (dict, list, or scalar)
+
+        Returns:
+            Same structure with leading dots stripped from all dict keys
+        """
+        if isinstance(data, dict):
+            return {
+                k.lstrip("."): OllamaLLMClient._normalize_field_names(v)
+                for k, v in data.items()
+            }
+        if isinstance(data, list):
+            return [OllamaLLMClient._normalize_field_names(item) for item in data]
+        return data
+
     def _inject_example(
         self, message_dicts: list[dict], response_model: type[BaseModel]
     ) -> list[dict]:
@@ -219,6 +243,10 @@ class OllamaLLMClient(LLMClient):
                         clean_text = re.sub(r'\n?```\s*$', '', clean_text).strip()
                     # Try to parse the response as JSON
                     parsed_data = json.loads(clean_text)
+                    # Normalize dot-prefixed keys before any validation (cloud models
+                    # sometimes mirror filenames like ".env" into field names,
+                    # producing {".name": "value"} instead of {"name": "value"})
+                    parsed_data = self._normalize_field_names(parsed_data)
                     # Some cloud models return a bare list instead of the expected wrapped
                     # object, even when format= is set. Try wrapping the list under each
                     # list-typed field in the model and return the first that validates.
