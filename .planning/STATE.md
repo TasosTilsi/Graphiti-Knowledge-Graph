@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-27T16:28:14.567Z"
+last_updated: "2026-02-27T16:32:40.465Z"
 progress:
   total_phases: 16
-  completed_phases: 15
+  completed_phases: 16
   total_plans: 58
-  completed_plans: 56
+  completed_plans: 58
 ---
 
 # Project State
@@ -22,11 +22,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 ## Current Position
 
-Phase: 8.7 of 10 (Gap Closure — Hook Security Gaps) — IN PROGRESS
-Plan: 2 of 3 — 8.7-02 COMPLETE
-Status: 8.7-01 (scan_staged_secrets fix) done, 8.7-02 (wire pre-commit hook) done — next: 8.7-03 (update verify scripts)
-Last activity: 2026-02-27 — 8.7-02 executed: install_precommit_hook wired into graphiti hooks install/uninstall/status (commit 19ac3f2)
-Next: Execute 8.7-03 (/gsd:execute-phase 8.7)
+Phase: 8.7 of 10 (Gap Closure — Hook Security Gaps) — COMPLETE
+Plan: 3 of 3 — 8.7-03 COMPLETE
+Status: All 3 plans complete — 8.7-01 (scan_staged_secrets fix), 8.7-02 (wire pre-commit hook), 8.7-03 (update verify scripts)
+Last activity: 2026-02-27 — 8.7-03 executed: verify_phase_07.py + verify_phase_71.py updated to confirm 8.7-01/02 fixes (commit 3da319a)
+Next: Phase 9 or Phase 10 (next planned phases)
 
 Progress: [████████████████████████████████████████░] 40 plans complete — 2 phases remaining (9, 10)
 
@@ -95,6 +95,7 @@ Progress: [███████████████████████
 | Phase 8.6-gap-closure-runtime-bugs-inserted P02 | 255 | 2 tasks | 1 files |
 | Phase 8.7 P01 | 130 | 4 tasks | 1 files |
 | Phase 8.7 P02 | 126 | 7 tasks | 1 files |
+| Phase 8.7 P03 | 120 | 5 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -280,6 +281,8 @@ Recent decisions affecting current work:
 - [Phase 8.7-02]: Pass root (repo_path) not git_dir to pre-commit installer functions — install_precommit_hook takes repo_path unlike post-checkout/post-rewrite which take git_dir
 - [Phase 8.7-02]: Pre-commit row placed first in status table — secret-scanning is primary security gate, ordering emphasizes importance
 - [Phase 8.7-02]: Uninstall non-destructive for pre-commit — graphiti section removed but template header stub remains (consistent with all other hooks)
+- [Phase 8.7-03]: Commit clean version before new-file sub-test so index is in known state — prevents false positives from leftover staged changes
+- [Phase 8.7-03]: Verification scripts must be updated after fixing bugs to directly assert correct behaviour (not document workarounds)
 
 ### Pending Todos
 
@@ -309,8 +312,8 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 8.7-02-PLAN.md (19ac3f2) — install_precommit_hook wired into graphiti hooks install/uninstall/status. 197 tests pass.
-Resume file: .planning/ — 8.7-02 COMPLETE; next is 8.7-03 (update verify scripts to check pre-commit hook)
+Stopped at: Completed 8.7-03-PLAN.md (3da319a) — verify_phase_07.py + verify_phase_71.py updated to confirm 8.7-01/02 fixes. Phase 8.7 gap closure fully complete (3/3 plans done).
+Resume file: .planning/ — Phase 8.7 COMPLETE; next is Phase 9 or Phase 10
 
 **Phase 7.1 Context Captured:** Git Indexing Pivot. Key decisions: remove journal/replay/LFS/checkpoint from Phase 7, keep secrets+size pre-commit hooks. Indexer = historical bootstrap (brownfield), Phase 6 = ongoing real-time capture. SHA deduplication prevents overlap. --full flag for clean rebuild. Quality gate skips version-bump/bot/merge/tiny commits. Two-pass extraction (structured Q&A + free-form entity). Stale triggers: post-merge, post-checkout, post-rewrite (NOT post-commit). Cooldown 5 min between auto-triggers.
 **Phase 8 Context Captured:** SKILL.md + MCP Server. Key decisions: all CLI commands as MCP tools (graphiti_ prefix), subprocess wrapper, plain text responses, context from local Kuzu DB (built by Phase 7.1 indexer), mcp.context_tokens config key (default 8192), stdio default + HTTP, graphiti mcp install command for zero-config setup.
