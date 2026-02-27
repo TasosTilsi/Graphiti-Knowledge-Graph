@@ -51,18 +51,25 @@ def scan_staged_secrets(project_root: Path) -> list[str]:
         repo = git.Repo(project_root)
 
         # Find all staged files (comparing index to HEAD)
+        # repo.index.diff("HEAD") marks files relative to HEAD:
+        #   new staged file (in index, not in HEAD):  deleted_file=True, a_blob has content
+        #   staged deletion (in HEAD, removed from index): new_file=True, a_blob=None
         try:
             staged_diffs = repo.index.diff("HEAD")
+            staged_paths: list[str] = []
+            for diff_item in staged_diffs:
+                # Skip files staged for deletion (a_blob=None — removed from index)
+                if diff_item.new_file:
+                    continue
+                staged_paths.append(diff_item.a_path)
         except git.exc.BadName:
-            # No HEAD yet (initial commit)
-            staged_diffs = repo.index.diff(git.NULL_TREE)
+            # No HEAD yet (initial commit) — all index entries are new staged files.
+            # git.NULL_TREE is not supported by repo.index.diff() in GitPython 3.x;
+            # iterate repo.index.entries directly instead.
+            staged_paths = [entry_key[0] for entry_key in repo.index.entries.keys()]
 
-        for diff_item in staged_diffs:
-            # Skip deleted files
-            if diff_item.deleted_file:
-                continue
-
-            file_path = project_root / diff_item.a_path
+        for rel_path in staged_paths:
+            file_path = project_root / rel_path
 
             try:
                 # Read file content
@@ -73,7 +80,7 @@ def scan_staged_secrets(project_root: Path) -> list[str]:
 
                 if result.was_modified:
                     warnings.append(
-                        f"{diff_item.a_path}: secrets detected - {len(result.findings)} finding(s)"
+                        f"{rel_path}: secrets detected - {len(result.findings)} finding(s)"
                     )
             except (FileNotFoundError, UnicodeDecodeError):
                 # Skip binary files or files deleted between detection and scan
