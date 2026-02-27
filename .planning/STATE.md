@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Context continuity without repetition - Claude remembers your preferences, decisions, and project architecture across all sessions without you stating them again, while project teams can share knowledge safely through git.
-**Current focus:** Phase 8.6 Gap Closure — Runtime bug fixes; 8.6-01 COMPLETE (dot-prefixed LLM field normalization); 8.6-02 pending (queue race condition fix)
+**Current focus:** Phase 8.6 Gap Closure COMPLETE — Both runtime bugs fixed; next is Phase 9 (Advanced Features — Smart Retention, Context Refresh)
 
 ## Current Position
 
-Phase: 8.6 of 10 (Gap Closure — Runtime Bugs) — IN PROGRESS
-Plan: 1 of 2 — Complete (Plan 8.6-01: _normalize_field_names() for dot-prefixed LLM keys)
-Status: Phase 8.6 Plan 01 Complete — OllamaLLMClient normalization fix committed (7f55287)
-Last activity: 2026-02-27 — Phase 8.6 Plan 01 COMPLETE: _normalize_field_names() added to src/graph/adapters.py (7f55287)
-Next: Phase 8.6 Plan 02 (queue race condition fix), then Phase 9 (Advanced Features — Smart Retention, Context Refresh)
+Phase: 8.6 of 10 (Gap Closure — Runtime Bugs) — COMPLETE
+Plan: 2 of 2 — Complete (Plan 8.6-02: process_queue() race condition fix)
+Status: Phase 8.6 COMPLETE — Both bugs fixed: dot-prefixed LLM field names (7f55287) + process_queue() race condition (df7d984)
+Last activity: 2026-02-27 — Phase 8.6 Plan 02 COMPLETE: process_queue() race condition fixed in src/queue/__init__.py (df7d984)
+Next: Phase 9 (Advanced Features — Smart Retention, Context Refresh)
 
 Progress: [████████████████████████████████████████░] 40 plans complete — 2 phases remaining (9, 10)
 
@@ -79,6 +79,7 @@ Progress: [███████████████████████
 | Phase 8.1-gap-closure-verification-files-inserted P01 | 300 | 1 tasks | 1 files |
 | Phase 8.4-gap-closure-documentation-traceability-inserted P01 | 900 | 2 tasks | 32 files |
 | Phase 8.6-gap-closure-runtime-bugs-inserted P01 | 70 | 2 tasks | 1 files |
+| Phase 8.6-gap-closure-runtime-bugs-inserted P02 | 255 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -257,6 +258,8 @@ Recent decisions affecting current work:
 - [Phase 8.4-gap-closure-documentation-traceability-inserted]: R4.1 stays Pending until human runs Phase 8.5 verification guide — guide written != human execution confirmed
 - [Phase 8.6-01]: Single normalization call site in _generate_response() after json.loads() and before isinstance check covers both bare-list fallback and normal dict path with one call
 - [Phase 8.6-01]: Use lstrip('.') not strip('.') — only strip leading dots, never trailing, to preserve dot-prefixed values like '.env.test_verification'
+- [Phase 8.6-02]: process_queue() race condition: use worker.stop(timeout=120) join pattern instead of qsize()-only polling — qsize() drops to 0 on dequeue into unacked state, not on job completion
+- [Phase 8.6-02]: 120s stop timeout: accommodates slow LLM calls (gemma2:9b commit summarization can take 60-120s)
 
 ### Pending Todos
 
@@ -271,11 +274,9 @@ Recent decisions affecting current work:
    - `_normalize_field_names()` added to `OllamaLLMClient` in `src/graph/adapters.py`
    - Called before `model_validate()` in `_generate_response()`; dot-prefixed keys stripped recursively
 
-2. **Bug: `process_queue()` race condition** (`src/queue/__init__.py`)
-   - `SQLiteAckQueue.qsize()` returns 0 when jobs are "in-flight" (unacked), not just when done
-   - Main thread sees 0, stops worker while job is mid-execution → worker killed before `process_pending_commits()` is called
-   - `pending_commits` file never cleared; queue shows pending=2 forever
-   - Fix plan: `8.6-02-PLAN.md` — replace qsize() polling with `worker.stop(timeout=120)` join
+2. ~~**Bug: `process_queue()` race condition** (`src/queue/__init__.py`)~~ **FIXED 2026-02-27** (commit df7d984)
+   - `process_queue()` now calls `worker.stop(timeout=120.0)` after `qsize()==0`, joining the thread to ensure in-flight jobs complete
+   - Docstring explains: qsize() drops to 0 on dequeue to "unacked" state, not on ack; join() is the correct completion gate
 
 **Phase 06 verification status**: Tests 1 (hook install) and 2 (timing) PASSED. Tests 3 and 4 blocked by above bugs. Must re-run after Phase 8.6 is executed.
 
@@ -288,8 +289,8 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 8.6-01-PLAN.md — _normalize_field_names() added to OllamaLLMClient; fixes dot-prefixed field names from cloud LLMs causing Pydantic ValidationError
-Resume file: .planning/ — Phase 8.6 Plan 01 complete; next is Phase 8.6 Plan 02 (queue race condition fix)
+Stopped at: Completed 8.6-02-PLAN.md — process_queue() race condition fixed in src/queue/__init__.py; worker.stop(timeout=120) ensures in-flight SQLiteAckQueue jobs complete before returning
+Resume file: .planning/ — Phase 8.6 COMPLETE (both bugs fixed); next is Phase 9 (Advanced Features — Smart Retention, Context Refresh)
 
 **Phase 7.1 Context Captured:** Git Indexing Pivot. Key decisions: remove journal/replay/LFS/checkpoint from Phase 7, keep secrets+size pre-commit hooks. Indexer = historical bootstrap (brownfield), Phase 6 = ongoing real-time capture. SHA deduplication prevents overlap. --full flag for clean rebuild. Quality gate skips version-bump/bot/merge/tiny commits. Two-pass extraction (structured Q&A + free-form entity). Stale triggers: post-merge, post-checkout, post-rewrite (NOT post-commit). Cooldown 5 min between auto-triggers.
 **Phase 8 Context Captured:** SKILL.md + MCP Server. Key decisions: all CLI commands as MCP tools (graphiti_ prefix), subprocess wrapper, plain text responses, context from local Kuzu DB (built by Phase 7.1 indexer), mcp.context_tokens config key (default 8192), stdio default + HTTP, graphiti mcp install command for zero-config setup.

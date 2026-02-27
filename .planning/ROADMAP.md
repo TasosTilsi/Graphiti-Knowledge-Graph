@@ -26,7 +26,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 8.3: Gap Closure — Queue Dispatch** [INSERTED] - Fix BackgroundWorker._replay_command() dispatch for capture_git_commits jobs (restores Flow 3)
 - [x] **Phase 8.4: Gap Closure — Documentation Traceability** [INSERTED] - Update REQUIREMENTS.md checkboxes and add requirements-completed frontmatter to SUMMARY.md files (depends on 8.1, 8.2, 8.3)
 - [ ] **Phase 8.5: Gap Closure — Human Runtime Verification** [INSERTED] - Step-by-step verification checklists for Phases 02 (security) and 06 (automatic capture)
-- [ ] **Phase 8.6: Gap Closure — Runtime Bug Fixes** [INSERTED] - Fix LLM output `.name` field parsing failure and `process_queue()` race condition (discovered during Phase 06 human verification run 2026-02-26)
+- [x] **Phase 8.6: Gap Closure — Runtime Bug Fixes** [INSERTED] - Fix LLM output `.name` field parsing failure and `process_queue()` race condition (discovered during Phase 06 human verification run 2026-02-26) (completed 2026-02-27)
 - [ ] **Phase 9: Advanced Features** - Smart retention, performance, and context refresh
 - [ ] **Phase 10: Frontend UI** - Localhost graph visualization and monitoring dashboard
 
