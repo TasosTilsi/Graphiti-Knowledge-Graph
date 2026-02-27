@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Context continuity without repetition - Claude remembers your preferences, decisions, and project architecture across all sessions without you stating them again, while project teams can share knowledge safely through git.
-**Current focus:** Phase 8.4 Gap Closure — Documentation traceability complete; REQUIREMENTS.md 17/19 Complete; requirements-completed frontmatter added to all 31 SUMMARY.md files across phases 01-06
+**Current focus:** Phase 8.6 Gap Closure — Runtime bug fixes; 8.6-01 COMPLETE (dot-prefixed LLM field normalization); 8.6-02 pending (queue race condition fix)
 
 ## Current Position
 
-Phase: 8.4 of 10 (Gap Closure — Documentation Traceability) — COMPLETE
-Plan: 1 of 1 — Complete (Plan 8.4-01: REQUIREMENTS.md + SUMMARY.md frontmatter)
-Status: Phase 8.4 Plan 01 Complete — Traceability updated, 31 SUMMARY.md files annotated
-Last activity: 2026-02-24 — Phase 8.4 Plan 01 COMPLETE: REQUIREMENTS.md 17/19 Complete (b1c63e2), 31 SUMMARY.md annotated (d7aac45)
-Next: Phase 9 (Advanced Features — Smart Retention, Context Refresh)
+Phase: 8.6 of 10 (Gap Closure — Runtime Bugs) — IN PROGRESS
+Plan: 1 of 2 — Complete (Plan 8.6-01: _normalize_field_names() for dot-prefixed LLM keys)
+Status: Phase 8.6 Plan 01 Complete — OllamaLLMClient normalization fix committed (7f55287)
+Last activity: 2026-02-27 — Phase 8.6 Plan 01 COMPLETE: _normalize_field_names() added to src/graph/adapters.py (7f55287)
+Next: Phase 8.6 Plan 02 (queue race condition fix), then Phase 9 (Advanced Features — Smart Retention, Context Refresh)
 
 Progress: [████████████████████████████████████████░] 40 plans complete — 2 phases remaining (9, 10)
 
@@ -78,6 +78,7 @@ Progress: [███████████████████████
 | Phase 8.1-gap-closure-verification-files-inserted P02 | 117 | 1 tasks | 1 files |
 | Phase 8.1-gap-closure-verification-files-inserted P01 | 300 | 1 tasks | 1 files |
 | Phase 8.4-gap-closure-documentation-traceability-inserted P01 | 900 | 2 tasks | 32 files |
+| Phase 8.6-gap-closure-runtime-bugs-inserted P01 | 70 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -254,6 +255,8 @@ Recent decisions affecting current work:
 - [Phase 8.4-gap-closure-documentation-traceability-inserted]: Apply gap-closure phase reality over plan spec: when dependency phases already ran, mark requirements Complete rather than Pending
 - [Phase 8.4-gap-closure-documentation-traceability-inserted]: requirements-completed YAML frontmatter in SUMMARY.md makes requirement tracking machine-readable and consistent with REQUIREMENTS.md traceability table
 - [Phase 8.4-gap-closure-documentation-traceability-inserted]: R4.1 stays Pending until human runs Phase 8.5 verification guide — guide written != human execution confirmed
+- [Phase 8.6-01]: Single normalization call site in _generate_response() after json.loads() and before isinstance check covers both bare-list fallback and normal dict path with one call
+- [Phase 8.6-01]: Use lstrip('.') not strip('.') — only strip leading dots, never trailing, to preserve dot-prefixed values like '.env.test_verification'
 
 ### Pending Todos
 
@@ -264,10 +267,9 @@ Recent decisions affecting current work:
 
 **BLOCKING Phase 06 human verification (Tests 3 & 4) — discovered 2026-02-26:**
 
-1. **Bug: LLM `.name` field parsing** (`src/graph/adapters.py`)
-   - Cloud models return `{".name": "value"}` instead of `{"name": "value"}` when processing commits that touch dot-prefixed filenames (e.g., `.env.test_verification`)
-   - Pydantic raises `Field required` for `extracted_entities[N].name` → entire batch stored: 0
-   - Fix plan: `8.6-01-PLAN.md` — add `_normalize_field_names()` to strip leading dots before `model_validate()`
+1. ~~**Bug: LLM `.name` field parsing** (`src/graph/adapters.py`)~~ **FIXED 2026-02-27** (commit 7f55287)
+   - `_normalize_field_names()` added to `OllamaLLMClient` in `src/graph/adapters.py`
+   - Called before `model_validate()` in `_generate_response()`; dot-prefixed keys stripped recursively
 
 2. **Bug: `process_queue()` race condition** (`src/queue/__init__.py`)
    - `SQLiteAckQueue.qsize()` returns 0 when jobs are "in-flight" (unacked), not just when done
@@ -285,9 +287,9 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-02-24
-Stopped at: Completed 8.4-01-PLAN.md — REQUIREMENTS.md traceability 17/19 Complete; 31 SUMMARY.md files annotated with requirements-completed frontmatter
-Resume file: .planning/ — Phase 8.4 complete; next is Phase 9 (Advanced Features)
+Last session: 2026-02-27
+Stopped at: Completed 8.6-01-PLAN.md — _normalize_field_names() added to OllamaLLMClient; fixes dot-prefixed field names from cloud LLMs causing Pydantic ValidationError
+Resume file: .planning/ — Phase 8.6 Plan 01 complete; next is Phase 8.6 Plan 02 (queue race condition fix)
 
 **Phase 7.1 Context Captured:** Git Indexing Pivot. Key decisions: remove journal/replay/LFS/checkpoint from Phase 7, keep secrets+size pre-commit hooks. Indexer = historical bootstrap (brownfield), Phase 6 = ongoing real-time capture. SHA deduplication prevents overlap. --full flag for clean rebuild. Quality gate skips version-bump/bot/merge/tiny commits. Two-pass extraction (structured Q&A + free-form entity). Stale triggers: post-merge, post-checkout, post-rewrite (NOT post-commit). Cooldown 5 min between auto-triggers.
 **Phase 8 Context Captured:** SKILL.md + MCP Server. Key decisions: all CLI commands as MCP tools (graphiti_ prefix), subprocess wrapper, plain text responses, context from local Kuzu DB (built by Phase 7.1 indexer), mcp.context_tokens config key (default 8192), stdio default + HTTP, graphiti mcp install command for zero-config setup.
