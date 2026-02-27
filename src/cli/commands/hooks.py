@@ -18,6 +18,9 @@ from src.hooks import (
     get_hooks_enabled,
 )
 from src.hooks.installer import (
+    install_precommit_hook,
+    uninstall_precommit_hook,
+    is_precommit_hook_installed,
     install_postcheckout_hook,
     install_postrewrite_hook,
     upgrade_postmerge_hook,
@@ -84,12 +87,16 @@ def install_command(
             # Upgrade post-merge hook if it's the old Phase 7 journal-based one
             upgrade_postmerge_hook(git_dir)
 
+            # Install pre-commit hook (secret scanning + size checks)
+            precommit_installed = install_precommit_hook(root, force=force)
+
             # Install indexer trigger hooks (post-checkout and post-rewrite)
             postcheckout_installed = install_postcheckout_hook(git_dir)
             postrewrite_installed = install_postrewrite_hook(git_dir)
 
         # Output result
         if format == "json":
+            result["precommit_installed"] = precommit_installed
             result["postcheckout_installed"] = postcheckout_installed
             result["postrewrite_installed"] = postrewrite_installed
             print_json(result)
@@ -108,6 +115,11 @@ def install_command(
             elif install_claude:
                 skipped.append("Claude hook (already installed)")
 
+            if precommit_installed:
+                installed.append("pre-commit")
+            else:
+                skipped.append("pre-commit (already installed)")
+
             if postcheckout_installed:
                 installed.append("post-checkout")
             else:
@@ -123,7 +135,7 @@ def install_command(
                 hooks_str = ", ".join(installed)
                 print_success(f"Installed hooks: {hooks_str}")
                 console.print(
-                    "[dim]All indexer hooks deployed: pre-commit, post-commit, post-merge, post-checkout, post-rewrite[/dim]"
+                    "[dim]All 5 hooks deployed: pre-commit, post-commit, post-merge, post-checkout, post-rewrite[/dim]"
                 )
 
             if skipped:
@@ -184,12 +196,14 @@ def uninstall_command(
                 remove_claude=remove_claude
             )
 
-            # Also remove post-checkout and post-rewrite hooks
+            # Also remove pre-commit, post-checkout, and post-rewrite hooks
+            precommit_removed = uninstall_precommit_hook(root)
             postcheckout_removed = uninstall_postcheckout_hook(git_dir)
             postrewrite_removed = uninstall_postrewrite_hook(git_dir)
 
         # Output result
         if format == "json":
+            result["precommit_removed"] = precommit_removed
             result["postcheckout_removed"] = postcheckout_removed
             result["postrewrite_removed"] = postrewrite_removed
             print_json(result)
@@ -201,6 +215,8 @@ def uninstall_command(
                 removed.append("post-commit hook")
             if result.get("claude_removed"):
                 removed.append("Claude Code Stop hook")
+            if precommit_removed:
+                removed.append("pre-commit hook")
             if postcheckout_removed:
                 removed.append("post-checkout hook")
             if postrewrite_removed:
@@ -246,6 +262,7 @@ def status_command(
 
         # Derive .git directory for new hook status checks
         git_dir = root / ".git"
+        precommit_installed = is_precommit_hook_installed(root)
         postcheckout_installed = is_postcheckout_hook_installed(git_dir)
         postrewrite_installed = is_postrewrite_hook_installed(git_dir)
 
@@ -254,6 +271,7 @@ def status_command(
             output = {
                 "git_installed": status.get("git_hook_installed", False),
                 "claude_installed": status.get("claude_hook_installed", False),
+                "precommit_installed": precommit_installed,
                 "postcheckout_installed": postcheckout_installed,
                 "postrewrite_installed": postrewrite_installed,
             }
@@ -274,6 +292,10 @@ def status_command(
             return "[green]✓[/green]" if installed else "[red]✗[/red]"
 
         # Add rows for each hook type
+        table.add_row(
+            "Git pre-commit",
+            status_icon(precommit_installed)
+        )
         table.add_row(
             "Git post-commit",
             status_icon(status.get("git_hook_installed", False))
