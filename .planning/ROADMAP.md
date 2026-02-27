@@ -315,8 +315,8 @@ Plans:
   6. `verify_phase_71.py` tests 5-hook deployment and passes
 
 Plans:
-- [ ] 8.7-01-PLAN.md — Fix `scan_staged_secrets()` inverted deleted_file check in `src/gitops/hooks.py`
-- [ ] 8.7-02-PLAN.md — Wire `install_precommit_hook()` into CLI install/uninstall/status commands
+- [x] 8.7-01-PLAN.md — Fix `scan_staged_secrets()` inverted deleted_file check in `src/gitops/hooks.py`
+- [x] 8.7-02-PLAN.md — Wire `install_precommit_hook()` into CLI install/uninstall/status commands
 - [ ] 8.7-03-PLAN.md — Update verification scripts to test fixed behaviour
 
 ### Phase 9: Advanced Features
