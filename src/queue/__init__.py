@@ -213,39 +213,48 @@ def process_queue() -> tuple[int, int]:
     """Process queue manually (CLI fallback).
 
     Starts worker if not running and processes all pending jobs.
-    Used by `graphiti process-queue` command when MCP server isn't running.
+    Waits until the queue is empty AND the worker thread has fully
+    finished its current job before returning.
 
-    This is a synchronous blocking operation - waits until queue is empty
-    or worker is stopped.
+    The previous implementation only waited for qsize()==0, but
+    SQLiteAckQueue.qsize() returns 0 as soon as jobs are dequeued
+    into "unacked" (in-flight) state — before they are actually
+    processed. This caused the worker to be stopped mid-job, which
+    meant process_pending_commits() was never called and the
+    pending_commits file was never cleared.
+
+    Fix: after qsize() drops to 0, call worker.stop(timeout=120) which
+    joins the worker thread. The thread completes its current job before
+    the stop event causes it to exit, so join() returns only after all
+    in-flight work is done.
 
     Returns:
-        Tuple of (success_count, failure_count)
-
-    Note:
-        In Phase 05, this is a basic implementation. Full job tracking
-        and result counting will be added in Phase 06 when CLI commands
-        are implemented.
+        Tuple of (success_count, failure_count) — placeholder counts
+        (full tracking deferred, consistent with original implementation)
     """
+    import time
+
     worker = get_worker()
 
-    # Start worker if not running
     if not worker.is_running():
         worker.start()
         logger.info("worker_started_for_manual_processing")
 
-    # Wait for queue to be processed
-    # Simple implementation: wait while queue has pending jobs
     queue = get_queue()
-    import time
 
+    # Wait for all "ready" jobs to be picked up by the worker.
+    # Once qsize()==0, all jobs are either in-flight or done.
     while queue.get_pending_count() > 0:
-        time.sleep(1)
+        time.sleep(0.5)
 
-    # Stop worker after processing complete
-    worker.stop()
+    # Stop the worker and JOIN the thread. worker.stop() signals the
+    # stop event and then calls thread.join(timeout). The worker thread
+    # only checks the stop event between jobs — it completes any
+    # in-flight job before exiting. This ensures in-flight work finishes.
+    worker.stop(timeout=120.0)
+
     logger.info("manual_processing_complete")
 
-    # Return placeholder counts (full tracking added in Phase 06)
     return (0, 0)
 
 
