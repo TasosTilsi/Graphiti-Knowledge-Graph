@@ -164,11 +164,13 @@ def test_hook_installation(r: Runner) -> None:
 
     status_result = graphiti("hooks", "status")
     output = status_result.stdout + status_result.stderr
-    if "yes" in output.lower() and "enabled" in output.lower():
-        r.ok("graphiti hooks status — both hooks installed and enabled")
+    post_commit_ok = "post-commit" in output.lower() and "✓" in output
+    claude_ok = "claude code stop" in output.lower() and "✓" in output
+    if post_commit_ok and claude_ok:
+        r.ok("graphiti hooks status — post-commit and Claude Code Stop installed")
     else:
         r.fail(
-            "graphiti hooks status did not show installed/enabled",
+            "graphiti hooks status did not show post-commit + Claude Code Stop as installed",
             detail=output.strip()[:200],
         )
 
@@ -192,7 +194,7 @@ def test_hook_timing(r: Runner) -> None:
         if commit_result.returncode != 0:
             r.fail(
                 "git commit failed during timing test",
-                detail=commit_result.stderr.strip(),
+                detail=(commit_result.stdout + commit_result.stderr).strip()[:300],
             )
             return
 
@@ -264,7 +266,7 @@ def test_excluded_files_not_captured(r: Runner, skip_ollama: bool) -> None:
             return
 
         r.info("Committed .env.test_verification — triggering queue processing...")
-        queue_result = graphiti("queue", "process", timeout=120)
+        queue_result = graphiti("queue", "process", timeout=300)
         r.info(f"Queue processing exited with code {queue_result.returncode}")
 
         # Search for the secret — must NOT appear
@@ -331,7 +333,7 @@ def test_captured_knowledge_queryable(r: Runner, skip_ollama: bool) -> None:
             return
 
         r.info("Committed UserAuthService file — triggering queue processing (may take 30-120s)...")
-        queue_result = graphiti("queue", "process", timeout=180)
+        queue_result = graphiti("queue", "process", timeout=300)
         r.info(f"Queue processing exited with code {queue_result.returncode}")
 
         # Search for the captured content

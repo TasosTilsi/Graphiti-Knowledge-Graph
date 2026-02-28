@@ -253,9 +253,9 @@ def test_graphiti_index(r: Runner, skip_ollama: bool) -> None:
             )
         return
 
-    # Full run: index recent commits to avoid reprocessing entire history
-    r.info("Running: graphiti index --verbose (may take 30-120s, uses Ollama)...")
-    result = graphiti("index", "--verbose", timeout=180)
+    # Index only the 3 most recent commits to keep the test bounded
+    r.info("Running: graphiti index --since HEAD~3 --verbose (may take 30-120s, uses Ollama)...")
+    result = graphiti("index", "--since", "HEAD~3", "--verbose", timeout=180)
 
     output = result.stdout + result.stderr
     if result.returncode == 0:

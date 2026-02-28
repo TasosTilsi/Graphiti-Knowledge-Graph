@@ -5,6 +5,7 @@ for idempotent and reversible operations.
 """
 
 import json
+import re
 from pathlib import Path
 from typing import Optional
 
@@ -127,9 +128,16 @@ def install_git_hook(repo_path: Path, force: bool = False) -> bool:
                 suggestion="Consider pre-commit integration for better compatibility"
             )
 
-        # Append our section with spacing
+        # Insert our section before any trailing exit statement so it runs
         graphiti_section = _get_graphiti_section()
-        new_content = existing_content.rstrip() + "\n\n" + graphiti_section
+        existing_trimmed = existing_content.rstrip()
+        exit_match = re.search(r'(\n+)(exit\s+\d+\s*)$', existing_trimmed)
+        if exit_match:
+            before_exit = existing_trimmed[:exit_match.start()].rstrip()
+            exit_line = exit_match.group(2).rstrip()
+            new_content = before_exit + "\n\n" + graphiti_section + "\n\n" + exit_line
+        else:
+            new_content = existing_trimmed + "\n\n" + graphiti_section
         hook_path.write_text(new_content)
 
     else:
@@ -372,9 +380,16 @@ def _install_hook(hook_type: str, repo_path: Path, force: bool = False) -> bool:
                 suggestion="Consider pre-commit integration for better compatibility"
             )
 
-        # Append our section with spacing
+        # Insert our section before any trailing exit statement so it runs
         graphiti_section = _get_graphiti_section(hook_type)
-        new_content = existing_content.rstrip() + "\n\n" + graphiti_section
+        existing_trimmed = existing_content.rstrip()
+        exit_match = re.search(r'(\n+)(exit\s+\d+\s*)$', existing_trimmed)
+        if exit_match:
+            before_exit = existing_trimmed[:exit_match.start()].rstrip()
+            exit_line = exit_match.group(2).rstrip()
+            new_content = before_exit + "\n\n" + graphiti_section + "\n\n" + exit_line
+        else:
+            new_content = existing_trimmed + "\n\n" + graphiti_section
         hook_path.write_text(new_content)
 
     else:

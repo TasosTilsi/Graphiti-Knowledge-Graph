@@ -17,12 +17,17 @@ batches. JobQueue handles its own thread safety via persistqueue.
 
 import asyncio
 import subprocess
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 from threading import Thread, Event
 from typing import Optional
 
 import structlog
+
+# Use the graphiti binary from the same venv as the running interpreter
+_GRAPHITI_CLI = str(Path(sys.executable).parent / "graphiti")
 
 from src.queue.storage import JobQueue
 
@@ -291,8 +296,8 @@ class BackgroundWorker:
         args = payload.get('args', [])
         kwargs = payload.get('kwargs', {})
 
-        # Construct CLI command: ["graphiti", command, *args, *flags]
-        cli_command = ["graphiti", command] + args + self._kwargs_to_flags(kwargs)
+        # Construct CLI command: [graphiti_venv_path, command, *args, *flags]
+        cli_command = [_GRAPHITI_CLI, command] + args + self._kwargs_to_flags(kwargs)
 
         # Execute command via subprocess
         result = subprocess.run(

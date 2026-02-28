@@ -6,10 +6,14 @@ status checking, and configuration toggling across both git and Claude Code hook
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 from typing import Dict
 
 import structlog
+
+# Use the graphiti binary from the same venv as the running interpreter
+_GRAPHITI_CLI = str(Path(sys.executable).parent / "graphiti")
 
 from .installer import (
     install_claude_hook,
@@ -32,7 +36,7 @@ def get_hooks_enabled() -> bool:
     """
     try:
         result = subprocess.run(
-            ["graphiti", "config", "--get", "hooks.enabled"],
+            [_GRAPHITI_CLI, "config", "--get", "hooks.enabled"],
             capture_output=True,
             text=True,
             timeout=5
@@ -60,7 +64,7 @@ def set_hooks_enabled(enabled: bool) -> None:
     """
     try:
         result = subprocess.run(
-            ["graphiti", "config", "--set", f"hooks.enabled={str(enabled).lower()}"],
+            [_GRAPHITI_CLI, "config", "--set", f"hooks.enabled={str(enabled).lower()}"],
             capture_output=True,
             text=True,
             timeout=5
