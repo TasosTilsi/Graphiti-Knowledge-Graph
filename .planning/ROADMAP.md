@@ -28,6 +28,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 8.5: Gap Closure — Human Runtime Verification** [INSERTED] - Step-by-step verification checklists for Phases 02 (security) and 06 (automatic capture) (completed 2026-02-24)
 - [x] **Phase 8.6: Gap Closure — Runtime Bug Fixes** [INSERTED] - Fix LLM output `.name` field parsing failure and `process_queue()` race condition (discovered during Phase 06 human verification run 2026-02-26) (completed 2026-02-27)
 - [x] **Phase 8.7: Gap Closure — Hook Security Gaps** [INSERTED] - Fix two gaps found during Phase 07/7.1 human verification: (1) `scan_staged_secrets()` silently skips newly staged files due to inverted `deleted_file` check; (2) `graphiti hooks install` does not deploy pre-commit hook despite template and installer function existing (completed 2026-02-27)
+- [ ] **Phase 8.8: Gap Closure — Verification Documentation** [INSERTED] - Write missing VERIFICATION.md for Phases 8.2, 8.3, and 8.5; update Phase 06 VERIFICATION.md from human_needed to passed; close R4.1 checkbox in REQUIREMENTS.md
+- [ ] **Phase 8.9: Gap Closure — Integration Wiring Fixes** [INSERTED] - Fix three integration bugs found by milestone audit: (1) add missing graphiti_index MCP tool; (2) fix hooks.enabled CLI flag syntax in manager.py; (3) fix _is_claude_hook_installed() dict traversal depth
 - [ ] **Phase 9: Advanced Features** - Smart retention, performance, and context refresh
 - [ ] **Phase 10: Frontend UI** - Localhost graph visualization and monitoring dashboard
 
@@ -319,6 +321,38 @@ Plans:
 - [x] 8.7-02-PLAN.md — Wire `install_precommit_hook()` into CLI install/uninstall/status commands
 - [x] 8.7-03-PLAN.md — Update verification scripts to test fixed behaviour
 
+### Phase 8.8: Gap Closure — Verification Documentation [INSERTED]
+**Goal**: Write missing VERIFICATION.md files for Phases 8.2, 8.3, and 8.5 (unverified gap-closure phases from milestone audit); update Phase 06 VERIFICATION.md from `human_needed` to `passed`; close R4.1 REQUIREMENTS.md checkbox.
+**Depends on**: Phase 8.5 (human verification guide already produced; this phase records completion)
+**Gap Closure**: Closes R4.1 (partial → complete); satisfies 3-source cross-reference for Phases 8.2, 8.3, 8.5
+**Requirements**: R4.1
+**Success Criteria** (what must be TRUE):
+  1. `.planning/phases/08.2-gap-closure-mcp-server-bugs-inserted/VERIFICATION.md` exists and documents bug fixes for --async flag, context.py bare path, _auto_install_hooks keys
+  2. `.planning/phases/08.3-gap-closure-queue-dispatch-inserted/VERIFICATION.md` exists and documents BackgroundWorker._replay_command() dispatch fix
+  3. `.planning/phases/08.5-gap-closure-human-runtime-verification-inserted/VERIFICATION.md` exists and records human verification guide completion
+  4. `.planning/phases/06-automatic-capture/VERIFICATION.md` status updated from `human_needed` to `passed`
+  5. REQUIREMENTS.md R4.1 checkbox changed from `[ ]` to `[x]` and traceability table shows Complete
+
+Plans:
+- [ ] 8.8-01-PLAN.md — Write VERIFICATION.md for Phases 8.2, 8.3, and 8.5
+- [ ] 8.8-02-PLAN.md — Update Phase 06 VERIFICATION.md and close R4.1 in REQUIREMENTS.md
+
+### Phase 8.9: Gap Closure — Integration Wiring Fixes [INSERTED]
+**Goal**: Fix three integration bugs identified by the milestone audit: (1) `graphiti_index` MCP tool is missing — add tool handler and register in server.py; (2) `hooks.enabled` config uses wrong CLI flag syntax in manager.py causing hooks.enabled to always default to True; (3) `_is_claude_hook_installed()` checks wrong dict depth, always reporting hook as not-installed.
+**Depends on**: Phase 8.8 (documentation complete before code fixes)
+**Gap Closure**: Closes R6.1 (HIGH: graphiti_index missing), R3.3 (MEDIUM: hooks.enabled broken), R4.1/R6.2/R6.3 display (LOW: _is_claude_hook_installed cosmetic)
+**Requirements**: R6.1, R3.3, R4.1
+**Success Criteria** (what must be TRUE):
+  1. `graphiti_index` tool handler exists in `src/mcp_server/tools.py` and is registered in `server.py` — MCP users can trigger git history indexing
+  2. `src/hooks/manager.py` calls `graphiti config get hooks.enabled` / `graphiti config set hooks.enabled <value>` (subcommand syntax, not `--get`/`--set` flags)
+  3. `_is_claude_hook_installed()` in `src/hooks/manager.py` traverses `entry["hooks"][0]["command"]` instead of `entry.get("command")`
+  4. `graphiti hooks status` correctly reports Claude hook installation state
+  5. `graphiti config set hooks.enabled false` persists and is read back correctly
+
+Plans:
+- [ ] 8.9-01-PLAN.md — Add graphiti_index MCP tool to tools.py and register in server.py
+- [ ] 8.9-02-PLAN.md — Fix hooks.enabled CLI syntax and _is_claude_hook_installed() traversal in manager.py
+
 ### Phase 9: Advanced Features
 **Goal**: Add smart retention, performance optimization, capture modes, and context refresh for production readiness
 **Depends on**: Phase 8 (all core functionality in place)
@@ -369,7 +403,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 7.1 -> 8 -> 8.1/8.2/8.3/8.5 (parallel) -> 8.4 -> 9 -> 10 -> 11
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 7.1 -> 8 -> 8.1/8.2/8.3/8.5 (parallel) -> 8.4 -> 8.6 -> 8.7 -> 8.8 -> 8.9 -> 9 -> 10 -> 11
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -389,6 +423,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 7.1 -> 8 -> 
 | 8.5. Gap Closure — Human Runtime Verification | 2/2 | Complete | 2026-02-24 |
 | 8.6. Gap Closure — Runtime Bug Fixes | 2/2 | Complete | 2026-02-27 |
 | 8.7. Gap Closure — Hook Security Gaps | 3/3 | Complete | 2026-02-27 |
+| 8.8. Gap Closure — Verification Documentation | 0/2 | Not started | - |
+| 8.9. Gap Closure — Integration Wiring Fixes | 0/2 | Not started | - |
 | 9. Advanced Features | 0/TBD | Not started | - |
 | 10. Frontend UI | 0/TBD | Not started | - |
 | 11. Multi-Provider LLM Support | 0/TBD | Not started | - |

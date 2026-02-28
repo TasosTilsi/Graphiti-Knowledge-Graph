@@ -429,7 +429,7 @@ Mapping of requirements to phases in ROADMAP.md:
 | R1.2: Dual-Scope Storage | Phase 1: Storage Foundation | Complete |
 | R3.1: File-Level Exclusions | Phase 2: Security Filtering | Complete |
 | R3.2: Entity-Level Sanitization | Phase 2: Security Filtering | Complete |
-| R3.3: Pre-Commit Validation | Phase 2: Security Filtering | Complete |
+| R3.3: Pre-Commit Validation | Phase 8.9: Gap Closure — Integration Wiring Fixes | Pending |
 | R5.1: Cloud Ollama Primary | Phase 8.1: Gap Closure — Verification Files | Complete |
 | R5.2: Local Ollama Fallback | Phase 8.1: Gap Closure — Verification Files | Complete |
 | R5.3: Fallback Hierarchy | Phase 8.1: Gap Closure — Verification Files | Complete |
@@ -437,11 +437,11 @@ Mapping of requirements to phases in ROADMAP.md:
 | R2.2: Configuration Management | Phase 4: CLI Interface | Complete |
 | R2.3: Health & Diagnostics | Phase 4: CLI Interface | Complete |
 | R4.3: Background Processing | Phase 8.3: Gap Closure — Queue Dispatch | Complete |
-| R4.1: Conversation-Based Capture | Phase 8.5: Gap Closure — Human Runtime Verification | Pending |
+| R4.1: Conversation-Based Capture | Phase 8.8: Gap Closure — Verification Documentation | Pending |
 | R4.2: Git Post-Commit Hook | Phase 8.3: Gap Closure — Queue Dispatch | Complete |
 | R8.1: Git-Safe Knowledge Graphs | Phase 7.1: Git Indexing Pivot | Complete |
 | R8.2: Merge Conflict Prevention | Phase 7.1: Git Indexing Pivot | Complete |
-| R6.1: MCP Server Tools | Phase 8.1: Gap Closure — Verification Files | Complete |
+| R6.1: MCP Server Tools | Phase 8.9: Gap Closure — Integration Wiring Fixes | Pending |
 | R6.2: Context Injection Hooks | Phase 8.2: Gap Closure — MCP Server Bugs | Complete |
 | R6.3: Conversation Capture Hook | Phase 8.2: Gap Closure — MCP Server Bugs | Complete |
 | R7.1: Time-Based Expiration | Phase 9: Advanced Features | Pending |
@@ -458,4 +458,4 @@ Mapping of requirements to phases in ROADMAP.md:
 ---
 
 *Requirements defined: 2026-02-02*
-*Status: 18/19 Complete — R4.1 pending human runtime verification (Phase 8.5 guide ready)*
+*Status: 16/19 Complete — R4.1 (docs), R3.3 (hooks.enabled bug), R6.1 (graphiti_index missing) pending gap closure phases 8.8/8.9 (audit 2026-02-28)*
