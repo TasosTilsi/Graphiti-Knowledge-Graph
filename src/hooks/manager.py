@@ -36,17 +36,22 @@ def get_hooks_enabled() -> bool:
     """
     try:
         result = subprocess.run(
-            [_GRAPHITI_CLI, "config", "--get", "hooks.enabled"],
+            [_GRAPHITI_CLI, "config", "get", "hooks.enabled"],
             capture_output=True,
             text=True,
             timeout=5
         )
 
-        # Parse output: if stdout contains "true" return True
-        if result.returncode == 0 and "true" in result.stdout.lower():
+        if result.returncode == 0:
+            # Config key found — parse the value
+            output = result.stdout.strip().lower()
+            if output == "false":
+                return False
+            # "true", "1", "yes", or any non-false output = enabled
             return True
         else:
-            # Config key doesn't exist or is not set - default to enabled
+            # Config key doesn't exist or graphiti unavailable — default to enabled
+            # (hooks are installed intentionally, so enabled by default)
             return True
 
     except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError) as e:
@@ -64,7 +69,7 @@ def set_hooks_enabled(enabled: bool) -> None:
     """
     try:
         result = subprocess.run(
-            [_GRAPHITI_CLI, "config", "--set", f"hooks.enabled={str(enabled).lower()}"],
+            [_GRAPHITI_CLI, "config", "set", "hooks.enabled", str(enabled).lower()],
             capture_output=True,
             text=True,
             timeout=5
@@ -103,10 +108,13 @@ def _is_claude_hook_installed(project_path: Path) -> bool:
         if "hooks" not in settings or "Stop" not in settings["hooks"]:
             return False
 
-        # Check if any Stop hook contains graphiti capture command
-        for hook in settings["hooks"]["Stop"]:
-            if isinstance(hook, dict) and "graphiti capture" in hook.get("command", ""):
-                return True
+        # Check if any Stop hook entry contains graphiti capture command
+        # Settings structure: hooks.Stop = [{ matcher, hooks: [{type, command, ...}] }]
+        for entry in settings["hooks"]["Stop"]:
+            if isinstance(entry, dict):
+                for h in entry.get("hooks", []):
+                    if isinstance(h, dict) and "graphiti capture" in h.get("command", ""):
+                        return True
 
         return False
 

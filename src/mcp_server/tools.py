@@ -345,6 +345,42 @@ def graphiti_compact(scope: str = "auto") -> str:
     return stdout.strip() or "Knowledge graph compacted."
 
 
+def graphiti_index(
+    full: bool = False,
+    since: str = "",
+) -> str:
+    """Index git history into the knowledge graph.
+
+    Incremental by default — only processes commits not yet indexed.
+    Use full=True to wipe all git-indexed knowledge and re-index entire
+    history from scratch. This operation can be slow for large repositories
+    (5+ minutes for histories with thousands of commits).
+
+    Args:
+        full: If True, wipe all git-indexed knowledge and re-index from scratch.
+        since: Index commits since date (YYYY-MM-DD) or commit SHA (optional).
+               Empty string means no filtering (default — all new commits).
+
+    Returns:
+        Status message from the CLI with commits processed and entities created.
+
+    Raises:
+        RuntimeError: If the graphiti CLI returns a non-zero exit code.
+    """
+    cmd = ["index"]
+    if full:
+        cmd.append("--full")
+    if since:
+        cmd.extend(["--since", since])
+
+    returncode, stdout, stderr = _run_graphiti(cmd, timeout=300, cwd=_get_cwd())
+
+    if returncode != 0:
+        raise RuntimeError(f"graphiti index failed: {stderr.strip()}")
+
+    return stdout.strip() or "Git history indexed successfully."
+
+
 def graphiti_capture() -> str:
     """Capture current conversation context into the knowledge graph.
 
@@ -421,6 +457,7 @@ __all__ = [
     "graphiti_delete",
     "graphiti_summarize",
     "graphiti_compact",
+    "graphiti_index",
     "graphiti_capture",
     "graphiti_health",
     "graphiti_config",

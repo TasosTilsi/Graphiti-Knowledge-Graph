@@ -29,6 +29,7 @@ from src.mcp_server.tools import (
     graphiti_delete,
     graphiti_summarize,
     graphiti_compact,
+    graphiti_index,
     graphiti_capture,
     graphiti_health,
     graphiti_config,
@@ -47,7 +48,7 @@ mcp = FastMCP(
     )
 )
 
-# Register all 10 CLI tools with graphiti_ prefix
+# Register all 11 CLI tools with graphiti_ prefix
 mcp.tool()(graphiti_add)
 mcp.tool()(graphiti_search)
 mcp.tool()(graphiti_list)
@@ -55,6 +56,7 @@ mcp.tool()(graphiti_show)
 mcp.tool()(graphiti_delete)
 mcp.tool()(graphiti_summarize)
 mcp.tool()(graphiti_compact)
+mcp.tool()(graphiti_index)
 mcp.tool()(graphiti_capture)
 mcp.tool()(graphiti_health)
 mcp.tool()(graphiti_config)
