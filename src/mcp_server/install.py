@@ -162,6 +162,7 @@ def _install_project_hooks(graphiti_cmd: str, force: bool = False) -> bool:
     ]
 
     stop_hooks.append({
+        "matcher": "",
         "hooks": [
             {
                 "type": "command",

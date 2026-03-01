@@ -229,11 +229,17 @@ def install_claude_hook(project_path: Path) -> bool:
     settings_dir = project_path / ".claude"
     settings_path = settings_dir / "settings.json"
 
-    # Graphiti Stop hook configuration
+    # Graphiti Stop hook configuration (new format with matcher + hooks array)
     graphiti_hook = {
-        "command": 'graphiti capture --auto --transcript-path "$transcript_path" --session-id "$session_id"',
-        "async": True,
-        "timeout": 10
+        "matcher": "",
+        "hooks": [
+            {
+                "type": "command",
+                "command": 'graphiti capture --auto --transcript-path "$transcript_path" --session-id "$session_id"',
+                "async": True,
+                "timeout": 10,
+            }
+        ],
     }
 
     # Load existing settings or create new
@@ -255,12 +261,14 @@ def install_claude_hook(project_path: Path) -> bool:
     if "Stop" not in settings["hooks"]:
         settings["hooks"]["Stop"] = []
 
-    # Check if graphiti hook already exists (idempotent)
-    for hook in settings["hooks"]["Stop"]:
-        if isinstance(hook, dict) and "graphiti capture" in hook.get("command", ""):
-            logger.info("Graphiti Claude Code hook already installed",
-                       project=str(project_path))
-            return False
+    # Check if graphiti hook already exists (idempotent) — check inside hooks array
+    for entry in settings["hooks"]["Stop"]:
+        if isinstance(entry, dict):
+            for h in entry.get("hooks", []):
+                if "graphiti capture" in h.get("command", ""):
+                    logger.info("Graphiti Claude Code hook already installed",
+                               project=str(project_path))
+                    return False
 
     # Add graphiti hook
     settings["hooks"]["Stop"].append(graphiti_hook)
@@ -304,11 +312,14 @@ def uninstall_claude_hook(project_path: Path) -> bool:
                    project=str(project_path))
         return False
 
-    # Filter out graphiti hooks
+    # Filter out graphiti hooks (new format: entries with hooks array)
     original_count = len(settings["hooks"]["Stop"])
     settings["hooks"]["Stop"] = [
-        hook for hook in settings["hooks"]["Stop"]
-        if not (isinstance(hook, dict) and "graphiti capture" in hook.get("command", ""))
+        entry for entry in settings["hooks"]["Stop"]
+        if not (
+            isinstance(entry, dict)
+            and any("graphiti capture" in h.get("command", "") for h in entry.get("hooks", []))
+        )
     ]
 
     if len(settings["hooks"]["Stop"]) == original_count:
