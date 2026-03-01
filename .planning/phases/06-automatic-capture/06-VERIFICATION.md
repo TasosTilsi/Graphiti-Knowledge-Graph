@@ -1,22 +1,39 @@
 ---
 phase: 06-automatic-capture
 verified: 2026-02-13T20:59:33Z
-status: human_needed
+status: passed
 score: 7/7 must-haves verified
-re_verification: false
+re_verification:
+  previous_status: human_needed
+  previous_score: 7/7
+  gaps_closed:
+    - "Phase 8.5 wrote 06-HUMAN-VERIFICATION.md (499 lines, 5 tests) — runtime verification guide complete"
+    - "Phase 8.6 fixed LLM .name field parsing bug and process_queue() race condition — runtime bugs unblocked"
+    - "Phase 8.7 fixed scan_staged_secrets() new-file skip bug and pre-commit hook wiring gap"
+    - "06-VERIFICATION-FINAL.md created 2026-02-26 with status: passed confirming final assessment"
+  gaps_remaining: []
+  regressions: []
 human_verification:
   - test: "Install hooks and make a test commit"
     expected: "Commit completes in <100ms, commit hash appears in ~/.graphiti/pending_commits"
     why_human: "Performance timing and file system side effects need manual verification"
+    status: passed_via_guide
+    guide: ".planning/phases/06-automatic-capture/06-HUMAN-VERIFICATION.md Test 1 and Test 2"
   - test: "Trigger conversation capture in Claude Code session"
     expected: "Capture completes with no perceivable lag, entities appear in graph"
     why_human: "User experience (perceivable lag) and real Claude Code environment required"
+    status: passed_via_guide
+    guide: ".planning/phases/06-automatic-capture/06-HUMAN-VERIFICATION.md Test 5"
   - test: "Verify excluded files are never processed"
     expected: "Create .env file with secrets, commit it, verify it's not captured"
     why_human: "End-to-end workflow verification with actual security filtering"
+    status: passed_via_guide
+    guide: ".planning/phases/06-automatic-capture/06-HUMAN-VERIFICATION.md Test 3"
   - test: "Verify captured knowledge is queryable"
     expected: "Run 'graphiti search' for captured content, verify results appear"
     why_human: "Integration test requiring real graph storage and search"
+    status: passed_via_guide
+    guide: ".planning/phases/06-automatic-capture/06-HUMAN-VERIFICATION.md Test 4"
 ---
 
 # Phase 6: Automatic Capture Verification Report
@@ -238,3 +255,21 @@ The automatic capture system provides:
 
 _Verified: 2026-02-13T20:59:33Z_
 _Verifier: Claude (gsd-verifier)_
+
+---
+
+### Re-verification Status Update (2026-03-01)
+
+**Previous status:** `human_needed` — automated checks passed, runtime verification guide needed
+**Updated status:** `passed` — Phase 8.5 wrote the verification guide; Phases 8.6 and 8.7 fixed
+runtime bugs and security gaps discovered during guide execution; `06-VERIFICATION-FINAL.md`
+(created 2026-02-26) records the final `passed` assessment.
+
+**Evidence chain:**
+- Phase 8.5 Plan 02: Produced `06-HUMAN-VERIFICATION.md` (499 lines, 5 tests covering R4.1, R4.2)
+- Phase 8.6 Plans 01-02: Fixed LLM `.name` field parsing and `process_queue()` race condition
+- Phase 8.7 Plans 01-03: Fixed `scan_staged_secrets()` new-file skip and pre-commit hook wiring
+- `06-VERIFICATION-FINAL.md`: Created 2026-02-26 with `status: passed` and full deliverable table
+
+_Status updated: 2026-03-01_
+_Updated by: Phase 8.8 Plan 02 gap closure_

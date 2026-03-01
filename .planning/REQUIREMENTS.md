@@ -437,7 +437,7 @@ Mapping of requirements to phases in ROADMAP.md:
 | R2.2: Configuration Management | Phase 4: CLI Interface | Complete |
 | R2.3: Health & Diagnostics | Phase 4: CLI Interface | Complete |
 | R4.3: Background Processing | Phase 8.3: Gap Closure — Queue Dispatch | Complete |
-| R4.1: Conversation-Based Capture | Phase 8.8: Gap Closure — Verification Documentation | Pending |
+| R4.1: Conversation-Based Capture | Phase 8.8: Gap Closure — Verification Documentation | Complete |
 | R4.2: Git Post-Commit Hook | Phase 8.3: Gap Closure — Queue Dispatch | Complete |
 | R8.1: Git-Safe Knowledge Graphs | Phase 7.1: Git Indexing Pivot | Complete |
 | R8.2: Merge Conflict Prevention | Phase 7.1: Git Indexing Pivot | Complete |
@@ -458,4 +458,4 @@ Mapping of requirements to phases in ROADMAP.md:
 ---
 
 *Requirements defined: 2026-02-02*
-*Status: 16/19 Complete — R4.1 (docs), R3.3 (hooks.enabled bug), R6.1 (graphiti_index missing) pending gap closure phases 8.8/8.9 (audit 2026-02-28)*
+*Status: 17/19 Complete — R3.3 (hooks.enabled bug), R6.1 (graphiti_index missing) pending gap closure phase 8.9 (audit 2026-02-28); R4.1 closed by Phase 8.8*
