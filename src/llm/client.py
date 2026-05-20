@@ -56,7 +56,7 @@ class LLMClient:
                     resp = await client.post(
                         f"{url}/api/embed",
                         json={"model": emb.model, "input": texts},
-                        timeout=30.0,
+                        timeout=300.0,
                     )
                 except (httpx.ConnectError, httpx.TimeoutException) as e:
                     raise LLMError(f"ollama embeddings unreachable at {url}: {e}") from e
@@ -144,7 +144,7 @@ class LLMClient:
                     f"{url}/api/chat",
                     json={"model": self._config.llm.model, "messages": messages, "stream": False},
                     headers=headers,
-                    timeout=30.0,
+                    timeout=300.0,
                 )
             except (httpx.ConnectError, httpx.TimeoutException) as e:
                 raise LLMError(f"ollama unreachable at {url}: {e}") from e
