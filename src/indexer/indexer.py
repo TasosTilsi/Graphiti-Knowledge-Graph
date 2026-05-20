@@ -16,7 +16,7 @@ import structlog
 
 from src.config import Config, load_config
 from src.db.manager import DatabaseManager
-from src.extractor.engine import extract_batch
+from src.extractor.engine import async_extract_batch
 from src.extractor.git_walker import CommitRecord, batch_commits, walk_commits
 from src.extractor.connector import fetch_github_pr, extract_pr_number
 from src.indexer.synthesis import run_synthesis
@@ -183,7 +183,7 @@ async def _async_run_init(repo_root: Path, config: Config) -> dict:
             start = i * batch_size + 1
             end = min(start + len(batch) - 1, total)
             logger.info("indexing_batch", range=f"{start}–{end}", total=total)
-            entities = extract_batch(batch)
+            entities = await async_extract_batch(batch)
             entities_inserted += _insert_entities(conn, entities)
             commits_processed += len(batch)
 
@@ -265,7 +265,7 @@ async def _async_run_sync(repo_root: Path, config: Config) -> dict:
             start = i * batch_size + 1
             end = min(start + len(batch) - 1, total)
             logger.info("syncing_batch", range=f"{start}–{end}", total=total)
-            entities = extract_batch(batch)
+            entities = await async_extract_batch(batch)
             entities_inserted += _insert_entities(conn, entities)
             commits_processed += len(batch)
 

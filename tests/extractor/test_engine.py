@@ -1,19 +1,17 @@
 """Tests for src/extractor/engine.py — extract_batch() function.
 
 Tests cover:
-- Happy path: mock subprocess returns valid JSON, entities normalized
+- Happy path: mock LLMClient returns valid JSON, entities normalized
 - Invalid entity types are dropped
 - Entity names are lowercased and stripped
 - Malformed JSON returns [] without raising
-- Subprocess CalledProcessError returns []
-- Subprocess TimeoutExpired returns []
+- API Error (LLMError) returns []
 - Empty batch raises ValueError
 - commit_sha is set on every returned entity from batch[0].sha
 """
 from __future__ import annotations
 
 import json
-import subprocess
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
@@ -22,6 +20,7 @@ import pytest
 from src.extractor.engine import extract_batch
 from src.extractor.git_walker import CommitRecord
 from src.extractor.prompt import VALID_ENTITY_TYPES
+from src.llm.client import LLMError
 
 
 # ---------------------------------------------------------------------------
@@ -45,6 +44,11 @@ def _make_valid_response(entities: list[dict]) -> str:
     return json.dumps({"entities": entities})
 
 
+class MockLLMResponse:
+    def __init__(self, content):
+        self.content = content
+
+
 # ---------------------------------------------------------------------------
 # Happy-path tests
 # ---------------------------------------------------------------------------
@@ -65,12 +69,11 @@ class TestExtractBatchHappyPath:
                 }
             ]
         )
-        mock_result = MagicMock()
-        mock_result.stdout = raw
+        
+        async def mock_chat(*args, **kwargs): return MockLLMResponse(raw)
 
-        with patch("shutil.which", return_value="/usr/bin/claude"), patch(
-            "subprocess.run", return_value=mock_result
-        ):
+        with patch("src.extractor.engine.LLMClient.chat", new=mock_chat), \
+             patch("src.extractor.engine.LLMClient.__init__", return_value=None):
             result = extract_batch([commit])
 
         assert len(result) == 1
@@ -91,12 +94,11 @@ class TestExtractBatchHappyPath:
                 }
             ]
         )
-        mock_result = MagicMock()
-        mock_result.stdout = raw
 
-        with patch("shutil.which", return_value="/usr/bin/claude"), patch(
-            "subprocess.run", return_value=mock_result
-        ):
+        async def mock_chat(*args, **kwargs): return MockLLMResponse(raw)
+
+        with patch("src.extractor.engine.LLMClient.chat", new=mock_chat), \
+             patch("src.extractor.engine.LLMClient.__init__", return_value=None):
             result = extract_batch([commit1, commit2])
 
         assert result[0]["commit_sha"] == commit1.sha
@@ -109,12 +111,11 @@ class TestExtractBatchHappyPath:
                 {"type": "bug_fix", "name": "fix null ptr", "content": "null fix", "commit_sha": "abc"},
             ]
         )
-        mock_result = MagicMock()
-        mock_result.stdout = raw
 
-        with patch("shutil.which", return_value="/usr/bin/claude"), patch(
-            "subprocess.run", return_value=mock_result
-        ):
+        async def mock_chat(*args, **kwargs): return MockLLMResponse(raw)
+
+        with patch("src.extractor.engine.LLMClient.chat", new=mock_chat), \
+             patch("src.extractor.engine.LLMClient.__init__", return_value=None):
             result = extract_batch([commit])
 
         assert len(result) == 2
@@ -133,12 +134,11 @@ class TestNormalization:
         raw = _make_valid_response(
             [{"type": "concept", "name": "SQLAlchemy ORM", "content": "orm usage", "commit_sha": "abc"}]
         )
-        mock_result = MagicMock()
-        mock_result.stdout = raw
 
-        with patch("shutil.which", return_value="/usr/bin/claude"), patch(
-            "subprocess.run", return_value=mock_result
-        ):
+        async def mock_chat(*args, **kwargs): return MockLLMResponse(raw)
+
+        with patch("src.extractor.engine.LLMClient.chat", new=mock_chat), \
+             patch("src.extractor.engine.LLMClient.__init__", return_value=None):
             result = extract_batch([commit])
 
         assert result[0]["name"] == "sqlalchemy orm"
@@ -148,12 +148,11 @@ class TestNormalization:
         raw = _make_valid_response(
             [{"type": "file", "name": "  main.py  ", "content": "main file", "commit_sha": "abc"}]
         )
-        mock_result = MagicMock()
-        mock_result.stdout = raw
 
-        with patch("shutil.which", return_value="/usr/bin/claude"), patch(
-            "subprocess.run", return_value=mock_result
-        ):
+        async def mock_chat(*args, **kwargs): return MockLLMResponse(raw)
+
+        with patch("src.extractor.engine.LLMClient.chat", new=mock_chat), \
+             patch("src.extractor.engine.LLMClient.__init__", return_value=None):
             result = extract_batch([commit])
 
         assert result[0]["name"] == "main.py"
@@ -163,12 +162,11 @@ class TestNormalization:
         raw = _make_valid_response(
             [{"type": "tech_debt", "name": "  Legacy Code  ", "content": "old code", "commit_sha": "abc"}]
         )
-        mock_result = MagicMock()
-        mock_result.stdout = raw
 
-        with patch("shutil.which", return_value="/usr/bin/claude"), patch(
-            "subprocess.run", return_value=mock_result
-        ):
+        async def mock_chat(*args, **kwargs): return MockLLMResponse(raw)
+
+        with patch("src.extractor.engine.LLMClient.chat", new=mock_chat), \
+             patch("src.extractor.engine.LLMClient.__init__", return_value=None):
             result = extract_batch([commit])
 
         assert result[0]["name"] == "legacy code"
@@ -190,12 +188,11 @@ class TestTypeFiltering:
                 {"type": "decision", "name": "good entity", "content": "kept", "commit_sha": "abc"},
             ]
         )
-        mock_result = MagicMock()
-        mock_result.stdout = raw
 
-        with patch("shutil.which", return_value="/usr/bin/claude"), patch(
-            "subprocess.run", return_value=mock_result
-        ):
+        async def mock_chat(*args, **kwargs): return MockLLMResponse(raw)
+
+        with patch("src.extractor.engine.LLMClient.chat", new=mock_chat), \
+             patch("src.extractor.engine.LLMClient.__init__", return_value=None):
             result = extract_batch([commit])
 
         assert len(result) == 1
@@ -209,12 +206,11 @@ class TestTypeFiltering:
                 {"type": "bar", "name": "b", "content": "y", "commit_sha": "abc"},
             ]
         )
-        mock_result = MagicMock()
-        mock_result.stdout = raw
 
-        with patch("shutil.which", return_value="/usr/bin/claude"), patch(
-            "subprocess.run", return_value=mock_result
-        ):
+        async def mock_chat(*args, **kwargs): return MockLLMResponse(raw)
+
+        with patch("src.extractor.engine.LLMClient.chat", new=mock_chat), \
+             patch("src.extractor.engine.LLMClient.__init__", return_value=None):
             result = extract_batch([commit])
 
         assert result == []
@@ -227,12 +223,11 @@ class TestTypeFiltering:
             for t in sorted(VALID_ENTITY_TYPES)
         ]
         raw = _make_valid_response(entities)
-        mock_result = MagicMock()
-        mock_result.stdout = raw
 
-        with patch("shutil.which", return_value="/usr/bin/claude"), patch(
-            "subprocess.run", return_value=mock_result
-        ):
+        async def mock_chat(*args, **kwargs): return MockLLMResponse(raw)
+
+        with patch("src.extractor.engine.LLMClient.chat", new=mock_chat), \
+             patch("src.extractor.engine.LLMClient.__init__", return_value=None):
             result = extract_batch([commit])
 
         assert len(result) == len(VALID_ENTITY_TYPES)
@@ -248,46 +243,33 @@ class TestErrorHandling:
 
     def test_malformed_json_returns_empty_list(self):
         commit = _make_commit()
-        mock_result = MagicMock()
-        mock_result.stdout = "this is not json {"
 
-        with patch("shutil.which", return_value="/usr/bin/claude"), patch(
-            "subprocess.run", return_value=mock_result
-        ):
+        async def mock_chat(*args, **kwargs): return MockLLMResponse("this is not json {")
+
+        with patch("src.extractor.engine.LLMClient.chat", new=mock_chat), \
+             patch("src.extractor.engine.LLMClient.__init__", return_value=None):
             result = extract_batch([commit])
 
         assert result == []
 
     def test_malformed_json_does_not_raise(self):
         commit = _make_commit()
-        mock_result = MagicMock()
-        mock_result.stdout = "{ broken json"
 
-        with patch("shutil.which", return_value="/usr/bin/claude"), patch(
-            "subprocess.run", return_value=mock_result
-        ):
+        async def mock_chat(*args, **kwargs): return MockLLMResponse("{ broken json")
+
+        with patch("src.extractor.engine.LLMClient.chat", new=mock_chat), \
+             patch("src.extractor.engine.LLMClient.__init__", return_value=None):
             # Must not raise any exception
             result = extract_batch([commit])
         assert isinstance(result, list)
 
-    def test_subprocess_called_process_error_returns_empty_list(self):
+    def test_api_error_returns_empty_list(self):
         commit = _make_commit()
 
-        with patch("shutil.which", return_value="/usr/bin/claude"), patch(
-            "subprocess.run",
-            side_effect=subprocess.CalledProcessError(1, "claude"),
-        ):
-            result = extract_batch([commit])
+        async def mock_chat(*args, **kwargs): raise LLMError("API Failed")
 
-        assert result == []
-
-    def test_subprocess_timeout_expired_returns_empty_list(self):
-        commit = _make_commit()
-
-        with patch("shutil.which", return_value="/usr/bin/claude"), patch(
-            "subprocess.run",
-            side_effect=subprocess.TimeoutExpired("claude", 60),
-        ):
+        with patch("src.extractor.engine.LLMClient.chat", new=mock_chat), \
+             patch("src.extractor.engine.LLMClient.__init__", return_value=None):
             result = extract_batch([commit])
 
         assert result == []
@@ -296,22 +278,14 @@ class TestErrorHandling:
         with pytest.raises(ValueError, match="batch must not be empty"):
             extract_batch([])
 
-    def test_claude_not_found_raises_runtime_error(self):
-        commit = _make_commit()
-
-        with patch("shutil.which", return_value=None):
-            with pytest.raises(RuntimeError, match="LLM provider 'claude' not available"):
-                extract_batch([commit])
-
     def test_empty_entities_list_in_response(self):
         commit = _make_commit()
         raw = json.dumps({"entities": []})
-        mock_result = MagicMock()
-        mock_result.stdout = raw
 
-        with patch("shutil.which", return_value="/usr/bin/claude"), patch(
-            "subprocess.run", return_value=mock_result
-        ):
+        async def mock_chat(*args, **kwargs): return MockLLMResponse(raw)
+
+        with patch("src.extractor.engine.LLMClient.chat", new=mock_chat), \
+             patch("src.extractor.engine.LLMClient.__init__", return_value=None):
             result = extract_batch([commit])
 
         assert result == []
@@ -320,12 +294,11 @@ class TestErrorHandling:
         """If LLM returns JSON but without 'entities' key, return []."""
         commit = _make_commit()
         raw = json.dumps({"result": "unexpected structure"})
-        mock_result = MagicMock()
-        mock_result.stdout = raw
 
-        with patch("shutil.which", return_value="/usr/bin/claude"), patch(
-            "subprocess.run", return_value=mock_result
-        ):
+        async def mock_chat(*args, **kwargs): return MockLLMResponse(raw)
+
+        with patch("src.extractor.engine.LLMClient.chat", new=mock_chat), \
+             patch("src.extractor.engine.LLMClient.__init__", return_value=None):
             result = extract_batch([commit])
 
         assert result == []

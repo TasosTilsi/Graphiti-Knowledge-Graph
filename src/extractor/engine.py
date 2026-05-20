@@ -38,13 +38,15 @@ def extract_batch(batch: list[CommitRecord]) -> list[EntityRecord]:
     # This is a synchronous wrapper around the async LLM client for now,
     # as the indexer currently expects synchronous execution.
     try:
-        return asyncio.run(_async_extract_batch(batch))
+        return asyncio.run(async_extract_batch(batch))
     except Exception as e:
         logger.error("engine.extract_batch failed", error=str(e))
         return []
 
 
-async def _async_extract_batch(batch: list[CommitRecord]) -> list[EntityRecord]:
+
+
+async def async_extract_batch(batch: list[CommitRecord]) -> list[EntityRecord]:
     prompt = build_batch_prompt(batch)
     config = load_config()
     client = LLMClient(config)

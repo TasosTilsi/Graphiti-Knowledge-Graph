@@ -61,7 +61,7 @@ def test_run_sync_empty_after_filter(tmp_path: Path, capsys):
 
     with (
         patch("src.indexer.indexer.walk_commits", return_value=commits),
-        patch("src.indexer.indexer.extract_batch", return_value=FAKE_ENTITIES),
+        patch("src.indexer.indexer.async_extract_batch", return_value=FAKE_ENTITIES),
     ):
         # First run init to create and populate the DB
         result_init = run_init(tmp_path, config)
@@ -92,13 +92,13 @@ def test_run_sync_incremental(tmp_path: Path):
 
     processed_batches = []
 
-    def fake_extract(batch):
+    async def fake_extract(batch):
         processed_batches.extend([c.sha for c in batch])
         return []
 
     with (
         patch("src.indexer.indexer.walk_commits", return_value=commits),
-        patch("src.indexer.indexer.extract_batch", side_effect=fake_extract),
+        patch("src.indexer.indexer.async_extract_batch", side_effect=fake_extract),
     ):
         # Init with all 3 commits but we'll manually set last_sha to sha1
         from src.db.manager import DatabaseManager
@@ -150,7 +150,7 @@ def test_run_sync_no_db_delegates_to_init(tmp_path: Path):
 
     with (
         patch("src.indexer.indexer.walk_commits", return_value=commits),
-        patch("src.indexer.indexer.extract_batch", return_value=[]),
+        patch("src.indexer.indexer.async_extract_batch", return_value=[]),
         patch("src.indexer.indexer.run_init", side_effect=spy_init) as mock_init,
     ):
         result = run_sync(tmp_path, config)
@@ -176,7 +176,7 @@ def test_run_init_processes_all_commits(tmp_path: Path):
 
     with (
         patch("src.indexer.indexer.walk_commits", return_value=commits),
-        patch("src.indexer.indexer.extract_batch", return_value=FAKE_ENTITIES),
+        patch("src.indexer.indexer.async_extract_batch", return_value=FAKE_ENTITIES),
     ):
         result = run_init(tmp_path, config)
 
